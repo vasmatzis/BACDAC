@@ -24,6 +24,7 @@ Imports:
     logging (>= 0.10-108),
     BiocGenerics (>= 0.44.0),
     rtracklayer (>= 1.58.0),
-    methods,
+    grDevices,
     graphics,
-    grDevices
+    methods,
+    utils

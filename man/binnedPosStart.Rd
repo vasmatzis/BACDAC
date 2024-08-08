@@ -34,6 +34,6 @@ bin# \tab 1K \tab 10K \cr
 Other coordinates: 
 \code{\link{binnedPosEnd}()},
 \code{\link{getLinearCoordinates}()},
-\code{\link{linearCoordinates}}
+\code{\link{linearCoordinates}()}
 }
 \concept{coordinates}

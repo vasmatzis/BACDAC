@@ -315,11 +315,11 @@ makeHetScoreReportPdf <- function(segmentationFile,
 
     if(!is.null(normalPeakMethod)){
       if(normalPeakMethod=='ploidyBased'){
-        ploidySegments <- getPloidySegments(postProcessingDir, sampleId, stopIfNoPloidySegments=stopIfNoPloidySegments) # load this separately to do all the checks and stuff
+        ploidySegments <- bmdSvPipeline::getPloidySegments(postProcessingDir, sampleId, stopIfNoPloidySegments=stopIfNoPloidySegments) # load this separately to do all the checks and stuff
         if(all(!is.na(ploidySegments))){
           hetScores_StarCloudDataInfo <- getTypedFile("hetScores_StarCloudData", dir = postProcessingDir, values = list(sampleId = sampleId),legacy = TRUE)
-          starCloudData <- loadRdata(file=hetScores_StarCloudDataInfo@path, fileLabel = 'output from the star-cloud plot' )
-          allelicSegData <- allelicCNV(starLookUp = starCloudData$starLookUp, segmentDataIn = ploidySegments)
+          starCloudData <- bmdSvPipeline::loadRdata(file=hetScores_StarCloudDataInfo@path, fileLabel = 'output from the star-cloud plot' )
+          allelicSegData <- bmdSvPipeline::allelicCNV(starLookUp = starCloudData$starLookUp, segmentDataIn = ploidySegments)
         }else{
           loginfo('%s: ploidySegments is.na cannot add allelicSegData to linear plot.',sampleId)
         }
@@ -346,7 +346,7 @@ makeHetScoreReportPdf <- function(segmentationFile,
   # Row 1: linear genome plot ----
   # TODO: load in allelicSegData
   if(!is.null(allelicSegData)){
-    linearGenomePlot(
+    bmdSvPipeline::linearGenomePlot(
       postProcessingDir = postProcessingDir,
       rgd = rgdObject,
       sampleId=sampleId, # must provide in order to load other files (allelic, hetScore stuff)

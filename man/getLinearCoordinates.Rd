@@ -21,6 +21,6 @@ Get object describing linear coordinate space for main chromosomes
 Other coordinates: 
 \code{\link{binnedPosEnd}()},
 \code{\link{binnedPosStart}()},
-\code{\link{linearCoordinates}}
+\code{\link{linearCoordinates}()}
 }
 \concept{coordinates}
