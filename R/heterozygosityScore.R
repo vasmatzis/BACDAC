@@ -1,26 +1,32 @@
-#' Combines data from lohDetection
+#' Combines ref/alt SNP data from each chromosome 1-22,X
 #'
 #' Outputs heterozygosity score by bin (.wig) and by arm (.csv) for each chromosome
-#' To plot see \link{plotLohAnalysis} and the three graph plot function \link{makeLohFullReportPdf}
+#' To plot see \link{plotHetScorePerBin} and the three graph plot function \link{makeHetScoreReportPdf}
 #'
-#' @param minSnpsToCalculateStatistic  Minimum SNPs required in the window (1Mb) to calculate the statistic
-#' @param samplingStep How frequently to try to summarize the data (bp), to produce overlapping windows
-#' @param extraWindow Size of the window, how many bps to look at during each sampling step
+#' @param sampleId sample identifier, used as prefix for all input and output file names \code{<sampleId>_snpVals_<chromosome>.Rdata} and \code{<sampleId>_countBP_<chromosome>.Rdata}
+#' @param inputDir full path to snpVal and countBP Rdata
+#' @param outputDir full path for output files
+#' @param segmentationFile segmentation file for read depth, cnv data with required columns: chr, start, end, rd
+#' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
 #' @param maximumCoverage Do not process SNPs covered more than this
 #' @param trimFromAlt Bins to discard from the 'alt' side of the distribution
 #' @param trimFromRef Bins to discard from the 'ref' side of the distribution
 #' @param trimExtraPerCoverage Fraction of bins to trim per each extra coverage
-#' @inheritParams commonParameters
+#' @param minSnpsToCalculateStatistic  Minimum SNPs required in the window (1Mb) to calculate the statistic
+#' @param samplingStep How frequently to try to summarize the data (bp), to produce overlapping windows
+#' @param extraWindow Size of the window, how many bps to look at during each sampling step
 #'
-#' @example inst/examples/lohAnalysisExample.R
-#'
+#' @examples
+#' sampleId='TCGA-14-1402-02A_ds'
+#' inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'
+#' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+#' segmentationFile=
 #' @export
-lohAnalysis <- function(
+calculateHetScore <- function(
     sampleId,
-    rgd,
-    cytoBandFile,
-    outputDir,
-    postProcessingDir = outputDir,
+    inputDir,
+    outputDir=inputDir,
+    segmentationFile,
     noPdf = FALSE,
     maximumCoverage = 1000,
     trimFromAlt = 2,
@@ -30,43 +36,38 @@ lohAnalysis <- function(
     samplingStep = 30000,
     extraWindow = 1000000
 ) {
-  logCall()
+  # inst/examples/lohAnalysisExample.R
+
+  # loaded automatically: rgdObject, ideogram
 
   # maximumCoverage = 1000;  trimFromAlt = 2;  trimFromRef = 1;  trimExtraPerCoverage = 0.1;  minSnpsToCalculateStatistic = 20;  samplingStep = 30000;  extraWindow = 1000000
+  # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 
-  cytoBands  <- loadIdeogram(path = rcfPrefix(cytoBandFile))
-  rgdObject <- loadRgd(rgd)
-  mainChroms <- unique(sort(c(svaAutosomes(rgdObject), svaAllosomes(rgdObject)))) # Allosomes
-
-  chrYRefNumber <- refNameToNumber(rgdObject, "chrY")
-  chrYSvaNumber <- genomeToBima(rgdObject, chrYRefNumber, 1)$svaNumber
-  # We skip Y chromosome because LOH does not make much sense there
-  mainChromsNoY <- mainChroms[mainChroms != chrYSvaNumber]
-
+  mainChroms <- 1:24
+  # We skip Y chromosome because hetScore does not make much sense there
+  mainChromsNoY <- 1:23
   coords <- getLinearCoordinates(rgdObject, mainChroms)
 
-  # We will be writing these files out, let's check that we can
-  lohAnalysisWigFileInfo <- getTypedFile("lohAnalysisWig", dir = outputDir, values=list(sampleId=sampleId))
-  validateFileBeforeWrite(lohAnalysisWigFileInfo)
-
-  lohPerArmFileInfo <- getTypedFile('lohPerArm', dir=outputDir, values = list(sampleId=sampleId))
-  validateFileBeforeWrite(lohPerArmFileInfo)
-
-  het_score_wigFileInfo <- getTypedFile("heterozygosity_score",dir = outputDir, values=list(sampleId=sampleId))  # genViz
-  validateFileBeforeWrite(het_score_wigFileInfo)
+  # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
+  if(!dir.exists(file.path(outputDir, 'reports'))){
+    dir.create(path = file.path(outputDir, 'reports'))
+    logging::loginfo('creating output directory: \n\t%s:', file.path(outputDir, 'reports'))
+  }
+  hetScorePerArmFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))
+  hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
 
   # We want to calculate our test statistic for a wide range of coverages
   # we can encounter in practice.
-  valSave <- calculateLohTestStatisticPerCoverage(maximumCoverage, trimFromAlt, trimFromRef, trimExtraPerCoverage)
+  valSave <- calculateHetScoreTestStatisticPerCoverage(maximumCoverage, trimFromAlt, trimFromRef, trimExtraPerCoverage)
 
   seqListTotal <- list()
   seqValsTotal <- list()
 
-
-
   for (i in mainChromsNoY) {
-    snpFull <- loadRdata(getTypedFile("lohSnpFull", dir = postProcessingDir, values=list(sampleId=sampleId, svaNumber=i), legacy = TRUE))
-    countBPFull <- loadRdata(getTypedFile("lohCountBpFull", dir = postProcessingDir, values=list(sampleId=sampleId, svaNumber=i), legacy = TRUE))
+    logging::logdebug('loading data for chrom %i',i)
+    # TODO this could be problematic if the user doesn't save it with the same variable!
+    load(file.path(inputDir,    paste0(sampleId, '_snpVals_',i,'.Rdata')), verbose = TRUE) # snpFull
+    load(file.path(inputDir,paste0(sampleId, '_countBP_',i,'.Rdata')), verbose = TRUE) # countBPFull
 
     # Determine total coverage (how many times we see the ref/alt alleles)
     covVals <- countBPFull[['ref']] + countBPFull[['alt']]
@@ -113,44 +114,50 @@ lohAnalysis <- function(
     seqValsTotal[[i]] <- seqVals
   }
 
-  # Save our data in a .wig format
-
-  saveLohAnalysisToWig(
-    wigFile = lohAnalysisWigFileInfo,
+  # Save hetScore binned data in a .wig format
+  saveHetScoreToWig(
+    wigFile = hetScorePerBinWigFile,
     seqListTotal = seqListTotal,
     seqValsTotal = seqValsTotal,
-    rgdObject = rgdObject,
     chromsToSave = mainChromsNoY,
-    samplingStep = samplingStep)
+    samplingStep = samplingStep
+  )
 
-  # Summarize the data and write out
-  centroArray <- getCentromerePositions(ideogram = cytoBands, rgd = rgdObject)
-  lohPerArm <- lohSummary(seqValsTotal = seqValsTotal, centroArray = centroArray, coords = coords, chromosomes=mainChromsNoY)
-  bmd.write.csv(lohPerArm, file=lohPerArmFileInfo)
+  # make and save hetScore arm data in a .csv format
+  hetScorePerArm=makeAndSaveHetScorePerArm(
+    hetScorePerArmFile,
+    seqValsTotal,
+    chromsToSave=mainChromsNoY,
+    noPArm = c(13, 14, 15, 21, 22)
+  )
 
-  # plotLohAnalysis plotting code was copied to a function makeLohFullReportPdf(), and is now called in genomePlot.R
+  # make plot with segmentation, hetScore by bin, hetScore by arm
+  makeHetScoreReportPdf(
+    segmentationFile,
+    allelicSegData=NULL,
+    hetScorePerBinWigFile=hetScorePerBinWigFile,
+    hetScorePerArmFile=hetScorePerArmFile,
+    sampleId=sampleId,
+    outputDir=outputDir,
+    noPdf=noPdf)
 
-  # write GenViz output file
-  hetScoreToWig(postProcessingDir_SV=postProcessingDir,sampleId_SV=sampleId,outputDir=outputDir,wsz = samplingStep)
-  # loh_analysis_wigFileInfo=lohToGenViz(postProcessingDir,sampleId,outputDir=outputDir) # not needed
-
-  loginfo("END OF SCRIPT")
+  logging::loginfo("END OF SCRIPT")
 }
 
-#' Save the results of LOH analysis as a wig file
+#' Save the binned results of \code{calculateHetScore} as a wig file
 #'
-#' @param wigFile \link{typedFile-class} for the wig to save
+#' @param wigFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
+#' @param seqListTotal
+#' @param seqValsTotal Calculated values, 30K binned, list of one array per chromosome
+#' @param chromsToSave List of chromosomes to calculate the value for (by default all but Y)
 #' @param samplingStep Only uniformly sampled data can be used, use this sampling step
-#' @inheritParams plotLohAnalysis
 #'
-#' @export
-#' @family loh
-saveLohAnalysisToWig <- function(wigFile, seqListTotal, seqValsTotal, rgdObject, chromsToSave,
+#' @family hetScore
+saveHetScoreToWig <- function(wigFile, seqListTotal, seqValsTotal, chromsToSave,
                                  samplingStep) {
   # We go through GRanges object which is a bit of an overkill
   # but it allows us to use different formats than just wig if we wanted to
-  refNumbers <- bimaToGenome(rgdObject, chromsToSave, rep(1, length(chromsToSave)))[['refNumber']]
-  seqNames <- refNumberToName(rgdObject, refNumbers)
+  seqNames = convertChromToCharacter(chromsToSave, rgdObject, withChrPrefix = TRUE)
   data <- NULL
   for (i in chromsToSave) {
     part <- data.frame(seqname=seqNames[i], start=seqListTotal[[i]], value=seqValsTotal[[i]])
@@ -162,122 +169,212 @@ saveLohAnalysisToWig <- function(wigFile, seqListTotal, seqValsTotal, rgdObject,
     ranges=IRanges::IRanges(start=data[['start']], width=samplingStep))
   BiocGenerics::score(grange) <- data[['value']]
 
-  ensureDirExists(dirname(wigFile@path))
-  rtracklayer::export.wig(object = grange, con = wigFile@path)
+  if(!dir.exists(dirname(wigFile))){
+    dir.create(path = dirname(wigFile))
+    logging::loginfo('creating output directory: \n\t%s:', dirname(wigFile))
+  }
+  rtracklayer::export.wig(object = grange, con = wigFile)
+  logging::loginfo('wrote hetScore per 30kb bin to wig file: \n\t%s', wigFile)
 }
 
-#' Load data from the wig file
+
+#' summarize the hetScore from bins to chromosome arm
 #'
+#' @param hetScorePerArmFile full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}
+#' @param seqValsTotal Calculated values, 30K binned, list of one array per chromosome
+#' @param chromsToSave List of chromosomes to calculate the value for (by default all but Y)
+#' @param noPArm Do not return calculation for these p arms
+#'
+#' @return data.frame with chr, arm, hetScore columns
+#'
+#' @family hetScore
+makeAndSaveHetScorePerArm <- function(hetScorePerArmFile, seqValsTotal, chromsToSave=1:23, noPArm = c(13, 14, 15, 21, 22)) {
+  # previously lohSummary and without the write to file
+
+  #centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
+  centroArray <- getCentromerePositions(ideogram = ideogram)
+
+  coords <- getLinearCoordinates(rgdObject, chromosomes = 1:24)
+  numChromosomes <- length(chromsToSave)
+
+  pVals <- chromsToSave * 0
+  qVals <- chromsToSave * 0
+
+  binSize <- 30000
+
+  densityRange <- c(0.01, 1.2) # This is where we smooth our values to look for peak
+  densityN <- 5000 # How smoothly to estimate density
+
+  for (i in chromsToSave) {
+    # Separate values for bins for p and q arms
+    centromereStartBin <- floor(centroArray[i,1]/binSize)
+    centromereEndBin <- floor(centroArray[i,2]/binSize)
+    chromosomeEndBin <- floor((coords@chromEnd[i]-coords@chromStart[i]+1)/binSize)
+
+    lohTempP <- (seqValsTotal[[i]])[seqFwd(1, centromereStartBin)]
+    lohTempQ <- (seqValsTotal[[i]])[seqFwd(centromereEndBin, chromosomeEndBin)]
+
+    denseP <- BiocGenerics::density(lohTempP,from=densityRange[1],to=densityRange[2],n=densityN)
+    denseQ <- BiocGenerics::density(lohTempQ,from=densityRange[1],to=densityRange[2],n=densityN)
+
+    pVals[i] <- denseP$x[which.max(denseP$y)]
+    qVals[i] <- denseQ$x[which.max(denseQ$y)]
+
+    # print(paste(i,denseP$x[which.max(denseP$y)],denseQ$x[which.max(denseQ$y)]))
+  }
+
+  # Serialize the p and q arm values into one long vector (1p, 1q, 2p, 2q, ... 23q)
+  # The as.vector trick turns a data.frame into a long list by reading out values by column
+  chrOut <- as.vector(rbind(chromsToSave, chromsToSave))
+  armOut <- as.vector(rbind(rep("p", numChromosomes), rep("q", numChromosomes)))
+  valOut <- as.vector(rbind(pVals,qVals))
+  hetScorePerArm <- data.frame('chr'=chrOut, 'arm'=armOut, 'hetScore'=round(valOut,3))
+  # Drop the missing p arms
+  hetScorePerArm <- hetScorePerArm[hetScorePerArm[,"arm"]!="p" | (!(hetScorePerArm[,"chr"] %in% noPArm)),,drop=FALSE]
+  rownames(hetScorePerArm) <- NULL # Otherwise indexing fails
+  hetScorePerArm$chr=convertChromToCharacter(hetScorePerArm$chr)
+
+  if(!dir.exists(dirname(hetScorePerArmFile))){
+    dir.create(path = dirname(hetScorePerArmFile))
+    logging::loginfo('creating output directory: \n\t%s:', dirname(hetScorePerArmFile))
+  }
+
+  write.csv(hetScorePerArm, file=hetScorePerArmFile)
+  logging::loginfo('wrote hetScore per arm to csv file: \n\t%s', hetScorePerArmFile)
+
+  return(hetScorePerArm)
+}
+
+
+
+#' Load hetScore as data.frame from the binned wig file
+#' @param wigFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
 #' @return data.frame with seqnames, start, end, strand, score columns. Note that the strand column is not set (all values will be '*')
 #'
 #' @export
-loadLohAnalysisFromWig <- function(postProcessingDir, sampleId, typeId = 'lohAnalysisWig') {
-  data <- as.data.frame(
-    rtracklayer::import.wig(
-      getTypedFile(typeId = typeId, dir=postProcessingDir, values=list(sampleId=sampleId), legacy=TRUE)@path))
+loadHetScoreFromWig <- function(wigFile) {
+  data <- as.data.frame(rtracklayer::import.wig(wigFile))
   return(data)
 }
 
-#' Make 3-subplot LOH analysis PDF
+#' Make 3-subplot hetScore analysis PDF
 #'
 #' Will show 3 separate plots contrasting CNV, heterozygosity score per 30K and heterozygosity score per arm.
 #'
-#' @inheritParams commonParameters
+#' @param segmentationFile segmentation file for read depth, cnv data with required columns: chr, start, end, rd
+#' @param allelicSegData allele specific segmentation file
+#' @param hetScorePerBinWigFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
+#' @param hetScorePerArmFile full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}
+#' @param sampleId sample id, will be used as the prefix for all input and output file names
+#' @param outputDir full path for output files
+#' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
+#' @examples
+#'   segmentationFile <-
+#'   '/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/cnv/TCGA-14-1402-02A_ds_cnvIntervals.csv'
 #' @export
-makeLohFullReportPdf <- function(postProcessingDir, sampleId, outputDir,
-                                 rgdObject,
-                                 noPdf) {
+makeHetScoreReportPdf <- function(segmentationFile,
+                                  allelicSegData=NULL,
+                                  hetScorePerBinWigFile,
+                                  hetScorePerArmFile,
+                                  sampleId,
+                                  outputDir,
+                                  noPdf) {
+  # previously called makeLohFullReportPdf and called from genomePlot in svaTools pipeline
 
-  # Skip the Y chromosome
-  mainChroms <- unique(sort(c(svaAutosomes(rgdObject), svaAllosomes(rgdObject)))) # Allosomes
-  coords <- getLinearCoordinates(rgd = rgdObject, chromosomes = mainChroms)
-  chrYRefNumber <- refNameToNumber(rgdObject, "chrY")
-  chrYSvaNumber <- genomeToBima(rgdObject, chrYRefNumber, 1)$svaNumber
+  mainChroms <- 1:24
   # We skip Y chromosome because LOH does not make much sense there
-  mainChromsNoY <- mainChroms[mainChroms != chrYSvaNumber]
+  mainChromsNoY <- 1:23
+  coords <- getLinearCoordinates(rgdObject, mainChroms)
 
-  # load cnvIntervals
-  cnvIntervalsFile <-getTypedFile("cnvIntervals",dir = postProcessingDir,values = list(sampleId = sampleId),legacy = TRUE )
-  if(file.exists(cnvIntervalsFile@path)) {
-    cnvIntervals <- bmd.read.csv(cnvIntervalsFile)
-    cnvMetadata <- readMetadata(cnvIntervalsFile)
-    if(!is.null(cnvMetadata[['normalPostProcessingDir']])) {
-      normalPeakMethod <- cnvMetadata[['normalPeakMethod']]
-    }else{
-      logwarn('missing normalPeakMethod from cnvIntervals metadata')
+  # load segmentationFile (cnvIntervals)
+  if(file.exists(segmentationFile)) {
+    segments <- read.csv(segmentationFile,comment.char = '#', header = TRUE)
 
+    # check for required columns
+    requiredColumns=c('chr', 'start', 'end','rd')
+    missingColumnKey=which(!requiredColumns %in% names(segments))
+    if(length(missingColumnKey)>0){
+      logging::logerror('missing required column: %s',requiredColumns[missingColumnKey])
     }
+
+    # cnvMetadata <- readMetadata(cnvIntervalsFile)
+    # if(!is.null(cnvMetadata[['normalPostProcessingDir']])) {
+    #   normalPeakMethod <- cnvMetadata[['normalPeakMethod']]
+    # }else{
+    #   logwarn('missing normalPeakMethod from cnvIntervals metadata')
+    # }
+
   }else{
-    logerror('missing cnvIntervals file: %s',cnvIntervalsFile@path)
+    logging::logerror('missing segmentation file: %s', segmentationFile)
   }
 
-  # load allelicSegData if possible
-  allelicSegData <- NULL
-  if(!is.null(normalPeakMethod)){
-    if(normalPeakMethod=='ploidyBased'){
-      ploidySegments <- getPloidySegments(postProcessingDir, sampleId, stopIfNoPloidySegments=stopIfNoPloidySegments) # load this separately to do all the checks and stuff
-      if(all(!is.na(ploidySegments))){
-        hetScores_StarCloudDataInfo <- getTypedFile("hetScores_StarCloudData", dir = postProcessingDir, values = list(sampleId = sampleId),legacy = TRUE)
-        starCloudData <- loadRdata(file=hetScores_StarCloudDataInfo@path, fileLabel = 'output from the star-cloud plot' )
-        allelicSegData <- allelicCNV(starLookUp = starCloudData$starLookUp, segmentDataIn = ploidySegments)
-      }else{
-        loginfo('%s: ploidySegments is.na cannot add allelicSegData to linear plot.',sampleId)
+  if(FALSE){
+    # allelicSegData should be loaded in, not created
+
+    # load allelicSegData if possible
+
+    if(!is.null(normalPeakMethod)){
+      if(normalPeakMethod=='ploidyBased'){
+        ploidySegments <- getPloidySegments(postProcessingDir, sampleId, stopIfNoPloidySegments=stopIfNoPloidySegments) # load this separately to do all the checks and stuff
+        if(all(!is.na(ploidySegments))){
+          hetScores_StarCloudDataInfo <- getTypedFile("hetScores_StarCloudData", dir = postProcessingDir, values = list(sampleId = sampleId),legacy = TRUE)
+          starCloudData <- loadRdata(file=hetScores_StarCloudDataInfo@path, fileLabel = 'output from the star-cloud plot' )
+          allelicSegData <- allelicCNV(starLookUp = starCloudData$starLookUp, segmentDataIn = ploidySegments)
+        }else{
+          loginfo('%s: ploidySegments is.na cannot add allelicSegData to linear plot.',sampleId)
+        }
       }
     }
   }
 
+
+
   # TODO: does the graphicsDeviceOpen stuff have to be done here, like it is done for other plots? not sure what this feature does for us.
   if(!noPdf) {
-    LOHPlotFile <- getTypedFile("lohFullReportPdf", dir=outputDir, values=list(sampleId=sampleId))
-    ensureDirExists(dirname(LOHPlotFile@path))
-    pdf(file=LOHPlotFile@path, width=11, height=8,  paper="a4r", title=paste0('heteroScore_',sampleId))
-    loginfo('loh Full Report Pdf  file: %s',LOHPlotFile@path)
+    # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
+    if(!dir.exists(file.path(outputDir, 'reports'))){
+      dir.create(path = file.path(outputDir, 'reports'))
+      logging::loginfo('creating output directory for hetScoreReport PDF: \n\t%s:', file.path(outputDir, 'reports'))
+    }
+    hetScoreReportPdf <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScoreReport.pdf'))
+    pdf(file=hetScoreReportPdf, width=11, height=8,  paper="a4r", title=paste0('hetScoreReport_',sampleId))
+    logging::loginfo('writing hetScore report to PDF: \n\t%s:', hetScoreReportPdf)
   }
 
-  # georgeTempFile
-  biallelicAnalysisFile <- getTypedFile(typeId = 'biallelicAnalysisWig', dir=postProcessingDir, values=list(sampleId=sampleId), legacy=TRUE)@path
-  if(file.exists(biallelicAnalysisFile)){
-    op <- par(mfrow=c(4,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext
+  op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext
+
+  # Row 1: linear genome plot ----
+  # TODO: load in allelicSegData
+  if(!is.null(allelicSegData)){
+    linearGenomePlot(
+      postProcessingDir = postProcessingDir,
+      rgd = rgdObject,
+      sampleId=sampleId, # must provide in order to load other files (allelic, hetScore stuff)
+      cnvIntervals=segments,
+      allelicSegData=allelicSegData)
   }else{
-    op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext
+    plotEmptyLinearGenomePlot(chromsToPlot=mainChromsNoY)
   }
 
-
-  # Row 1: linear genome plot
-  linearGenomePlot(
-    postProcessingDir = postProcessingDir,
-    rgd = rgdObject,
-    sampleId=sampleId, # must provide in order to load other files (allelic, hetScore stuff)
-    cnvIntervals=cnvIntervals,
-    allelicSegData=allelicSegData)
-
-  # annotate with sampleId and folderId in the upper left and upper right respectively
-  mtext(sampleId,           side = 3, line= 1, outer=TRUE, cex= 1, adj=0)
-  mtext(rgdObject$folderId, side = 3, line= 1, outer=TRUE, cex= 1, adj=1)
-
-  # Row 2a: heterozygosity scores -per bin-
-  lohdata <- loadLohAnalysisFromWig(postProcessingDir=postProcessingDir, sampleId=sampleId)
-  plotLohAnalysis(lohdata, coords=coords, chromsToPlot = mainChromsNoY, rgdObject=rgdObject,allelicSegData=allelicSegData )
-
-  if(file.exists(biallelicAnalysisFile)){
-    # Row 2b: biallelic scores -per bin-
-    biallelicData <- loadLohAnalysisFromWig(postProcessingDir=postProcessingDir, sampleId=sampleId, typeId='biallelicAnalysisWig')
-    plotLohAnalysis(biallelicData, coords=coords, chromsToPlot = mainChromsNoY, rgdObject=rgdObject,allelicSegData=allelicSegData, ylab='biallelic score')
-
-  }
+  # annotate with title and sampleId in the upper left
+  title(main= 'Heterozygosity Score Report', outer = TRUE)
+  mtext(sampleId,side=3, adj=0)
+  # mtext(sampleId, side = 3, line= 1, outer=TRUE, cex= 1, adj=0)
 
 
+  # Row 2: heterozygosity scores -per bin- ----
+  hetScore <- loadHetScoreFromWig(hetScorePerBinWigFile)
+  plotHetScorePerBin(hetScore,
+                     chromsToPlot = mainChromsNoY,
+                     ylab="Heterozygosity Score by bin",
+                     allelicSegData=allelicSegData ) # aka plotLohAnalysis()
 
-  # Row 3: heterozygosity scores -per arm-
-  lohPerArmFile <- getTypedFile('lohPerArm', dir=postProcessingDir, values = list(sampleId=sampleId), legacy=TRUE)
-  lohPerArm <- bmd.read.csv(file=lohPerArmFile)
-  lohSummaryPlot(lohPerArm=lohPerArm, rgdObject = rgdObject, coords=coords)
 
-  # add indicator for BIMA version and use of BIMA indels
-  bimaIndels <- extractSvaIndelColumnEnabled(commandLine=rgdObject$commandLine, file=rgdObject$file)
-  bimaVersion <- rgdObject$processInformation$bimaVersion
-  bimaInfo <- paste0(bimaVersion, ' indels:', bimaIndels)
-  mtext(bimaInfo, side = 1, line= 1, outer=F, cex= .7, adj = 0)
+  # Row 3: heterozygosity scores -per arm- ----
+  hetScorePerArm <- read.csv(file=hetScorePerArmFile, header = TRUE, comment.char = '#')
+  plotHetScorePerArm(hetScorePerArm=hetScorePerArm,
+                     chromsToPlot=mainChromsNoY,
+                     ylab="Heterozygosity Score by arm") # aka lohSummaryPlot()
 
   par(op)
   if (!noPdf) {
@@ -285,37 +382,62 @@ makeLohFullReportPdf <- function(postProcessingDir, sampleId, outputDir,
   }
 }
 
-#' Create multiple plots for the LOH analysis using heterozygosity scores.
+#' create a plot to fill the empty space for now
 #'
-#' These plots show the heterozygosity scores per bin, not per arm (summaries).
-#' For per arm values, see \link{lohSummaryPlot}. \code{sampleId} and \code{sampleAlias} are optional,
+#' @param chromsToPlot Vector of chromosome numbers to plot
+plotEmptyLinearGenomePlot <- function(chromsToPlot){
+  # Get a plot started
+  maxX <- max(coords@chromEnd[coords@maxcn])
+  plot(x=0, y=0, type="n",
+       xaxs="i",
+       xlim=c(1,maxX), ylim=c(0, 1),
+       xaxt="n", yaxt="n",
+       xlab='', ylab="")
+  ## annotations
+  chrCharacters <- convertChromToCharacter(chromsToPlot)
+  axis(side=3, at=coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='lightgray') # Draw ticks
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=0.85, lwd=0, padj=0) # Draw labels
+  title(xlab='chromosome', line=0)
+
+}
+
+
+#' Plot the binned heterozygosity score
+#'
+#' These plots show the heterozygosity scores per bin.
+#' For per arm values, see \link{plotHetScorePerArm}. \code{sampleId} is optional,
 #' for plot annotation only.
 #'
-#' @param lohdata heterozygosity scores as loaded from the loh wig file
-#' @param coords The coordinate system description from RGD
+#' @param hetScore binned heterozygosity scores as loaded from the hetScore wig file
 #' @param chromsToPlot Vector of chromosome numbers to plot
-#' @param addIndividualChrPlots option to plot each chromosome individually
-#' @param rgdObject To convert chromosome number to text
-#' @param yMap How to transform y coordinates for drawing purposes
+#' @param sampleId sample id, will be used as the prefix for all input and output file names
+#' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
 #' @param allelicSegData ploidy segments with mean and median het scores and allelic ratios
-#' @param ylab label for y axis default "Heterozygosity Score" refers to the low coverage method,
-#' 'biallelic Score' refers to high coverage method
-#'
-#' @inheritParams commonParameters
+#' @param ylab label for y axis default "Heterozygosity Score"
 #'
 #' @export
-#' @family loh
-#' @example inst/examples/plotLohAnalysisExample.R
-plotLohAnalysis <- function(lohdata, coords, chromsToPlot, rgdObject, sampleId=NULL, sampleAlias=NULL, addIndividualChrPlots=FALSE,
-                            yMap=function(y) { y },ylab="Heterozygosity Score",allelicSegData=NULL) {
+#' @family hetScore
+
+plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
+                            yMap=function(y) { y },
+                            ylab="Heterozygosity Score",
+                            allelicSegData=NULL) {
+  # @example inst/examples/plotLohAnalysisExample.R
+
+  mainChroms <- 1:24
+  coords <- getLinearCoordinates(rgdObject, mainChroms)
+
   # Make an overview plot
   # Get a plot started
   maxX <- max(coords@chromEnd[coords@maxcn])
   dataYRange <- c(0, 1)
   yRange <- yMap(dataYRange)
   yRange[2] <- yRange[1] + (yRange[2]-yRange[1]) * 1.1 # Add 10 % on the top
-  plot(x=0, y=0, type="n",  xaxs="i", xlim=c(1,maxX), ylim=yRange,
-       xaxt="n", yaxt="n", ylab=ylab, xlab='')
+  plot(x=0, y=0, type="n",
+       xaxs="i",
+       xlim=c(1,maxX), ylim=yRange,
+       xaxt="n", yaxt="n",
+       xlab='', ylab=ylab)
 
   # Custom Y axis
   ticksPosition <- seq(dataYRange[1], dataYRange[2], 0.2)
@@ -325,7 +447,7 @@ plotLohAnalysis <- function(lohdata, coords, chromsToPlot, rgdObject, sampleId=N
 
   title(xlab='chromosome', line=0)
 
-  ## option for Zebra bars for the chromosomes. Draw first so the dots can go over
+  ## option for Zebra bars for the chromosomes. Draw first so the dots can go over top
   for(i in seq_len(length(chromsToPlot))) {
     if(i%%2==1){
       rect(xleft = coords@chromStart[i],
@@ -339,17 +461,17 @@ plotLohAnalysis <- function(lohdata, coords, chromsToPlot, rgdObject, sampleId=N
   for (i in chromsToPlot) {
     chromName <- convertChromToCharacter(i, rgdObject, withChrPrefix=TRUE)
 
-    lohDataForChrom <- lohdata[
-      lohdata[['seqnames']]==chromName,
+    hetScoreForChrom <- hetScore[
+      hetScore[['seqnames']]==chromName,
       c('start', 'score')
     ]
 
-    points(lohDataForChrom[['start']]+coords@chromStart[i]-1,
-           yMap(lohDataForChrom[['score']]),
+    points(hetScoreForChrom[['start']]+coords@chromStart[i]-1,
+           yMap(hetScoreForChrom[['score']]),
            col=ifelse(i%%2==0, 'black', 'black'),pch=".") # was alternating black, orange, but got rid of the orange and instead alternate shading the background
   }
 
-  # TODO: add allelicSegData somehow
+  # TODO: add allelicSegData
   # add purple lines for LOH segments
   if(!is.null(allelicSegData)){
     # we don't want to include the 1N segments
@@ -366,7 +488,6 @@ plotLohAnalysis <- function(lohdata, coords, chromsToPlot, rgdObject, sampleId=N
 
   }
 
-
   ## annotations
   chrCharacters <- convertChromToCharacter(chromsToPlot,rgdObject = rgdObject) # required for X aka 23
   abline(h=yMap(1.0), col='green')
@@ -375,32 +496,103 @@ plotLohAnalysis <- function(lohdata, coords, chromsToPlot, rgdObject, sampleId=N
   # add if sampleId is provided
   if(!is.null(sampleId)) {
     title(main= sampleId,    adj= 0)
-    title(main= sampleAlias, adj= 1)
   }
 
-  ## include a plot per each chromosome
-  if(addIndividualChrPlots){
-    for(i in chromsToPlot) {
-      chromName <- convertChromToCharacter(i, rgdObject, withChrPrefix=TRUE)
-      lohDataForChrom <- lohdata[lohdata[['seqnames']]==chromName, c('start', 'score')]
-
-      plot(lohDataForChrom[['start']]+coords@chromStart[i]-1, yMap(lohDataForChrom[['score']]),
-           ylim=yRange, col='black',type='l', ylab=ylab,xlab='linear genome (top) and chromosome (bot) position (bp)', yaxt="n")
-      abline(h=yMap(1.0), col='green3')
-      mtext(text=paste('chr',chrCharacters[i]), side = 3)
-      if(!is.null(sampleId)) {
-        title(main= sampleId,    adj= 0)
-        title(main= sampleAlias, adj= 1)
-      }
-      # add chromosome positions to x axis
-      xlimMax <- bmdSvPipeline:::convertpos(coords@chromEnd[i], coords)[2]
-      chrPosLabels <- round(seq(1,xlimMax, length.out = length(axTicks(3))),-6)
-      axis(side = 1, at = axTicks(3), labels = chrPosLabels,line = 1,tick = FALSE)
-    }
-  }
 }
 
-#' Calculate the value of test statistic for LOH analysis
+
+#' Plot the heterozygosity scores for evaluating LOH, summary values
+#'
+#' @param hetScorePerArm A matrix with chr, arm and hetScore columns
+#' @param chromsToPlot Vector of chromosome numbers to plot
+#' @param sampleId sample id, will be used as the prefix for all input and output file names
+#' @param hetScoreMean Mean expected hetScore
+#' @param hetScoreStDev standard deviation of the hetScore values
+#' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
+#' @param ylab label for y axis
+#'
+#' @export
+#' @family hetScore
+plotHetScorePerArm <- function(hetScorePerArm, chromsToPlot,sampleId=NULL,
+                               hetScoreMean=0.9875, hetScoreStDev=0.0125,
+                               yMap=function(y) { 2 ^ (10*y) },
+                               ylab="Heterozygosity Score"
+) {
+  # @example inst/examples/hetScoreSummaryPlotExample.R
+  mainChroms <- 1:24
+  coords <- getLinearCoordinates(rgdObject, mainChroms)
+
+
+  # Make an overview plot
+  # Get a plot started
+  maxX <- max(coords@chromEnd[coords@maxcn])
+  dataYRange <- c(0, 1) # Where the data falls
+  yRange <- yMap(dataYRange) # Range of our plot
+  extraPercentOnTop <- 0.16 # Take the range, add this much on top for labels
+  yRangeWithLabel <- c(yRange[1], yRange[1] + (yRange[2]-yRange[1]) * (1+extraPercentOnTop))
+  plot(x=0, y=0, type="n",
+       xaxs="i",
+       xlim=c(1,maxX), ylim=yRangeWithLabel,
+       xaxt="n", yaxt="n",
+       xlab='', ylab=ylab)
+
+  # Custom Y axis
+  ticksPosition <- seq(dataYRange[1], dataYRange[2], 0.05)
+  axis(side = 2,
+       at=yMap(ticksPosition),
+       labels= ticksPosition)
+
+  title(xlab='chromosome', line=0)
+
+
+  ## reference lines for hetScore analysis
+  abline(h=yMap(dataYRange[2]),      col='green',lwd=1)                      # This is where we should be in theory
+  abline(h=yMap(hetScoreMean - hetScoreStDev),            col='blue', lwd=1) # 1 stdev from mean
+  abline(h=yMap(hetScoreMean - 2*hetScoreStDev), col='red',  lwd=1)          # 2 stdevs from mean
+
+
+  ## option for Zebra bars for the chromosomes. Draw first so the dots can go over
+  for(i in seq_len(length(chromsToPlot))) {
+    if(i%%2==1){
+      rect(xleft = coords@chromStart[i],
+           ybottom= yRangeWithLabel[1],
+           xright = coords@chromEnd[i],
+           ytop   = yRangeWithLabel[2]*1.04,
+           col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
+    }
+  }
+  ## option for vertical lines/ticks for the chromosomes
+ axis(side=3, at= coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
+
+  pqLabelPos <- coords@chromStart[hetScorePerArm[,'chr']] +
+    (coords@chromEnd[hetScorePerArm[,'chr']] - coords@chromStart[hetScorePerArm[,'chr']]) *
+    ifelse(hetScorePerArm[,'arm']=='p', 0.25, 0.75)
+
+  ## annotations
+  chrCharacters <- convertChromToCharacter(chromsToPlot) # required for X aka 23
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=0.85, lwd=0, padj=0) # Draw labels
+  axis(side=3, at=pqLabelPos, line=-2.6, labels = hetScorePerArm[,'arm'], cex.axis=0.66, tick = FALSE) # Draw labels
+  # add if sampleId is provided
+  if(!is.null(sampleId)) {
+    title(main= sampleId,    adj= 0)
+  }
+
+  # pq labels and points
+  for(i in seq_len(nrow(hetScorePerArm))){
+    xArm <- pqLabelPos[i]
+    # Plot the values that are out of range as arrow pointing up/down
+    points(x=xArm,
+           y=yMap(pmin(dataYRange[2], pmax(dataYRange[1], hetScorePerArm[i,'hetScore']))),
+           ylim=yRange,
+           pch=ifelse(hetScorePerArm[i,'hetScore'] < dataYRange[1], 25,
+                      ifelse(hetScorePerArm[i,'hetScore'] > dataYRange[2], 24, 16)), col="darkmagenta", bg="magenta")
+  }
+
+}
+
+
+
+#' Calculate the value of test statistic for HetScore analysis
 #'
 #' The statistic is expected number of times we observe reference/alternate
 #' allele (whichever count is smaller) for given coverage, assuming there is no
@@ -435,8 +627,8 @@ plotLohAnalysis <- function(lohdata, coords, chromsToPlot, rgdObject, sampleId=N
 #' @return Array with test statistic for each coverage from 1 to maximumCoverage
 #'
 #' @export
-#' @family loh
-calculateLohTestStatisticPerCoverage <- function(maximumCoverage, trimFromAlt=2, trimFromRef=1, trimExtraPerCoverage=0.1) {
+#' @family hetScore
+calculateHetScoreTestStatisticPerCoverage <- function(maximumCoverage, trimFromAlt=2, trimFromRef=1, trimExtraPerCoverage=0.1) {
   # This is binomial distribution (initially for coverage of 1)
   # We will use "Pascal's triangle" method of computing this distribution
   # for each coverage.
@@ -478,146 +670,3 @@ calculateLohTestStatisticPerCoverage <- function(maximumCoverage, trimFromAlt=2,
   return(valSave)
 }
 
-#' Summarize LOH levels per chromosome arm
-#'
-#' @param seqValsTotal Calculated values, 30K binned, list of one array per chromosome
-#' @param centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
-#' @param coords Coordinate system from rgd
-#' @param chromosomes List of chromosomes to calculate the value for (by default all but Y)
-#' @param noPArm Do not return calculation for these p arms
-#'
-#' @return data.frame with chr, arm, val columns
-#'
-#' @export
-#'
-#' @family loh
-lohSummary <- function(seqValsTotal, centroArray, coords, chromosomes=1:23, noPArm = c(13, 14, 15, 21, 22)) {
-  numChromosomes <- length(chromosomes)
-
-  pVals <- chromosomes * 0
-  qVals <- chromosomes * 0
-
-  binSize <- 30000
-
-  densityRange <- c(0.01, 1.2) # This is where we smooth our values to look for peak
-  densityN <- 5000 # How smoothly to estimate density
-
-  for (i in chromosomes) {
-    # Separate values for bins for p and q arms
-    centromereStartBin <- floor(centroArray[i,1]/binSize)
-    centromereEndBin <- floor(centroArray[i,2]/binSize)
-    chromosomeEndBin <- floor((coords@chromEnd[i]-coords@chromStart[i]+1)/binSize)
-
-    lohTempP <- (seqValsTotal[[i]])[seqFwd(1, centromereStartBin)]
-    lohTempQ <- (seqValsTotal[[i]])[seqFwd(centromereEndBin, chromosomeEndBin)]
-
-    denseP <- density(lohTempP,from=densityRange[1],to=densityRange[2],n=densityN)
-    denseQ <- density(lohTempQ,from=densityRange[1],to=densityRange[2],n=densityN)
-
-    pVals[i] <- denseP$x[which.max(denseP$y)]
-    qVals[i] <- denseQ$x[which.max(denseQ$y)]
-
-    # print(paste(i,denseP$x[which.max(denseP$y)],denseQ$x[which.max(denseQ$y)]))
-  }
-
-  # Serialize the p and q arm values into one long vector (1p, 1q, 2p, 2q, ... 23q)
-  # The as.vector trick turns a data.frame into a long list by reading out values by column
-  chrOut <- as.vector(rbind(chromosomes, chromosomes))
-  armOut <- as.vector(rbind(rep("p", numChromosomes), rep("q", numChromosomes)))
-  valOut <- as.vector(rbind(pVals,qVals))
-  lohPerArm <- data.frame(chr=chrOut, arm=armOut, val=valOut)
-  # Drop the missing p arms
-  lohPerArm <- lohPerArm[lohPerArm[,"arm"]!="p" | (!(lohPerArm[,"chr"] %in% noPArm)),,drop=FALSE]
-  rownames(lohPerArm) <- NULL # Otherwise indexing fails
-
-  return(lohPerArm)
-}
-
-#' Plot the heterozygosity scores for evaluating LOH, summary values
-#'
-#' @param lohPerArm A matrix with chr, arm and val columns
-#' @param rgdObject To convert chromosome number to text
-#' @param lohMean Mean expected value
-#' @param lohStDev standard deviation of the loh values
-#' @param yMap A function that turns the actual y value into a position on screen
-#'
-#' @export
-#'
-#' @family loh
-#'
-#' @example inst/examples/lohSummaryPlotExample.R
-lohSummaryPlot <- function(lohPerArm, rgdObject, coords, lohMean=0.9875, lohStDev=0.0125, yMap=function(y) { 2 ^ (10*y) }) {
-  dataYRange <- c(0, 1) # Where the data falls
-
-  extraPercentOnTop <- 0.16 # Take the range, add this much on top for labels
-
-  yRange <- yMap(dataYRange) # Range of our plot
-  yRangeWithLabel <- c(yRange[1], yRange[1] + (yRange[2]-yRange[1]) * (1+extraPercentOnTop))
-
-  chromsToPlot <- unique(sort(as.integer(lohPerArm[,'chr'])))
-  chrCharacters <- convertChromToCharacter(chromsToPlot,rgdObject = rgdObject) # required for X aka 23
-  maxX <- max(coords@chromEnd[coords@maxcn])
-  plot(c(0,0),c(0,0), type="n",  xaxs="i",
-       xlim=c(1,maxX),
-       ylim=yRangeWithLabel,
-       xaxt="n",
-       yaxt="n",
-       ylab="Heterozygosity Score", xlab='')
-  title(xlab='chromosome', line=0)
-  ticksPosition <- seq(dataYRange[1], dataYRange[2], 0.05)
-  axis(side = 2,
-       at=yMap(ticksPosition),
-       labels= ticksPosition)
-
-  ## reference lines for LOH analysis
-  abline(h=yMap(dataYRange[2]),      col='green',lwd=1) # This is where we should be in theory
-  abline(h=yMap(lohMean - lohStDev),            col='blue', lwd=1) # 1 stdev from mean
-  abline(h=yMap(lohMean - 2*lohStDev), col='red',  lwd=1) # 2 stdevs from mean
-
-
-  ## option for vertical lines/ticks for the chromosomes
-  # axis(side=3, at= coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
-
-  ## option for Zebra bars for the chromosomes. Draw first so the dots can go over
-  for(i in seq_len(length(chromsToPlot))) {
-    if(i%%2==1){
-      rect(xleft = coords@chromStart[i],
-           ybottom= yRangeWithLabel[1],
-           xright = coords@chromEnd[i],
-           ytop   = yRangeWithLabel[2]*1.04,
-           col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
-    }
-  }
-
-  # chr labels
-  chromLabelPos <- (coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2
-  names(chromLabelPos) <- chromsToPlot
-
-  pqLabelPos <- coords@chromStart[lohPerArm[,'chr']] +
-    (coords@chromEnd[lohPerArm[,'chr']] - coords@chromStart[lohPerArm[,'chr']]) *
-    ifelse(lohPerArm[,'arm']=='p', 0.25, 0.75)
-
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=0.85, lwd=0, padj=0) # Draw labels
-  axis(side=3, at=pqLabelPos, line=-2.6, labels = lohPerArm[,'arm'], cex.axis=0.66, tick = FALSE) # Draw labels
-  # pq labels and points
-  for(i in seq_len(nrow(lohPerArm))){
-    xArm <- pqLabelPos[i]
-    # Plot the values that are out of range as arrow pointing up/down
-    points(x=xArm,
-           y=yMap(pmin(dataYRange[2], pmax(dataYRange[1], lohPerArm[i,'val']))),
-           ylim=yRange,
-           pch=ifelse(lohPerArm[i,'val'] < dataYRange[1], 25,
-                      ifelse(lohPerArm[i,'val'] > dataYRange[2], 24, 16)), col="darkmagenta", bg="magenta")
-  }
-
-}
-
-
-#' Run LOH analysis
-#'
-#' @family command
-#'
-#' @export
-lohAnalysisCmd <- function(args = commandArgs(TRUE)) {
-  bmdCommand("lohAnalysis", args)
-}
