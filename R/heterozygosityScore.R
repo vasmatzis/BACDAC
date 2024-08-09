@@ -53,7 +53,7 @@ calculateHetScore <- function(
   # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
   if(!dir.exists(file.path(outputDir, 'reports'))){
     dir.create(path = file.path(outputDir, 'reports'))
-    logging::loginfo('creating output directory: \n\t%s:', file.path(outputDir, 'reports'))
+    loginfo('creating output directory: \n\t%s:', file.path(outputDir, 'reports'))
   }
   hetScorePerArmFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))
   hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
@@ -163,7 +163,7 @@ calculateHetScore <- function(
     outputDir=outputDir,
     noPdf=noPdf)
 
-  logging::loginfo("END OF SCRIPT")
+  loginfo("END OF SCRIPT")
 }
 
 #' Save the binned results of \code{calculateHetScore} as a wig file
@@ -193,10 +193,10 @@ saveHetScoreToWig <- function(wigFile, seqListTotal, seqValsTotal, chromsToSave,
 
   if(!dir.exists(dirname(wigFile))){
     dir.create(path = dirname(wigFile))
-    logging::loginfo('creating output directory: \n\t%s:', dirname(wigFile))
+    loginfo('creating output directory: \n\t%s:', dirname(wigFile))
   }
   rtracklayer::export.wig(object = grange, con = wigFile)
-  logging::loginfo('wrote hetScore per 30kb bin to wig file: \n\t%s', wigFile)
+  loginfo('wrote hetScore per 30kb bin to wig file: \n\t%s', wigFile)
 }
 
 
@@ -258,11 +258,11 @@ makeAndSaveHetScorePerArm <- function(hetScorePerArmFile, seqValsTotal, chromsTo
 
   if(!dir.exists(dirname(hetScorePerArmFile))){
     dir.create(path = dirname(hetScorePerArmFile))
-    logging::loginfo('creating output directory: \n\t%s:', dirname(hetScorePerArmFile))
+    loginfo('creating output directory: \n\t%s:', dirname(hetScorePerArmFile))
   }
 
   write.csv(hetScorePerArm, file=hetScorePerArmFile)
-  logging::loginfo('wrote hetScore per arm to csv file: \n\t%s', hetScorePerArmFile)
+  loginfo('wrote hetScore per arm to csv file: \n\t%s', hetScorePerArmFile)
 
   return(hetScorePerArm)
 }
@@ -316,7 +316,7 @@ makeHetScoreReportPdf <- function(segmentationFile,
     requiredColumns=c('chr', 'start', 'end','rd')
     missingColumnKey=which(!requiredColumns %in% names(segments))
     if(length(missingColumnKey)>0){
-      logging::logerror('missing required column: %s',requiredColumns[missingColumnKey])
+      logerror('missing required column: %s',requiredColumns[missingColumnKey])
     }
 
     # cnvMetadata <- readMetadata(cnvIntervalsFile)
@@ -327,7 +327,7 @@ makeHetScoreReportPdf <- function(segmentationFile,
     # }
 
   }else{
-    logging::logerror('missing segmentation file: %s', segmentationFile)
+    logerror('missing segmentation file: %s', segmentationFile)
   }
 
   if(FALSE){
@@ -356,11 +356,11 @@ makeHetScoreReportPdf <- function(segmentationFile,
     # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
     if(!dir.exists(file.path(outputDir, 'reports'))){
       dir.create(path = file.path(outputDir, 'reports'))
-      logging::loginfo('creating output directory for hetScoreReport PDF: \n\t%s:', file.path(outputDir, 'reports'))
+      loginfo('creating output directory for hetScoreReport PDF: \n\t%s:', file.path(outputDir, 'reports'))
     }
     hetScoreReportPdf <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScoreReport.pdf'))
     pdf(file=hetScoreReportPdf, width=11, height=8,  paper="a4r", title=paste0('hetScoreReport_',sampleId))
-    logging::loginfo('writing hetScore report to PDF: \n\t%s:', hetScoreReportPdf)
+    loginfo('writing hetScore report to PDF: \n\t%s:', hetScoreReportPdf)
   }
 
   op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext
