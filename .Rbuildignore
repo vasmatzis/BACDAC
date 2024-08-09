@@ -2,3 +2,5 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^README\.Rmd$
+^notes\.R$
+^R/notes1\.R$
