@@ -20,9 +20,8 @@
 #' sampleId='TCGA-14-1402-02A_ds'
 #' inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'
 #' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-#' segmentationFile=
 #'
-#' @example inst/examples/calculateHetScoreExample.R
+#'
 #'  sampleId='TCGA-14-1402-02A_ds'
 #'  inputDir <- system.file('extdata', package = "BACDAC")
 #'  outputDir <- tempdir()
@@ -35,7 +34,9 @@
 #'    logerror('missing required column: %s',requiredColumns[missingColumnKey])
 #'  }
 #'  noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1;trimExtraPerCoverage = 0.1;minSnpsToCalculateStatistic = 20;samplingStep = 30000;extraWindow = 1000000
-
+#'
+#' @example inst/examples/calculateHetScoreExample.R
+#'
 #' @export
 calculateHetScore <- function(
     sampleId,

@@ -52,7 +52,20 @@ To plot see \link{plotHetScorePerBin} and the three graph plot function \link{ma
 sampleId='TCGA-14-1402-02A_ds'
 inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'
 outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-segmentationFile=
+
+
+ sampleId='TCGA-14-1402-02A_ds'
+ inputDir <- system.file('extdata', package = "BACDAC")
+ outputDir <- tempdir()
+ segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+ segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE)
+ # check for required columns
+ requiredColumns=c('chr', 'start', 'end','rd')
+ missingColumnKey=which(!requiredColumns \%in\% names(segmentation))
+ if(length(missingColumnKey)>0){
+   logerror('missing required column: \%s',requiredColumns[missingColumnKey])
+ }
+ noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1;trimExtraPerCoverage = 0.1;minSnpsToCalculateStatistic = 20;samplingStep = 30000;extraWindow = 1000000
 
 \dontrun{
 
