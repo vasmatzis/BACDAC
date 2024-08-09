@@ -41,7 +41,9 @@ calculateHetScore <- function(
   # loaded automatically: rgdObject, ideogram
 
   # maximumCoverage = 1000;  trimFromAlt = 2;  trimFromRef = 1;  trimExtraPerCoverage = 0.1;  minSnpsToCalculateStatistic = 20;  samplingStep = 30000;  extraWindow = 1000000
+
   # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 
   mainChroms <- 1:24
   # We skip Y chromosome because hetScore does not make much sense there
@@ -63,11 +65,31 @@ calculateHetScore <- function(
   seqListTotal <- list()
   seqValsTotal <- list()
 
+
+  # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
+  inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
+  loginfo('loading from inputDir: %s', inputDir)
+
   for (i in mainChromsNoY) {
-    logging::logdebug('loading data for chrom %i',i)
-    # TODO this could be problematic if the user doesn't save it with the same variable!
-    load(file.path(inputDir,    paste0(sampleId, '_snpVals_',i,'.Rdata')), verbose = TRUE) # snpFull
-    load(file.path(inputDir,paste0(sampleId, '_countBP_',i,'.Rdata')), verbose = TRUE) # countBPFull
+    loginfo('loading chrom %i',i)
+    ichrChar=convertChromToCharacter(i)
+
+
+    if(inputDirIsNextGenProjects){
+      # loading .Rdata output from bmdSvPipeline using bmdSvPipeline functions
+      snpFull= bmdTools::loadRdata(file.path(inputDir,    paste0(sampleId, '_snpVals_',i,'.Rdata')), verbose = TRUE) # snpFull
+      countBPFull = bmdTools::loadRdata(file.path(inputDir,paste0(sampleId, '_countBP_',i,'.Rdata')), verbose = TRUE) # countBPFull
+
+      iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
+    }else{
+      # loading BACDAC .Rds inputs
+      iFile=file.path(inputDir,'data', paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
+      loginfo('%i loading %s',i, iFile)
+
+      iRefAltCount = readRDS(file=iFile )
+      countBPFull=iRefAltCount[,c('ref', 'alt')]
+      snpFull=iRefAltCount[,'pos']
+    }
 
     # Determine total coverage (how many times we see the ref/alt alleles)
     covVals <- countBPFull[['ref']] + countBPFull[['alt']]
