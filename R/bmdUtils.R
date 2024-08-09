@@ -29,7 +29,7 @@ getLinearCoordinates <- function(rgdObject, chromosomes=1:24) {
 #'
 #' @param chroms A vector of reference sequence numbers for the chromosomes being used
 #' @param chromStart A vector of all chromosome start positions in linear coordinates.
-#' @param chromEnd A vector of all chromosome end positions in linear coordinates
+#' @param chromEnd A vector of all chromosome positions in linear coordinates
 #'
 #' @return \link{linearCoordinates} class
 #'

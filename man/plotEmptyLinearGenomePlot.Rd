@@ -4,10 +4,12 @@
 \alias{plotEmptyLinearGenomePlot}
 \title{create a plot to fill the empty space for now}
 \usage{
-plotEmptyLinearGenomePlot(chromsToPlot)
+plotEmptyLinearGenomePlot(chromsToPlot, coords)
 }
 \arguments{
-\item{chromsToPlot}{Vector of chromosome numbers to plot}
+\item{chromsToPlot}{vector of chromosome (as integers) to plot}
+
+\item{coords}{object describing linear coordinate space for the chromosomes}
 }
 \description{
 create a plot to fill the empty space for now

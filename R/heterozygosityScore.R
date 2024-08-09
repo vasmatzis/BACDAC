@@ -334,7 +334,7 @@ makeHetScoreReportPdf <- function(segmentationFile,
     # allelicSegData should be loaded in, not created
 
     # load allelicSegData if possible
-
+    postProcessingDir=bmdSvPipeline::getPostProcessingDir(sampleId=sampleId)
     if(!is.null(normalPeakMethod)){
       if(normalPeakMethod=='ploidyBased'){
         ploidySegments <- bmdSvPipeline::getPloidySegments(postProcessingDir, sampleId, stopIfNoPloidySegments=stopIfNoPloidySegments) # load this separately to do all the checks and stuff
@@ -375,7 +375,7 @@ makeHetScoreReportPdf <- function(segmentationFile,
       cnvIntervals=segments,
       allelicSegData=allelicSegData)
   }else{
-    plotEmptyLinearGenomePlot(chromsToPlot=mainChromsNoY)
+    plotEmptyLinearGenomePlot(chromsToPlot=mainChromsNoY,coords=coords)
   }
 
   # annotate with title and sampleId in the upper left
@@ -406,8 +406,9 @@ makeHetScoreReportPdf <- function(segmentationFile,
 
 #' create a plot to fill the empty space for now
 #'
-#' @param chromsToPlot Vector of chromosome numbers to plot
-plotEmptyLinearGenomePlot <- function(chromsToPlot){
+#' @param chromsToPlot vector of chromosome (as integers) to plot
+#' @param coords object describing linear coordinate space for the chromosomes
+plotEmptyLinearGenomePlot <- function(chromsToPlot,coords){
   # Get a plot started
   maxX <- max(coords@chromEnd[coords@maxcn])
   plot(x=0, y=0, type="n",
@@ -500,8 +501,8 @@ plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
     minorZeroSegments <- allelicSegData[which(allelicSegData$minor==0 & allelicSegData$major>=2),]
     if(nrow(minorZeroSegments)>0){
       # convert to linear coordinates
-      linPosStart <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
-      linPosEnd   <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
+      linPosStart <- abs(bmdSvPipeline::bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
+      linPosEnd   <- abs(bmdSvPipeline::bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
 
       yloc <- par('usr')[3]/2 # to put it just below 0 but still on the plot
       # add allele=0 segments to plot and data.frame

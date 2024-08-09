@@ -11,7 +11,7 @@ linearCoordinates(chroms, chromStart, chromEnd)
 
 \item{chromStart}{A vector of all chromosome start positions in linear coordinates.}
 
-\item{chromEnd}{A vector of all chromosome end positions in linear coordinates}
+\item{chromEnd}{A vector of all chromosome positions in linear coordinates}
 }
 \value{
 \link{linearCoordinates} class
