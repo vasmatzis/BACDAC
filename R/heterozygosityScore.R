@@ -6,7 +6,7 @@
 #' @param sampleId sample identifier, used as prefix for all input and output file names \code{<sampleId>_snpVals_<chromosome>.Rdata} and \code{<sampleId>_countBP_<chromosome>.Rdata}
 #' @param inputDir full path to snpVal and countBP Rdata
 #' @param outputDir full path for output files
-#' @param segmentationFile segmentation file for read depth, cnv data with required columns: chr, start, end, rd
+#' @param segmentation read depth data.frame with required columns: chr, start, end, rd
 #' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
 #' @param maximumCoverage Do not process SNPs covered more than this
 #' @param trimFromAlt Bins to discard from the 'alt' side of the distribution
@@ -21,12 +21,27 @@
 #' inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'
 #' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 #' segmentationFile=
+#'
+#' @example inst/examples/calculateHetScoreExample.R
+#'  sampleId='TCGA-14-1402-02A_ds'
+#'  inputDir <- system.file('extdata', package = "BACDAC")
+#'  outputDir <- tempdir()
+#'  segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+#'  segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE)
+#'  # check for required columns
+#'  requiredColumns=c('chr', 'start', 'end','rd')
+#'  missingColumnKey=which(!requiredColumns %in% names(segmentation))
+#'  if(length(missingColumnKey)>0){
+#'    logerror('missing required column: %s',requiredColumns[missingColumnKey])
+#'  }
+#'  noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1;trimExtraPerCoverage = 0.1;minSnpsToCalculateStatistic = 20;samplingStep = 30000;extraWindow = 1000000
+
 #' @export
 calculateHetScore <- function(
     sampleId,
     inputDir,
     outputDir=inputDir,
-    segmentationFile,
+    segmentation=NULL,
     noPdf = FALSE,
     maximumCoverage = 1000,
     trimFromAlt = 2,
@@ -38,7 +53,7 @@ calculateHetScore <- function(
 ) {
   # inst/examples/lohAnalysisExample.R
 
-  # loaded automatically: rgdObject, ideogram
+  # sysdata loaded automatically: rgdObject, ideogram
 
   # maximumCoverage = 1000;  trimFromAlt = 2;  trimFromRef = 1;  trimExtraPerCoverage = 0.1;  minSnpsToCalculateStatistic = 20;  samplingStep = 30000;  extraWindow = 1000000
 
@@ -55,6 +70,7 @@ calculateHetScore <- function(
     dir.create(path = file.path(outputDir, 'reports'))
     loginfo('creating output directory: \n\t%s:', file.path(outputDir, 'reports'))
   }
+  # specify output file names
   hetScorePerArmFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))
   hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
 
@@ -68,7 +84,7 @@ calculateHetScore <- function(
 
   # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
   inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
-  loginfo('loading from inputDir: %s', inputDir)
+  loginfo('loading ref and alt counts from dir: %s', inputDir)
 
   for (i in mainChromsNoY) {
     loginfo('loading chrom %i',i)
@@ -83,7 +99,7 @@ calculateHetScore <- function(
       iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
     }else{
       # loading BACDAC .Rds inputs
-      iFile=file.path(inputDir,'data', paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
+      iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
       loginfo('%i loading %s',i, iFile)
 
       iRefAltCount = readRDS(file=iFile )
@@ -155,7 +171,7 @@ calculateHetScore <- function(
 
   # make plot with segmentation, hetScore by bin, hetScore by arm
   makeHetScoreReportPdf(
-    segmentationFile,
+    segmentation,
     allelicSegData=NULL,
     hetScorePerBinWigFile=hetScorePerBinWigFile,
     hetScorePerArmFile=hetScorePerArmFile,
@@ -283,51 +299,39 @@ loadHetScoreFromWig <- function(wigFile) {
 #'
 #' Will show 3 separate plots contrasting CNV, heterozygosity score per 30K and heterozygosity score per arm.
 #'
-#' @param segmentationFile segmentation file for read depth, cnv data with required columns: chr, start, end, rd
+#' @param segmentation read depth data.frame with required columns: chr, start, end, rd
 #' @param allelicSegData allele specific segmentation file
 #' @param hetScorePerBinWigFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
 #' @param hetScorePerArmFile full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}
 #' @param sampleId sample id, will be used as the prefix for all input and output file names
 #' @param outputDir full path for output files
 #' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
-#' @examples
-#'   segmentationFile <-
-#'   '/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/cnv/TCGA-14-1402-02A_ds_cnvIntervals.csv'
+#'
 #' @export
-makeHetScoreReportPdf <- function(segmentationFile,
-                                  allelicSegData=NULL,
-                                  hetScorePerBinWigFile,
+makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
                                   hetScorePerArmFile,
+                                  segmentation=NULL,
+                                  allelicSegData=NULL,
                                   sampleId,
                                   outputDir,
                                   noPdf) {
-  # previously called makeLohFullReportPdf and called from genomePlot in svaTools pipeline
+  # previously named makeLohFullReportPdf and called from genomePlot in svaTools pipeline
 
   mainChroms <- 1:24
-  # We skip Y chromosome because LOH does not make much sense there
+  # We skip Y chromosome because hetScore does not make much sense there
   mainChromsNoY <- 1:23
   coords <- getLinearCoordinates(rgdObject, mainChroms)
 
-  # load segmentationFile (cnvIntervals)
-  if(file.exists(segmentationFile)) {
-    segments <- read.csv(segmentationFile,comment.char = '#', header = TRUE)
-
+  # check segmentation data (cnvIntervals)
+  if(is.null(segmentation)) {
+    logwarn('missing required input - segmentation - data frame, will not plot')
+  }else{
     # check for required columns
     requiredColumns=c('chr', 'start', 'end','rd')
-    missingColumnKey=which(!requiredColumns %in% names(segments))
+    missingColumnKey=which(!requiredColumns %in% names(segmentation))
     if(length(missingColumnKey)>0){
-      logerror('missing required column: %s',requiredColumns[missingColumnKey])
+      logerror('segmentation data is missing required column: %s',requiredColumns[missingColumnKey])
     }
-
-    # cnvMetadata <- readMetadata(cnvIntervalsFile)
-    # if(!is.null(cnvMetadata[['normalPostProcessingDir']])) {
-    #   normalPeakMethod <- cnvMetadata[['normalPeakMethod']]
-    # }else{
-    #   logwarn('missing normalPeakMethod from cnvIntervals metadata')
-    # }
-
-  }else{
-    logerror('missing segmentation file: %s', segmentationFile)
   }
 
   if(FALSE){

@@ -8,7 +8,7 @@ calculateHetScore(
   sampleId,
   inputDir,
   outputDir = inputDir,
-  segmentationFile,
+  segmentation = NULL,
   noPdf = FALSE,
   maximumCoverage = 1000,
   trimFromAlt = 2,
@@ -26,7 +26,7 @@ calculateHetScore(
 
 \item{outputDir}{full path for output files}
 
-\item{segmentationFile}{segmentation file for read depth, cnv data with required columns: chr, start, end, rd}
+\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd}
 
 \item{noPdf}{When TRUE, pdf files will not be generated, instead plots are drawn on default device}
 
@@ -53,4 +53,34 @@ sampleId='TCGA-14-1402-02A_ds'
 inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'
 outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 segmentationFile=
+
+\dontrun{
+
+  library(BACDAC)
+  # calculateHetScoreExample.R
+  basicConfig("DEBUG")
+  sampleId='TCGA-14-1402-02A_ds'
+  inputDir <- system.file('extdata', package = "BACDAC")
+  dir(inputDir)
+  outputDir <- tempdir()
+
+  segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+  if(file.exists(segmentationFile)){
+    segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE)
+
+    # check for required columns
+    requiredColumns=c('chr', 'start', 'end','rd')
+    missingColumnKey=which(!requiredColumns \%in\% names(segmentation))
+    if(length(missingColumnKey)>0){
+      logerror('missing required column: \%s',requiredColumns[missingColumnKey])
+    }
+  }
+
+  calculateHetScore(
+    sampleId,
+    inputDir,
+    outputDir=outputDir,
+    segmentation=segmentation,
+    noPdf = TRUE)
+}
 }

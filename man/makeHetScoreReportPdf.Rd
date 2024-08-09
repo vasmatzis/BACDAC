@@ -5,23 +5,23 @@
 \title{Make 3-subplot hetScore analysis PDF}
 \usage{
 makeHetScoreReportPdf(
-  segmentationFile,
-  allelicSegData = NULL,
   hetScorePerBinWigFile,
   hetScorePerArmFile,
+  segmentation = NULL,
+  allelicSegData = NULL,
   sampleId,
   outputDir,
   noPdf
 )
 }
 \arguments{
-\item{segmentationFile}{segmentation file for read depth, cnv data with required columns: chr, start, end, rd}
-
-\item{allelicSegData}{allele specific segmentation file}
-
 \item{hetScorePerBinWigFile}{full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}}
 
 \item{hetScorePerArmFile}{full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}}
+
+\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd}
+
+\item{allelicSegData}{allele specific segmentation file}
 
 \item{sampleId}{sample id, will be used as the prefix for all input and output file names}
 
@@ -31,8 +31,4 @@ makeHetScoreReportPdf(
 }
 \description{
 Will show 3 separate plots contrasting CNV, heterozygosity score per 30K and heterozygosity score per arm.
-}
-\examples{
-  segmentationFile <-
-  '/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/cnv/TCGA-14-1402-02A_ds_cnvIntervals.csv'
 }
