@@ -13,7 +13,9 @@ saveHetScoreToWig(
 )
 }
 \arguments{
-\item{wigFile}{full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}}
+\item{wigFile}{full Path to wig output file containing the Heterozygosity Score per bin as calculated by \code{calculateHetScore}}
+
+\item{seqListTotal}{Start position for each 30K bin, 1 based, list of one array per chromosome}
 
 \item{seqValsTotal}{Calculated values, 30K binned, list of one array per chromosome}
 

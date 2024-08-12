@@ -5,7 +5,6 @@
   basicConfig("DEBUG")
   sampleId='TCGA-14-1402-02A_ds'
   inputDir <- system.file('extdata', package = "BACDAC")
-  dir(inputDir)
   outputDir <- tempdir()
 
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))

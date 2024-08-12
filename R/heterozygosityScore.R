@@ -59,7 +59,7 @@ calculateHetScore <- function(
   # maximumCoverage = 1000;  trimFromAlt = 2;  trimFromRef = 1;  trimExtraPerCoverage = 0.1;  minSnpsToCalculateStatistic = 20;  samplingStep = 30000;  extraWindow = 1000000
 
   # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-  # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/data'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 
   mainChroms <- 1:24
   # We skip Y chromosome because hetScore does not make much sense there
@@ -69,7 +69,7 @@ calculateHetScore <- function(
   # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
   if(!dir.exists(file.path(outputDir, 'reports'))){
     dir.create(path = file.path(outputDir, 'reports'))
-    loginfo('creating output directory: \n\t%s:', file.path(outputDir, 'reports'))
+    logdebug('creating output directory: \n\t%s:', file.path(outputDir, 'reports'))
   }
   # specify output file names
   hetScorePerArmFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))
@@ -185,8 +185,8 @@ calculateHetScore <- function(
 
 #' Save the binned results of \code{calculateHetScore} as a wig file
 #'
-#' @param wigFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
-#' @param seqListTotal
+#' @param wigFile full Path to wig output file containing the Heterozygosity Score per bin as calculated by \code{calculateHetScore}
+#' @param seqListTotal Start position for each 30K bin, 1 based, list of one array per chromosome
 #' @param seqValsTotal Calculated values, 30K binned, list of one array per chromosome
 #' @param chromsToSave List of chromosomes to calculate the value for (by default all but Y)
 #' @param samplingStep Only uniformly sampled data can be used, use this sampling step
@@ -210,10 +210,10 @@ saveHetScoreToWig <- function(wigFile, seqListTotal, seqValsTotal, chromsToSave,
 
   if(!dir.exists(dirname(wigFile))){
     dir.create(path = dirname(wigFile))
-    loginfo('creating output directory: \n\t%s:', dirname(wigFile))
+    logdebug('creating output directory: \n\t%s:', dirname(wigFile))
   }
   rtracklayer::export.wig(object = grange, con = wigFile)
-  loginfo('wrote hetScore per 30kb bin to wig file: \n\t%s', wigFile)
+  logdebug('wrote hetScore per 30kb bin to wig file: \n\t%s', wigFile)
 }
 
 
@@ -365,7 +365,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
     }
     hetScoreReportPdf <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScoreReport.pdf'))
     pdf(file=hetScoreReportPdf, width=11, height=8,  paper="a4r", title=paste0('hetScoreReport_',sampleId))
-    loginfo('writing hetScore report to PDF: \n\t%s:', hetScoreReportPdf)
+    logdebug('writing hetScore report to PDF: \n\t%s:', hetScoreReportPdf)
   }
 
   op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext

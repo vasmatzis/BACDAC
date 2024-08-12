@@ -29,3 +29,4 @@ Imports:
     graphics,
     methods,
     utils
+LazyData: true
