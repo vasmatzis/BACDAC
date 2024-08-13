@@ -95,6 +95,48 @@ binnedPosStart <- function(pos, binSize=1000) {
   return(trunc((pos-1)/binSize)+1)
 }
 
+
+#' Translate from BIMA coordinates to linear genome.
+#'
+#' Translate a list of BIMA chromosomes (svaNumbers) and BIMA positions to the
+#' linear genome coordinates. The linear genome starts at position 1 and
+#' consists of all sequences in linear order.
+#'
+#' @param rgd Reference Genome Descriptor
+#' @param svaNumber BIMA chromosome number (as present in the SVA file)
+#' @param svaPos Position within the sequence (1-based)
+#' @param binSize How to round the coordinates. The result will be divided by this number.
+#' Note - recreates a bug in George's code at the moment,
+#' so the result can be up to binSize away from what you'd expect.
+#'
+#' @return Linear genome position (1-based). For negative \code{svaPos}
+#' return negative number.
+#'
+#' @note Fix the bug with binSize rounding in two passes
+#'
+#' @note \code{bimaToLinear(rgd, svaNumber, abs(svaPos), binSize=10000)} replaces
+#' the original \code{conver10Kserial(svaPos, svaNumber)}
+#'
+#' @family coordinates
+#'
+#' @export
+bimaToLinear <- function(rgd, svaNumber, svaPos, binSize=1)
+{
+  # checkSvaNumber(svaNumber)
+
+  # store signs of the positions and take absolute values
+  posSign <- as.numeric(svaPos>=0)*2-1 # Convert >=0 to 1, <0 to -1
+  svaPos <- pmax(0, abs(svaPos)-1) # Clamp because inconsistency of BIMA
+
+  # Convert BIMA coordinates to global ones
+  globalPos <- trunc((rgd$globalCoordinates$svaOffset[svaNumber+1]-1)/binSize)+trunc(svaPos/binSize)+1
+
+  return(globalPos * posSign)
+}
+
+
+
+
 #' For given position and bin size, return the binned position
 #'
 #' This is done for consistency. There are many off by one errors

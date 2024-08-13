@@ -2,7 +2,7 @@ if(FALSE){
   folder=66301
   sampleId=bmdSvPipeline::getSampleId(folder)
   postProcessingDir=bmdSvPipeline::getPostProcessingDir(folder)
-  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
   outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
 
   # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
@@ -21,9 +21,10 @@ if(FALSE){
   # convert <sampleId>_cnvIntervals.csv to <sampleId>_segmentation.csv
   # /research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/cnv/TCGA-14-1402-02A_ds_cnvIntervals.csv
   outputDir = system.file('extdata', package = "BACDAC")
-  oldFileNamePath=file.path(postProcessingDir, 'cnv', paste0(sampleId,'_cnvIntervals.csv'))
-  # newFileNamePath=file.path(outputDir, 'data', paste0(sampleId,'_segmentation.csv'))
+  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
   newFileNamePath=file.path(outputDir,  paste0(sampleId,'_segmentation.csv'))
+
+  oldFileNamePath=file.path(postProcessingDir, 'cnv', paste0(sampleId,'_cnvIntervals.csv'))
   cpCmd = paste('cp', oldFileNamePath, newFileNamePath)
   if(file.exists(oldFileNamePath)){
     params <- c(oldFileNamePath, newFileNamePath)
@@ -65,7 +66,35 @@ if(FALSE){
   # [m071478@mforgers3 data]$ du -hs
   # 108M    .
 
+  ### frequency array 1Kb, 30Kb, 100Kb ---------------
+  folder=66301
+  sampleId=bmdSvPipeline::getSampleId(folder)
+  postProcessingDir=bmdSvPipeline::getPostProcessingDir(folder)
+  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
 
+  cnvBinnedFile <- file.path(postProcessingDir, 'cnv/cnvBinned.Rdata')
+  if(file.exists(cnvBinnedFile)){
+    cnvBinnedData <- loadRdata(cnvBinnedFile)
+  }else{
+    logerror('cant find cnvBinned file: %s', cnvBinnedFile)
+  }
+  outputWsz <- 1000
+  readDepthPer1kbBin <- bmdSvPipeline:::getFreqArrayFromCnvBinned(cnvBinnedData, newWindowSize=outputWsz, maxChrom=24)
+  oneKbFile=file.path(outputDir, paste0(sampleId,'_','readDepthPer1kbBin.Rds'))
+  loginfo('writing %s',oneKbFile)
+  saveRDS(readDepthPer1kbBin, file=oneKbFile )
+
+  wszLinear <- 30000
+  readDepthPer30kbBin <- bmdSvPipeline:::getFreqArrayFromCnvBinned(cnvBinnedData, newWindowSize=wszLinear, maxChrom=24)
+  thirtyKbFile=file.path(outputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+  loginfo('writing %s',thirtyKbFile)
+  saveRDS(readDepthPer30kbBin, file=thirtyKbFile )
+
+  wszPeaks <- 1000000
+  readDepthPer100kbBin <- bmdSvPipeline:::getFreqArrayFromCnvBinned(cnvBinnedData, newWindowSize=wszPeaks, maxChrom=22)
+  oneHundredKbFile=file.path(outputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
+  loginfo('writing %s',oneHundredKbFile)
+  saveRDS(readDepthPer1kbBin, file=oneHundredKbFile )
 
 
 }
