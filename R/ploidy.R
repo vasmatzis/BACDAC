@@ -2,7 +2,8 @@
 #'
 #' peaks are returned in order of read depth with most common (highest frequency) read depth peak listed first
 #'
-#' @param sampleId sampleId
+#' @param sampleId sample Identifier
+#' @param folderId secondary sample identifier
 #' @param rgdObject loaded rgd file as an object
 #' @param cnvBinnedData binned copy number variant (actually read depth) values, linear coordinates, with normal
 #' @param segmentation identified regions of the genome with constant read depth
@@ -11,15 +12,13 @@
 #' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location) set to -1 to use main Peak width
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
 #' @param qualityPostNorm used to determine grabDataPercentMax
-peaksByDensity <-function(sampleId, readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
-                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,numChroms=numChroms,folderId=NULL){
+peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
+                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,folderId=NULL){
   # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
   # peaksByDensity(sampleId,  rgdObject, cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08,pause=F);
   #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; pause=F;origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
 
-  xind <-23 # index of chrX
   coords <- getLinearCoordinates(rgdObject, chromosomes = 1:numChroms)
-  maxcn <- numChroms
 
   ### get frequency array ---------------
   frqToUse <- readDepthPer100kbBin$readDepthArray
@@ -552,8 +551,6 @@ digitalGrid <- function(peakInfo, gridHeights,
         text(dPeaks,rep((yMin-.02),length(nCopyPeaks_dig)),labels=nCopyPeaks_dig)
         mtext(3, text=paste('penaltyCoefForAddingGrids:',penaltyCoefForAddingGrids),adj=0, line=-1)
         mtext(3, text=paste0('numOfGridCoordsToTest: ',numOfGridCoordsToTest),adj=0, line=-2)
-        # mtext(3, text=paste0('firstPeakPenaltyCoefMin: ',firstPeakPenaltyCoefMin),adj=0, line=-2)
-        mtext(3, text=paste('grid-ness:',round(maxSum/length(dPeaks),2)),adj=0, line=-3)
         mtext(3, text=paste('minPeriod:',minPeriod),adj=0, line=-4)
         mtext(3, text=paste('period:',maxPeriod),adj=0, line=-5)
 
@@ -948,7 +945,7 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @return expReadsIn2NPeak_1bp, percentTumor,peakInfo, hetScoreQuantiles
 #'
 #' @export
-calculatePloidy <- function(sampleId, outputDir,
+calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
                             readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
                             segmentation, segmentationBinSize=30000,
                             hetScoreData,
@@ -960,7 +957,8 @@ calculatePloidy <- function(sampleId, outputDir,
                             minReasonableSegmentSize=5.5e6,
                             omitAnnotations = FALSE,
                             heterozygosityScoreThreshold=0.98,  # If segment hetScore is more than this, the segment is heterozygous
-                            allowedTumorPercent = 106
+                            allowedTumorPercent = 106,
+                            hsNormMat=NULL
 ){
   ### defaults passed into cnvDetect
   # dPeaksCutoff=0.01; penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1; pause=FALSE; skipExtras=FALSE; heterozygosityScoreThreshold=0.98
@@ -1053,7 +1051,13 @@ calculatePloidy <- function(sampleId, outputDir,
          xlab="Heterozygosity Score",
          ylab="pkmod: mean read depth per segment normalized by 1st digital peak",
          main=segmentCountText)
-    mtext(3, text=c(sampleId, folderId),adj=c(0,1))
+    if(!is.null(folderId)){
+      mtext(3, text=c(sampleId, folderId),adj=c(0,1))
+    }else{
+      mtext(3, text=c(sampleId),adj=c(0))
+    }
+
+
 
 
     # annotate normalized peak locations
@@ -1063,7 +1067,6 @@ calculatePloidy <- function(sampleId, outputDir,
          ytop    = peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak + digitalPeakZone,
          border = NA,  col="#f9edfa")
     box()
-    mtext(1, text=bimaVersion,            adj = 0, line=-1, cex=.9)
     mtext(1, text=paste('segData ploidy:', round(segmentPloidy,1)), adj = 0, line=-2, cex=.9)
 
 
@@ -1185,7 +1188,7 @@ calculatePloidy <- function(sampleId, outputDir,
   maxcn <- numChroms
 
   # TODO: do we still want/need this?
-  # lohMat   <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
+  # hsNormMat   <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata')) # aka lohMat
 
   ################################'
   ### peaks By density------
@@ -1200,7 +1203,7 @@ calculatePloidy <- function(sampleId, outputDir,
                               segmentation=segmentation, segmentationBinSize=segmentationBinSize,
                               grabDataPercentManual= grabDataPercentManual, origMaxPercentCutoffManual=origMaxPercentCutoffManual,
                               addAreaLinesToPlot=!omitAnnotations,qualityPostNorm=qualityPostNorm,pause=FALSE, omitAnnotations=omitAnnotations,
-                              numChroms=numChroms)
+                              folderId=folderId)
 
   #
   ####################'
@@ -1262,9 +1265,8 @@ calculatePloidy <- function(sampleId, outputDir,
     wsz <- 30000
 
     ### get frequency array ---------------
-    readDepthPerWindow30kbData <- getFreqArrayFromCnvBinned(cnvBinnedData, newWindowSize=wsz, maxChrom=22)
-    frq00 <- readDepthPerWindow30kbData$readDepthArray       # y axis
-    wdnsMSK00 <- readDepthPerWindow30kbData$goodWindowArray      # x axis
+    frq00 <- readDepthPer30kbBin$readDepthArray       # y axis
+    wdnsMSK00 <- readDepthPer30kbBin$goodWindowArray      # x axis
 
     getSegmentsWeWant <- function(segmentation,minReasonableSegmentSize, xind){
       segmentsWeWant <- which( segmentation[,'chr'] < xind &
@@ -1357,9 +1359,9 @@ calculatePloidy <- function(sampleId, outputDir,
         }
 
         segmentData[,'size'] <- segmentData$end - segmentData$start
-        loginfo('cnv segmentData was broken into smaller chunks: from %i to %i segments', nrow(segmentTemp), nrow(segmentData) )
+        loginfo('segmentData was broken into smaller chunks: from %i to %i segments', nrow(segmentTemp), nrow(segmentData) )
         if(minReasonableSegmentSizeStart!=minReasonableSegmentSizeFinal){
-          loginfo('start and final CNV segment size min: %i to  %i ', minReasonableSegmentSizeStart, minReasonableSegmentSizeFinal )
+          loginfo('start and final segment size min: %i to  %i ', minReasonableSegmentSizeStart, minReasonableSegmentSizeFinal )
         }
 
       }
@@ -1377,8 +1379,8 @@ calculatePloidy <- function(sampleId, outputDir,
   }
 
 
-  ### wrap steps to repeat into a function:
-  ### add 'nCopy' to peaksInfo, construct hetScoreQuantiles, calculate Tumor
+  #' wrap steps to repeat into a function:
+  #' add 'nCopy' to peaksInfo, construct hetScoreQuantiles, calculate Tumor
   repeatSteps <- function(peakInfo,keyHetScoresPerPeak,nCopyPeaks_step, allowed=allowedTumorPercent){
 
     ## 1 ## which peakRD_1bp (normPeak) is which of the dPeaks?
@@ -1388,9 +1390,9 @@ calculatePloidy <- function(sampleId, outputDir,
       peakInfo[key,'nCopy'] <- nCopyPeaks_step[i]
     }
 
-
     ## 2 ## HetScore quantile scores for each digital peak
-    hetScoreQuantiles <-  data.frame(sampleId, folderId,
+    hetScoreQuantiles <-  data.frame(sampleId,
+                                     folderId=ifelse(is.null(folderId),NA,folderId),
                                      'nCopy'=peakInfo$nCopy,
                                      keyHetScoresPerPeak )
 
@@ -1535,16 +1537,20 @@ calculatePloidy <- function(sampleId, outputDir,
                ylim = c(0,  yMaxPlot),
                xlim = c(0,  temp00chrEnd[maxcn]), # temp00chrEnd[maxcn] will extend the axis to the end of chrY rather than the end of the Y data
                xaxt="n", xaxs='i')
-          mtext(3, text=c(sampleId, folderId),adj=c(0,1))
+          if(!is.null(folderId)){
+            mtext(3, text=c(sampleId, folderId),adj=c(0,1))
+          }else{
+            mtext(3, text=c(sampleId),adj=c(0))
+          }
           markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, rgdObject=rgdObject, vCol='gray30')
         }
 
         # mean and median Het. score for each segment
-        # pkmod aka CNV,  normalized to the read depth of the first digital peak, if the first digital peak changes, pkmod will too
+        # pkmod,  read depth normalized to the read depth of the first digital peak, if the first digital peak changes, pkmod will too
         # valid (1 means both avg and median loh != 0)
 
         ### initialize "valid" as 0
-        # 0 = don't use this segment, LOH data is not valid avg and/or median = 0
+        # 0 = don't use this segment, hetScore data is not valid avg and/or median = 0
         # 1 = valid, will be filled in later after validity is confirmed
         segmentData[,'lohScoreMean'] <- NA
         segmentData[,'lohScoreMedian'] <- NA
@@ -1565,54 +1571,64 @@ calculatePloidy <- function(sampleId, outputDir,
           intersectingLoh <- which(hetScoreData[,'seqnames']==lohSeqname &
                                      hetScoreData[,'start'] >= segment[['start']] &
                                      hetScoreData[,'start'] < segment[['end']]) # TODO: should this be hetScoreData[,'end']?????
-          # chr16 has some weird high scores, so avoid those segments too
-          # check the hetScores in the normal samples
-          # lohMat   <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
-          # for each row of data, how many samples have a value outside of the normal range?
-          lohChrMed <- apply(lohMat[intersectingLoh,,drop = FALSE],1,function(x) (sum(x<0.975 | x> 2)))
-          numLohRefSamples<-ncol(lohMat) #  23, as in the 23 TCGA normals
-          lohMatCutoff <-  numLohRefSamples/2
-          whichToKeep <- which(lohChrMed < lohMatCutoff)
-          passedMaskedIntersectingLoh <- (intersectingLoh)[whichToKeep]
 
-          # plot lohMat
-          if(FALSE){
-            plot(lohMat[,1],type = 'p', col=1)
-            for(i in 2:23){
-              points(lohMat[,i],type = 'p', col=i)
-            }
-            markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, rgdObject=rgdObject, vCol='gray30')
-          }
-
-          # 'NoMask' was the original way
+          # 'NoMask' not masked or checked with the hsNormMat
           meanLohNoMask    <- mean(hetScoreData[intersectingLoh, 'score'])
           medianLohNoMask  <- median(hetScoreData[intersectingLoh, 'score'])
 
-          if(length(passedMaskedIntersectingLoh) > 0){
-            meanLoh   <- mean(hetScoreData[passedMaskedIntersectingLoh, 'score'])
-            medianLoh <- median(hetScoreData[passedMaskedIntersectingLoh, 'score'])
+          # check the hetScores in the normal samples
+          # for each row of data, how many samples have a value outside of the normal range?
+          if(!is.null(hsNormMat)){
+            lohChrMed <- apply(hsNormMat[intersectingLoh,,drop = FALSE],1,function(x) (sum(x<0.975 | x> 2)))
+            numLohRefSamples<-ncol(hsNormMat) #  23, as in the 23 TCGA normals
+            hsNormMatCutoff <-  numLohRefSamples/2
+            whichToKeep <- which(lohChrMed < hsNormMatCutoff)
+            passedMaskedIntersectingLoh <- (intersectingLoh)[whichToKeep]
+
+            # plot hsNormMat
+            if(FALSE){
+              plot(hsNormMat[,1],type = 'p', col=1)
+              for(i in 2:23){
+                points(hsNormMat[,i],type = 'p', col=i)
+              }
+              temp00chrStart <- binnedPosStart(coords@chromStart, binSize = wsz) # start positions must be same bin size as the plotted data
+              markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, rgdObject=rgdObject, vCol='gray30')
+            }
+
+            if(length(passedMaskedIntersectingLoh) > 0){
+              meanLoh   <- mean(hetScoreData[passedMaskedIntersectingLoh, 'score'])
+              medianLoh <- median(hetScoreData[passedMaskedIntersectingLoh, 'score'])
+            }else{
+              meanLoh   <- 0
+              medianLoh <- 0
+            }
+
+            # plot hetScores masked and unmasked for segmentId
+            if(FALSE){
+              op <- par(mfrow=c(2,1),mar=c(2.5, 3.5, 1.5, 1),mgp=c(1.5, 0.5,0))
+              hist(lohChrMed, breaks = 23, col='gray', main=paste('chrom: ', cn1, 'segmentId:', segmentId))
+              abline(v=hsNormMatCutoff)
+              if(!is.null(folderId)){
+                mtext(3, text=c(sampleId, folderId),adj=c(0,1))
+              }else{
+                mtext(3, text=c(sampleId),adj=c(0))
+              }
+              plot(intersectingLoh,hetScoreData[intersectingLoh, 'score'])
+              abline(h=meanLoh, col='red')
+              abline(h=meanLohNoMask, col='black')
+              abline(h=0.98, lty='dashed')
+              points(intersectingLoh,hetScoreData[intersectingLoh, 'score'],)
+              points(passedMaskedIntersectingLoh,hetScoreData[passedMaskedIntersectingLoh, 'score'],pch=19, col='red',cex=.3)
+              par(op)
+            }
+
           }else{
-            meanLoh   <- 0
-            medianLoh <- 0
+            # the mask is not provided so use the unmasked data
+            meanLoh   <- meanLohNoMask
+            medianLoh <- medianLohNoMask
           }
 
-          # plot loh scores passed masked and unmasked for segmentId
-          if(FALSE){
-            op <- par(mfrow=c(2,1),mar=c(2.5, 3.5, 1.5, 1),mgp=c(1.5, 0.5,0))
-            hist(lohChrMed, breaks = 23, col='gray', main=paste('chrom: ', cn1, 'segmentId:', segmentId))
-            abline(v=lohMatCutoff)
-            mtext(c(sampleId, folderId), adj=c(0,1))
-            plot(intersectingLoh,hetScoreData[intersectingLoh, 'score'])
-            abline(h=meanLoh, col='red')
-            abline(h=meanLohNoMask, col='black')
-            abline(h=0.98, lty='dashed')
-            points(intersectingLoh,hetScoreData[intersectingLoh, 'score'],)
-            points(passedMaskedIntersectingLoh,hetScoreData[passedMaskedIntersectingLoh, 'score'],pch=19, col='red',cex=.3)
-            par(op)
-          }
-
-
-          # CNV
+          # reads per segment
           chromStart <- coords@chromStart[cn1]
           segmentStartWindowIndex <- which.min(abs(binnedPosStart(chromStart + segment[['start']], binSize=wsz) - wdnsMSK00))
           segmentEndWindowIndex   <- which.min(abs(binnedPosEnd(chromStart + segment[['end']], binSize=wsz) - wdnsMSK00))
@@ -2662,7 +2678,7 @@ calculatePloidy <- function(sampleId, outputDir,
                        percentTumor=percentTumor,
                        peakInfo=peakInfo,
                        segmentData=segmentData,
-                       hetScoreQuantiles=hetScoreQuantiles,
+                       # hetScoreQuantiles=hetScoreQuantiles,
                        iterationStatsAll=iterationStatsAll)
 
   loginfo('END OF FUNCTION:calculatePloidy')
@@ -3174,163 +3190,6 @@ markChromEdges <- function(chromStarts,maxcn,rgdObject,vCol='gray90'){
 
 
 
-
-
-
-
-#' load all the inputs needed for calculatePloidy()
-#'
-#' this is a convenience function for running calculatePloidy outside of cnvDetect and the pipeline
-#'
-#' @param numfolder 5 digit folder number for a sample
-#' @inheritParams commonParameters
-#' @examples {
-#' numfolder=58093; sampleId=getSampleId(numfolder); postProcessingDir=getPostProcessingDir(numfolder);
-#' ploidyInputs=loadInputs_calculatePloidy(numfolder, sampleId, postProcessingDir) }
-#'
-loadInputs_calculatePloidy <- function(numfolder, sampleId, postProcessingDir){
-  rgd <- findRgdInDir(postProcessingDir)
-  rgdObject <- loadRgd(rgd)
-  outputDir <- file.path(postProcessingDir)#, 'dev/ploidy')
-
-  mainChroms <- unique(sort(c( svaAutosomes(rgdObject), svaAllosomes(rgdObject) )))
-  coords <- getLinearCoordinates(rgdObject, mainChroms) # Linear coordinate system for the main chromosomes
-
-
-  # really old mate-pair libraries are different and require a lower threshold
-  sampleDatabase <- getSampleDatabase()
-  iIndex   <- which(numfolder==sampleDatabase$folder)
-  libraryProtocol <- sampleDatabase[['libProtocol']][iIndex]
-  if(libraryProtocol=='illumMPv2'){
-    heterozygosityScoreThreshold <- 0.965  # example borderline samples: 20079
-  }else{
-    heterozygosityScoreThreshold <- 0.98
-  }
-
-
-  outputWsz <- 1000
-  cnvBinnedFile <- getTypedFile("cnvBinned", dir=postProcessingDir, legacy = TRUE)
-  if(file.exists(cnvBinnedFile@path)){
-    cnvBinnedData <- loadRdata(cnvBinnedFile)
-    expectedNormalBin <- getExpectedNormalBin(cnvBinnedData)
-  }else{
-    logwarn('cnvBinnedFile NOT FOUND, loading preliminary - unmasked- data instead')
-    freqarCASE <-loadFreqar(postProcessingDir, coords) # frequencies for our case, aligned to the coords system
-    maskar <- rep(1, length(freqarCASE))
-    outputSampleCnv <- bmdSvPipeline:::shrnkFRQserial(freqarCASE * maskar, wsz = outputWsz, coords = coords)@freqar
-
-    preliminaryCnvBinned <- cnvBinned(
-      coords = coords,
-      windowSize = outputWsz,
-      expectedNormalBin = NA, # This is not known yet, thus preliminary
-      mainPeakNormalBin       = NA, # This is not known yet, thus preliminary
-      ploidyBasedNormalBin    = NA, # This is not known yet, thus preliminary
-      cnv = outputSampleCnv,
-      normalCnv = maskar,    # was NA, outputNormalCnv,
-      normalPostProcessingDir = NA,  # theNormal[['dir']],
-      normalSampleName = NA,         # theNormal[['name']],
-      normalYPostProcessingDir = NA, # theNormal[['dirY']],
-      normalYSampleName = NA,        # theNormal[['nameY']],
-      version = 5
-    )
-    cnvBinnedData <- preliminaryCnvBinned
-  }
-
-  cnvIntervalsFile <- getTypedFile("cnvIntervals", dir = postProcessingDir, values = list(sampleId = sampleId), legacy = TRUE)
-  if(file.exists(cnvIntervalsFile@path)){
-    segmentationTemp <- bmd.read.csv(file = cnvIntervalsFile)
-    segmentation <- cleanSegmentation(segmentation=segmentationTemp,expectedNormalBin=expectedNormalBin)
-    segmentation <- segmentation[,c('chr', 'start', 'end', 'rd')]  # TODO: testing to see if I can limit to just these columns
-  }else{
-    segmentation <- NA
-  }
-
-
-
-  statisticsCnvDetectInfo <- getTypedFile("statisticsCnvDetect", dir = postProcessingDir, values = list(folderId = rgdObject$folderId), legacy = TRUE )
-  cnvNormalizationInfo <- list()
-  if(file.exists(statisticsCnvDetectInfo@path)){
-    statisticsCnvDetect <- loadRdata(statisticsCnvDetectInfo)
-
-    #metadata <- readMetadata(cnvIntervalsFile)
-
-    if(!is.null(statisticsCnvDetect$normalization)){
-      cnvNormalizationInfo[['cnvNormalizationMethod']] <- statisticsCnvDetect$normalization
-    }else if(!is.null(statisticsCnvDetect$normalSampleName)){
-      # if "normalization" is not availalbe then check for normalSampleName, if it is present assume 'bestNormal'
-      cnvNormalizationInfo[['cnvNormalizationMethod']] <- 'bestNormal'
-    }else{
-      cnvNormalizationInfo[['cnvNormalizationMethod']] <- 'content'
-    }
-
-    cnvNormalizationInfo[['qualityPostNorm']] <- round(statisticsCnvDetect$qualityPostNorm,2)
-  }else{
-    cnvNormalizationInfo[['cnvNormalizationMethod']] <- NA
-    cnvNormalizationInfo[['qualityPostNorm']] <- NULL
-  }
-  # peaksByDensity(sampleId,  rgdObject, cnvBinnedData, segmentation=segmentation, wsz = 100000, grabDataPercent= 0.06,origMaxPercentCutoff=0.015, pause=TRUE);
-  # peaksByDensity(sampleId,  rgdObject, cnvBinnedData, segmentation=segmentation, wsz = 100000, grabDataPercent= 0.1, origMaxPercentCutoff=0.015, pause=TRUE);
-
-
-  hetScoreData <- as.data.frame(rtracklayer::import.wig(
-    getTypedFile(typeId = 'lohAnalysisWig', dir=postProcessingDir, values=list(sampleId=sampleId), legacy=TRUE)@path
-  ))
-
-  cytoBandFile <- file.path(mainDir, 'Genome/Human/referenceFiles/cytoBand_hg38.txt')
-  cytoBands  <- loadIdeogram(path = rcfPrefix(cytoBandFile))
-  centroArray <- getCentromerePositions(ideogram = cytoBands, rgd = rgdObject)
-
-
-  # find protocol: matePair or pairedEnd
-  pipelineConfigFile <- getTypedFile("fullPipelineConfig", postProcessingDir, values = list(sampleId=sampleId), legacy=TRUE)
-  if(file.exists(pipelineConfigFile@path)) {
-    pipelineConfig <- yaml::yaml.load_file(pipelineConfigFile@path)
-
-    protocol <- bmdSvPipeline:::getConfigElement(pipelineConfig, 'cnvDetectConfigObject', 'protocol')
-  }else{
-    protocol <- NA_character_
-    logerror('pipeline config file does not exist: %s',pipelineConfigFile@path)
-  }
-
-
-
-
-  return(list(    outputDir=outputDir, sampleId=sampleId, cnvBinnedData=cnvBinnedData, segmentation=segmentation,
-                  centroArray=centroArray, hetScoreData=hetScoreData, rgdObject=rgdObject,
-                  cnvNormalizationInfo=cnvNormalizationInfo,
-                  protocol=protocol,
-                  heterozygosityScoreThreshold=heterozygosityScoreThreshold))
-}
-
-# TODO: addNRD function is in cnvDetect2, so addNewNRD does not need to be added to pipeline, but this version will keep the original nrd value for comparisons
-addNewNRD <- function(ploidyBasedNormalBin, wszNormalPeak= 30000,segmentation){
-  if('nrd' %in% names(segmentation)){
-    names(segmentation)[which(names(segmentation)=='nrd')] <- 'nrd_org'
-    # rename before adding new calculation
-  }
-
-  # Add nrd column now that we know position of 2N peak
-
-  # set ploidyMaxX to the proper position of 2N peak, as determined by ploidy
-  ploidyMaxX <- ploidyBasedNormalBin * wszNormalPeak
-
-  # Store the computed value as our "nrd" column (normalized so that 2.0 == normal)
-  nrd <- 2.0 * segmentation[, "rd"] / ploidyMaxX
-
-  segmentation[,"nrd"] <- nrd
-  return(segmentation)
-}
-
-#' as calculated in constellation plot
-#' converts pkmod rather than rd to nrd, normalized read depth
-pkmodToNRD <- function(segmentData, peakInfo, rdNormX_2Npeak){
-  firstDigPeakIndex <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
-  rdNormX_firstDigPeak <- peakInfo[firstDigPeakIndex, 'peakReadDepth_normX']   #
-  nrdNormCoef <- 2/rdNormX_2Npeak*rdNormX_firstDigPeak   # will be 2 if the first digital peak is the 2N peak
-  nrd <-  segmentData[,'pkmod'] * nrdNormCoef
-  return(nrd)
-
-}
 
 
 

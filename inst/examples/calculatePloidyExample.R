@@ -5,7 +5,7 @@
   noPdf=TRUE                          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
   # outputDir = tempdir();              # output folder for pdfs etc.
   outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-  sampleId='TCGA-14-1402-02A_ds'
+  sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   ### load data ###
   inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
@@ -25,6 +25,10 @@
   hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
   readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
+  # TODO: can I also make this example data? or should it be downloaded separately? file size= 18.6M
+  hsNormMat <- bmdTools::loadRdata('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata') # aka lohMat
+  # hsNormMat=NULL
+
 
   # defaults
   segmentationBinSize=30000; numChroms=24;
@@ -40,9 +44,9 @@
   ### call calculatePloidy, the function to do all the ploidy work ---------
   loginfo('calculate ploidy for %s ', sampleId)
   # cnvBinnedData = readDepthBinnedData; cnvIntervals=segmentation; lohdata = hetScoreData
-  result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf,
+  result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, folderId=alternateId,
                          readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
-                         cnvIntervals=segmentation, centroArray = centroArray, lohdata = hetScoreData,
+                         segmentation=segmentation, centroArray = centroArray, hetScoreData = hetScoreData,
 
                          segmentationBinSize=30000, numChroms=24,
                          pause=FALSE, skipExtras=FALSE, omitAnnotations = FALSE,
@@ -52,7 +56,8 @@
 
                          minReasonableSegmentSize=5.5e6,
                          heterozygosityScoreThreshold=0.98,  # If segment hetScore is more than this, the segment is heterozygous
-                         allowedTumorPercent = 106
+                         allowedTumorPercent = 106,
+                         hsNormMat=hsNormMat
   )
 
      print(result)
