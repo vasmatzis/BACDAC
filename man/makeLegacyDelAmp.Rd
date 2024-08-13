@@ -4,12 +4,10 @@
 \alias{makeLegacyDelAmp}
 \title{for compatibility with genomePlot. Make George's old array from new structure: 1=normal, -1=loss, 2=gain}
 \usage{
-makeLegacyDelAmp(segmentation, rgdObject, coords)
+makeLegacyDelAmp(segmentation, coords)
 }
 \arguments{
-\item{segmentation}{segmentation loaded via \link{typedFile-class}}
-
-\item{rgdObject}{reference genome descriptor object loaded via \code{loadRgd()}}
+\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
 
 \item{coords}{linear genome coordinates, loaded via \code{getLinearCoordinates(rgd=rgdObject)}}
 }

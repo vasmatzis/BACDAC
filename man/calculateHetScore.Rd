@@ -31,7 +31,7 @@ calculateHetScore(
 
 \item{outputDir}{full path for output files}
 
-\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd}
+\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
 
 \item{noPdf}{When TRUE, pdf files will not be generated, instead plots are drawn on default device}
 
@@ -48,6 +48,16 @@ calculateHetScore(
 \item{samplingStep}{How frequently to try to summarize the data (bp), to produce overlapping windows}
 
 \item{extraWindow}{Size of the window, how many bps to look at during each sampling step}
+
+\item{readDepthBinnedData}{list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)}
+
+\item{readDepthBinSize}{size of each window}
+
+\item{gainColor}{color to use for gains in linear genome plot, default is blue}
+
+\item{lossColor}{color to use for losses in linear geneome plot, default is red}
+
+\item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
 }
 \description{
 Outputs heterozygosity score by bin (.wig) and by arm (.csv) for each chromosome
@@ -70,7 +80,6 @@ outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC
  if(length(missingColumnKey)>0){
    logerror('missing required column: \%s',requiredColumns[missingColumnKey])
  }
- noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1;trimExtraPerCoverage = 0.1;minSnpsToCalculateStatistic = 20;samplingStep = 30000;extraWindow = 1000000
 
 \dontrun{
 

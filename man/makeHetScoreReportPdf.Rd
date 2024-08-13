@@ -23,7 +23,7 @@ makeHetScoreReportPdf(
 
 \item{hetScorePerArmFile}{full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}}
 
-\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd}
+\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
 
 \item{readDepthBinnedData}{list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)}
 
@@ -57,6 +57,7 @@ readDepthBinnedData = readRDS(file=thirtyKbFile )
 
  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 # default cnv coloring (by default) and annotations
-makeHetScoreReportPdf(hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,segmentation=segmentation,
-                      readDepthBinnedData=readDepthBinnedData,readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
+makeHetScoreReportPdf(hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,
+                      segmentation=segmentation,readDepthBinnedData=readDepthBinnedData,
+                      readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
 }

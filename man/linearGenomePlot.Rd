@@ -26,7 +26,7 @@ this quantile (number 0-1, 1=100\\%, 0.5=median)}
 
 \item{sampleId}{plot y axis with normalize read depth to 2 for the median frequency}
 
-\item{segmentation}{provides the color coding for each segment (dot). If no segmentation then color the segments gray}
+\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
 
 \item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
 
