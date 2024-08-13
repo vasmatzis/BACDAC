@@ -16,7 +16,12 @@ calculateHetScore(
   trimExtraPerCoverage = 0.1,
   minSnpsToCalculateStatistic = 20,
   samplingStep = 30000,
-  extraWindow = 1e+06
+  extraWindow = 1e+06,
+  readDepthBinnedData = NULL,
+  readDepthBinSize = 30000,
+  gainColor = "blue",
+  lossColor = "red",
+  noDelAmpDetection = FALSE
 )
 }
 \arguments{

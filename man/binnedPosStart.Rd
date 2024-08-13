@@ -32,6 +32,7 @@ bin# \tab 1K \tab 10K \cr
 }
 \seealso{
 Other coordinates: 
+\code{\link{bimaToLinear}()},
 \code{\link{binnedPosEnd}()},
 \code{\link{getLinearCoordinates}()},
 \code{\link{linearCoordinates}}

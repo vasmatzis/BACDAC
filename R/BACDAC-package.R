@@ -3,6 +3,7 @@
 
 ## usethis namespace: start
 #' @importFrom grDevices dev.off
+#' @importFrom grDevices palette
 #' @importFrom grDevices pdf
 #' @importFrom grDevices rgb
 #' @importFrom graphics abline
@@ -19,6 +20,7 @@
 #' @importFrom logging loginfo
 #' @importFrom logging logwarn
 #' @importFrom methods new
+#' @importFrom stats quantile
 #' @importFrom utils read.csv
 #' @importFrom utils write.csv
 ## usethis namespace: end

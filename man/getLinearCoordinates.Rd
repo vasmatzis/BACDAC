@@ -19,6 +19,7 @@ Get object describing linear coordinate space for main chromosomes
 }
 \seealso{
 Other coordinates: 
+\code{\link{bimaToLinear}()},
 \code{\link{binnedPosEnd}()},
 \code{\link{binnedPosStart}()},
 \code{\link{linearCoordinates}}

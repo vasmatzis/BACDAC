@@ -21,6 +21,7 @@ Linear coordinates class constructor
 }
 \seealso{
 Other coordinates: 
+\code{\link{bimaToLinear}()},
 \code{\link{binnedPosEnd}()},
 \code{\link{binnedPosStart}()},
 \code{\link{getLinearCoordinates}()}

@@ -10,7 +10,7 @@ plotHetScorePerBin(
   sampleId = NULL,
   yMap = function(y) {     y },
   ylab = "Heterozygosity Score",
-  allelicSegData = NULL
+  segmentation = NULL
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ plotHetScorePerBin(
 
 \item{ylab}{label for y axis default "Heterozygosity Score"}
 
-\item{allelicSegData}{ploidy segments with mean and median het scores and allelic ratios}
+\item{segmentation}{segments with major and minor allelic specific copy number}
 }
 \description{
 These plots show the heterozygosity scores per bin.

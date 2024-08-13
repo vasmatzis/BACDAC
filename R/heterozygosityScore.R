@@ -6,7 +6,7 @@
 #' @param sampleId sample identifier, used as prefix for all input and output file names \code{<sampleId>_snpVals_<chromosome>.Rdata} and \code{<sampleId>_countBP_<chromosome>.Rdata}
 #' @param inputDir full path to snpVal and countBP Rdata
 #' @param outputDir full path for output files
-#' @param segmentation read depth data.frame with required columns: chr, start, end, rd
+#' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
 #' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
 #' @param maximumCoverage Do not process SNPs covered more than this
 #' @param trimFromAlt Bins to discard from the 'alt' side of the distribution
@@ -15,6 +15,11 @@
 #' @param minSnpsToCalculateStatistic  Minimum SNPs required in the window (1Mb) to calculate the statistic
 #' @param samplingStep How frequently to try to summarize the data (bp), to produce overlapping windows
 #' @param extraWindow Size of the window, how many bps to look at during each sampling step
+#' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
+#' @param readDepthBinSize size of each window
+#' @param gainColor color to use for gains in linear genome plot, default is blue
+#' @param lossColor color to use for losses in linear geneome plot, default is red
+#' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #'
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
@@ -33,7 +38,6 @@
 #'  if(length(missingColumnKey)>0){
 #'    logerror('missing required column: %s',requiredColumns[missingColumnKey])
 #'  }
-#'  noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1;trimExtraPerCoverage = 0.1;minSnpsToCalculateStatistic = 20;samplingStep = 30000;extraWindow = 1000000
 #'
 #' @example inst/examples/calculateHetScoreExample.R
 #'
@@ -50,7 +54,14 @@ calculateHetScore <- function(
     trimExtraPerCoverage = 0.1,
     minSnpsToCalculateStatistic = 20,
     samplingStep = 30000,
-    extraWindow = 1000000
+    extraWindow = 1000000,
+
+    # inputs just for makeHetScoreReportPdf
+    readDepthBinnedData=NULL,  # if null will make an empty plot
+    readDepthBinSize=30000,
+    gainColor='blue',
+    lossColor='red',
+    noDelAmpDetection=FALSE  # FALSE = gray plot, TRUE= use gain and loss info to color plot
 ) {
   # inst/examples/lohAnalysisExample.R
 
@@ -172,13 +183,16 @@ calculateHetScore <- function(
 
   # make plot with segmentation, hetScore by bin, hetScore by arm
   makeHetScoreReportPdf(
-    segmentation,
-    allelicSegData=NULL,
     hetScorePerBinWigFile=hetScorePerBinWigFile,
     hetScorePerArmFile=hetScorePerArmFile,
+    segmentation=segmentation,
+    readDepthBinnedData=readDepthBinnedData,
+    readDepthBinSize=readDepthBinSize,
     sampleId=sampleId,
     outputDir=outputDir,
+    gainColor = gainColor, lossColor= lossColor,noDelAmpDetection=noDelAmpDetection,
     noPdf=noPdf)
+
 
   loginfo("END OF SCRIPT")
 }
@@ -301,22 +315,47 @@ loadHetScoreFromWig <- function(wigFile) {
 #' Will show 3 separate plots contrasting CNV, heterozygosity score per 30K and heterozygosity score per arm.
 #'
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd
-#' @param allelicSegData allele specific segmentation file
 #' @param hetScorePerBinWigFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
 #' @param hetScorePerArmFile full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}
+#' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
 #' @param sampleId sample id, will be used as the prefix for all input and output file names
 #' @param outputDir full path for output files
+#' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
+#' @param readDepthBinSize size of each window
+#' @param gainColor color to use for gains in linear genome plot, default is blue
+#' @param lossColor color to use for losses in linear geneome plot, default is red
+#' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
 #'
+#' @examples
+#' sampleId='TCGA-14-1402-02A_ds'
+#' inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
+#' hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
+#' hetScorePerArmFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerArm.csv'))
+#' hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
+#' segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+#' segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
+#' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+#' readDepthBinnedData = readRDS(file=thirtyKbFile )
+
+#'
+#'  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
+#' # default cnv coloring (by default) and annotations
+#' makeHetScoreReportPdf(hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,
+#'                       segmentation=segmentation,readDepthBinnedData=readDepthBinnedData,
+#'                       readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
 #' @export
 makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
                                   hetScorePerArmFile,
                                   segmentation=NULL,
-                                  allelicSegData=NULL,
+                                  readDepthBinnedData=NULL,
+                                  readDepthBinSize=30000,
                                   sampleId,
                                   outputDir,
-                                  noPdf) {
+                                  gainColor = 'blue', lossColor= 'red', noDelAmpDetection=FALSE,
+                                  noPdf=FALSE) {
   # previously named makeLohFullReportPdf and called from genomePlot in svaTools pipeline
+  # gainColor = 'blue'; lossColor= 'red'; noDelAmpDetection=FALSE;  noPdf=TRUE
 
   mainChroms <- 1:24
   # We skip Y chromosome because hetScore does not make much sense there
@@ -328,35 +367,14 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
     logwarn('missing required input - segmentation - data frame, will not plot')
   }else{
     # check for required columns
-    requiredColumns=c('chr', 'start', 'end','rd')
+    requiredColumns=c('chr', 'start', 'end','rd','cnvState')
     missingColumnKey=which(!requiredColumns %in% names(segmentation))
     if(length(missingColumnKey)>0){
       logerror('segmentation data is missing required column: %s',requiredColumns[missingColumnKey])
     }
   }
 
-  if(FALSE){
-    # allelicSegData should be loaded in, not created
-
-    # load allelicSegData if possible
-    postProcessingDir=bmdSvPipeline::getPostProcessingDir(sampleId=sampleId)
-    if(!is.null(normalPeakMethod)){
-      if(normalPeakMethod=='ploidyBased'){
-        ploidySegments <- bmdSvPipeline::getPloidySegments(postProcessingDir, sampleId, stopIfNoPloidySegments=stopIfNoPloidySegments) # load this separately to do all the checks and stuff
-        if(all(!is.na(ploidySegments))){
-          hetScores_StarCloudDataInfo <- getTypedFile("hetScores_StarCloudData", dir = postProcessingDir, values = list(sampleId = sampleId),legacy = TRUE)
-          starCloudData <- bmdSvPipeline::loadRdata(file=hetScores_StarCloudDataInfo@path, fileLabel = 'output from the star-cloud plot' )
-          allelicSegData <- bmdSvPipeline::allelicCNV(starLookUp = starCloudData$starLookUp, segmentDataIn = ploidySegments)
-        }else{
-          loginfo('%s: ploidySegments is.na cannot add allelicSegData to linear plot.',sampleId)
-        }
-      }
-    }
-  }
-
-
-
-  # TODO: does the graphicsDeviceOpen stuff have to be done here, like it is done for other plots? not sure what this feature does for us.
+  # set up/open pdf
   if(!noPdf) {
     # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
     if(!dir.exists(file.path(outputDir, 'reports'))){
@@ -371,14 +389,10 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
   op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext
 
   # Row 1: linear genome plot ----
-  # TODO: load in allelicSegData
-  if(!is.null(allelicSegData)){
-    bmdSvPipeline::linearGenomePlot(
-      postProcessingDir = postProcessingDir,
-      rgd = rgdObject,
-      sampleId=sampleId, # must provide in order to load other files (allelic, hetScore stuff)
-      cnvIntervals=segments,
-      allelicSegData=allelicSegData)
+  if(!is.null(readDepthBinnedData)){
+    linearGenomePlot( readDepthBinnedData, wsz=readDepthBinSize, segmentation=segmentation,
+                      sampleId=NULL, noDelAmpDetection = noDelAmpDetection,
+                      gainColor = gainColor, lossColor= lossColor)
   }else{
     plotEmptyLinearGenomePlot(chromsToPlot=mainChromsNoY,coords=coords)
   }
@@ -393,8 +407,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
   hetScore <- loadHetScoreFromWig(hetScorePerBinWigFile)
   plotHetScorePerBin(hetScore,
                      chromsToPlot = mainChromsNoY,
-                     ylab="Heterozygosity Score by bin",
-                     allelicSegData=allelicSegData ) # aka plotLohAnalysis()
+                     ylab="Heterozygosity Score by bin" ) # aka plotLohAnalysis()
 
 
   # Row 3: heterozygosity scores -per arm- ----
@@ -409,25 +422,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
   }
 }
 
-#' create a plot to fill the empty space for now
-#'
-#' @param chromsToPlot vector of chromosome (as integers) to plot
-#' @param coords object describing linear coordinate space for the chromosomes
-plotEmptyLinearGenomePlot <- function(chromsToPlot,coords){
-  # Get a plot started
-  maxX <- max(coords@chromEnd[coords@maxcn])
-  plot(x=0, y=0, type="n",
-       xaxs="i",
-       xlim=c(1,maxX), ylim=c(0, 1),
-       xaxt="n", yaxt="n",
-       xlab='', ylab="")
-  ## annotations
-  chrCharacters <- convertChromToCharacter(chromsToPlot)
-  axis(side=3, at=coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='lightgray') # Draw ticks
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=0.85, lwd=0, padj=0) # Draw labels
-  title(xlab='chromosome', line=0)
 
-}
 
 
 #' Plot the binned heterozygosity score
@@ -440,7 +435,7 @@ plotEmptyLinearGenomePlot <- function(chromsToPlot,coords){
 #' @param chromsToPlot Vector of chromosome numbers to plot
 #' @param sampleId sample id, will be used as the prefix for all input and output file names
 #' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
-#' @param allelicSegData ploidy segments with mean and median het scores and allelic ratios
+#' @param segmentation segments with major and minor allelic specific copy number
 #' @param ylab label for y axis default "Heterozygosity Score"
 #'
 #' @export
@@ -449,7 +444,7 @@ plotEmptyLinearGenomePlot <- function(chromsToPlot,coords){
 plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
                             yMap=function(y) { y },
                             ylab="Heterozygosity Score",
-                            allelicSegData=NULL) {
+                            segmentation=NULL) {
   # @example inst/examples/plotLohAnalysisExample.R
 
   mainChroms <- 1:24
@@ -472,8 +467,8 @@ plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
   axis(side = 2,
        at=yMap(ticksPosition),
        labels= ticksPosition)
+  title(xlab='chromosome', line=0, cex.lab=1.5)
 
-  title(xlab='chromosome', line=0)
 
   ## option for Zebra bars for the chromosomes. Draw first so the dots can go over top
   for(i in seq_len(length(chromsToPlot))) {
@@ -499,15 +494,15 @@ plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
            col=ifelse(i%%2==0, 'black', 'black'),pch=".") # was alternating black, orange, but got rid of the orange and instead alternate shading the background
   }
 
-  # TODO: add allelicSegData
+  # TODO: test for minor, major columns segmentation
   # add purple lines for LOH segments
-  if(!is.null(allelicSegData)){
+  if(!is.null(segmentation)){
     # we don't want to include the 1N segments
-    minorZeroSegments <- allelicSegData[which(allelicSegData$minor==0 & allelicSegData$major>=2),]
+    minorZeroSegments <- segmentation[which(segmentation$minor==0 & segmentation$major>=2),]
     if(nrow(minorZeroSegments)>0){
       # convert to linear coordinates
-      linPosStart <- abs(bmdSvPipeline::bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
-      linPosEnd   <- abs(bmdSvPipeline::bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
+      linPosStart <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
+      linPosEnd   <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
 
       yloc <- par('usr')[3]/2 # to put it just below 0 but still on the plot
       # add allele=0 segments to plot and data.frame
@@ -519,8 +514,8 @@ plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
   ## annotations
   chrCharacters <- convertChromToCharacter(chromsToPlot,rgdObject = rgdObject) # required for X aka 23
   abline(h=yMap(1.0), col='green')
-  axis(side=3, at=coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='lightgray') # Draw ticks
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=0.85, lwd=0, padj=0) # Draw labels
+  axis(side=3, at=coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='lightgray',cex.axis=1.2) # Draw ticks/lines
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
   # add if sampleId is provided
   if(!is.null(sampleId)) {
     title(main= sampleId,    adj= 0)
@@ -569,8 +564,7 @@ plotHetScorePerArm <- function(hetScorePerArm, chromsToPlot,sampleId=NULL,
   axis(side = 2,
        at=yMap(ticksPosition),
        labels= ticksPosition)
-
-  title(xlab='chromosome', line=0)
+  title(xlab='chromosome', line=0, cex.lab=1.5)
 
 
   ## reference lines for hetScore analysis
@@ -590,7 +584,7 @@ plotHetScorePerArm <- function(hetScorePerArm, chromsToPlot,sampleId=NULL,
     }
   }
   ## option for vertical lines/ticks for the chromosomes
- axis(side=3, at= coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
+ axis(side=3, at= coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks/lines
 
   pqLabelPos <- coords@chromStart[hetScorePerArm[,'chr']] +
     (coords@chromEnd[hetScorePerArm[,'chr']] - coords@chromStart[hetScorePerArm[,'chr']]) *
@@ -598,8 +592,8 @@ plotHetScorePerArm <- function(hetScorePerArm, chromsToPlot,sampleId=NULL,
 
   ## annotations
   chrCharacters <- convertChromToCharacter(chromsToPlot) # required for X aka 23
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=0.85, lwd=0, padj=0) # Draw labels
-  axis(side=3, at=pqLabelPos, line=-2.6, labels = hetScorePerArm[,'arm'], cex.axis=0.66, tick = FALSE) # Draw labels
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+  axis(side=3, at=pqLabelPos, line=-2.6, labels = hetScorePerArm[,'arm'], cex.axis=0.85, tick = FALSE) # Draw labels
   # add if sampleId is provided
   if(!is.null(sampleId)) {
     title(main= sampleId,    adj= 0)

@@ -8,10 +8,14 @@ makeHetScoreReportPdf(
   hetScorePerBinWigFile,
   hetScorePerArmFile,
   segmentation = NULL,
-  allelicSegData = NULL,
+  readDepthBinnedData = NULL,
+  readDepthBinSize = 30000,
   sampleId,
   outputDir,
-  noPdf
+  gainColor = "blue",
+  lossColor = "red",
+  noDelAmpDetection = FALSE,
+  noPdf = FALSE
 )
 }
 \arguments{
@@ -21,14 +25,38 @@ makeHetScoreReportPdf(
 
 \item{segmentation}{read depth data.frame with required columns: chr, start, end, rd}
 
-\item{allelicSegData}{allele specific segmentation file}
+\item{readDepthBinnedData}{list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)}
+
+\item{readDepthBinSize}{size of each window}
 
 \item{sampleId}{sample id, will be used as the prefix for all input and output file names}
 
 \item{outputDir}{full path for output files}
 
+\item{gainColor}{color to use for gains in linear genome plot, default is blue}
+
+\item{lossColor}{color to use for losses in linear geneome plot, default is red}
+
+\item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
+
 \item{noPdf}{When TRUE, pdf files will not be generated, instead plots are drawn on default device}
 }
 \description{
 Will show 3 separate plots contrasting CNV, heterozygosity score per 30K and heterozygosity score per arm.
+}
+\examples{
+sampleId='TCGA-14-1402-02A_ds'
+inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
+hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
+hetScorePerArmFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerArm.csv'))
+hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
+segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
+thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+readDepthBinnedData = readRDS(file=thirtyKbFile )
+
+ op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
+# default cnv coloring (by default) and annotations
+makeHetScoreReportPdf(hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,segmentation=segmentation,
+                      readDepthBinnedData=readDepthBinnedData,readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
 }
