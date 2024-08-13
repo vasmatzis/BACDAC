@@ -11,25 +11,19 @@
 #' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location) set to -1 to use main Peak width
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
 #' @param qualityPostNorm used to determine grabDataPercentMax
-peaksByDensity <-function(sampleId, rgdObject, cnvBinnedData, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
-                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE){
+peaksByDensity <-function(sampleId, readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
+                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,numChroms=numChroms,folderId=NULL){
   # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
   # peaksByDensity(sampleId,  rgdObject, cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08,pause=F);
   #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; pause=F;origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
 
-  #  omitAnnotations=TRUE
-
-  xind <- svaAllosomes(rgdObject, chromosome = "X") # index of chrX
-  yind <- svaAllosomes(rgdObject, chromosome = "Y") # index of chrY
-  coords <- cnvBinnedData[['coords']]
-  maxcn <- coords@maxcn
-  folderId <- rgdObject$folderId
-  segmentation <- as.data.frame(segmentation) # in case it gets loaded as a matrix instead
+  xind <-23 # index of chrX
+  coords <- getLinearCoordinates(rgdObject, chromosomes = 1:numChroms)
+  maxcn <- numChroms
 
   ### get frequency array ---------------
-  readDepthPerWindowData <- getFreqArrayFromCnvBinned(cnvBinnedData, newWindowSize=wszPeaks, maxChrom=22)
-  frqToUse <- readDepthPerWindowData$readDepthArray
-  wdnsToUse <- readDepthPerWindowData$goodWindowArray
+  frqToUse <- readDepthPer100kbBin$readDepthArray
+  wdnsToUse <- readDepthPer100kbBin$goodWindowArray
 
 
   ### do density
@@ -84,8 +78,7 @@ peaksByDensity <-function(sampleId, rgdObject, cnvBinnedData, segmentation, segm
   if(!'rd' %in% names(segmentation) ){
     stop('rd column missing from segmentation file')  # could be converted from 'nrd' but shouldn't have to
   }else{
-    segmentation[,'rd_org'] <- segmentation[,'rd']
-    segmentation[,'rd']  <- segmentation[,'rd'] * wszPeaks / segmentationBinSize  # rd was stored using segmentationBinSize=30000
+    segmentation[,'rd_wszPeaks']  <- segmentation[,'rd'] * wszPeaks / segmentationBinSize  # rd was stored using segmentationBinSize=30000, so convert for use with wszPeaks
   }
 
 
@@ -105,7 +98,8 @@ peaksByDensity <-function(sampleId, rgdObject, cnvBinnedData, segmentation, segm
   mtext(3, text=c(sampleId, folderId),adj=c(0,1),line=0.5)
   if(!omitAnnotations){
     mtext(1, text= 'chr 1-22', adj=1, cex=.9, line=1.5, col='darkgrey')
-    mtext(3, text= paste0('qualityCNV: ',qualityPostNorm), adj=0, cex=.8, line=-1)
+    if(!is.null(qualityPostNorm)){
+      mtext(3, text= paste0('qualityCNV: ',qualityPostNorm), adj=0, cex=.8, line=-1)}
   }
 
   polygon(denTempOrig$x, denTempOrig$y, col='gray92',border='gray92')
@@ -122,7 +116,7 @@ peaksByDensity <-function(sampleId, rgdObject, cnvBinnedData, segmentation, segm
     if(!is.null(qualityPostNorm)){
       dataBasedGrabDataPercentMax <- ifelse(qualityPostNorm < 2.5, 0.15, 0.17)
     }else{
-      loginfo('need qualityPostNorm to be able to determined dataBasedGrabDataPercentMax, will set this max to 0.15')
+      logdebug('need qualityPostNorm to be able to determined dataBasedGrabDataPercentMax, will set this max to 0.15')
       dataBasedGrabDataPercentMax <- 0.15
     }
     #Find the peaks for the unclassified data
@@ -233,7 +227,7 @@ peaksByDensity <-function(sampleId, rgdObject, cnvBinnedData, segmentation, segm
 
       # TODO: if X and Y are part of frqToUse,  then 'whichChoose' or maybe cnvSeq$rd needs to be adjusted because
       # currently there is a bug such that X and Y aren't extracted from the peaks correctly.
-      whichChoose <- unlist(sapply(which(abs(segmentation$rd-newpeakReadDepth)/newpeakReadDepth < scaledGrabDataPercent),function(x)
+      whichChoose <- unlist(sapply(which(abs(segmentation$rd_wszPeaks-newpeakReadDepth)/newpeakReadDepth < scaledGrabDataPercent),function(x)
         which(wdnsToUse >=  binnedPosStart(coords@chromStart[segmentation[x,'chr']], binSize = wszPeaks) + segmentation[x,'start']/wszPeaks &
                 wdnsToUse <=  binnedPosStart(coords@chromStart[segmentation[x,'chr']], binSize = wszPeaks) + segmentation[x,'end']  /wszPeaks ) ))
 
@@ -954,7 +948,12 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @return expReadsIn2NPeak_1bp, percentTumor,peakInfo, hetScoreQuantiles
 #'
 #' @export
-calculatePloidy <- function(postProcessingDir, sampleId, outputDir, rgdObject, cnvBinnedData, segmentation, segmentationBinSize=30000, centroArray, hetScoreData, numChroms=24,
+calculatePloidy <- function(sampleId, outputDir,
+                            readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
+                            segmentation, segmentationBinSize=30000,
+                            hetScoreData,
+
+                            numChroms=24,centroArray,
                             dPeaksCutoff=0.01,    penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1,    # digital peaks
                             grabDataPercentManual= -1, cnvNormalizationInfo=NULL, origMaxPercentCutoffManual=-1,  #  peaksByDensity
                             pause=FALSE, noPdf=FALSE,skipExtras=FALSE,forceFirstDigPeakCopyNum=-1,
@@ -962,7 +961,7 @@ calculatePloidy <- function(postProcessingDir, sampleId, outputDir, rgdObject, c
                             omitAnnotations = FALSE,
                             heterozygosityScoreThreshold=0.98,  # If segment hetScore is more than this, the segment is heterozygous
                             allowedTumorPercent = 106
-) {
+){
   ### defaults passed into cnvDetect
   # dPeaksCutoff=0.01; penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1; pause=FALSE; skipExtras=FALSE; heterozygosityScoreThreshold=0.98
   #
@@ -1181,17 +1180,12 @@ calculatePloidy <- function(postProcessingDir, sampleId, outputDir, rgdObject, c
     par(op)
   } # CLOSE: plotHetScoreVsPeakMode()
 
-  # TODO V1- remove rgdObject? or create a function that will create an rgdObject?
-  xind <- svaAllosomes(rgdObject, chromosome = "X") # index of chrX
-  # yind <- svaAllosomes(rgdObject, chromosome = "Y") # index of chrY
-  coords <- cnvBinnedData[['coords']]
-  maxcn <- coords@maxcn
-  folderId <- rgdObject$folderId
-  bimaVersion <- rgdObject$processInformation$bimaVersion
+  xind <-23 # index of chrX
+  coords <- getLinearCoordinates(rgdObject, chromosomes = 1:numChroms)
+  maxcn <- numChroms
 
-  lohMat   <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
-
-
+  # TODO: do we still want/need this?
+  # lohMat   <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
 
   ################################'
   ### peaks By density------
@@ -1200,24 +1194,13 @@ calculatePloidy <- function(postProcessingDir, sampleId, outputDir, rgdObject, c
 
   ### Use density on read depth to determine peaks, peaksByDensity() ----------------------------
   # peaks are returned in order of read depth with most common (highest frequency) read depth peak listed first
+  qualityPostNorm <- NULL
 
-  # use cnvNormalization qualityPostNorm to help determine grabDataPercentMax
-  # TODO P1: qualityPostNorm provide a function to get this from random data?
-  if(!is.null(cnvNormalizationInfo)){       # check to make sure it is available
-    qualityPostNorm <- cnvNormalizationInfo$qualityPostNorm
-  }else{
-    qualityPostNorm <- NULL
-  }
-  loginfo('CNV qualityPostNorm: %s', qualityPostNorm)
-
-
-
-  # op <- par(mfrow=c(2,1),mar=c(2.75, 3.5, 2, 1.5),mgp=c(1.5, 0.5,0)) #  moved to function
-  resultPBD <- peaksByDensity(sampleId, rgdObject, cnvBinnedData,
+  resultPBD <- peaksByDensity(sampleId, readDepthPer100kbBin=readDepthPer100kbBin,
                               segmentation=segmentation, segmentationBinSize=segmentationBinSize,
                               grabDataPercentManual= grabDataPercentManual, origMaxPercentCutoffManual=origMaxPercentCutoffManual,
-                              addAreaLinesToPlot=!omitAnnotations,qualityPostNorm=qualityPostNorm,pause=FALSE, omitAnnotations=omitAnnotations)
-
+                              addAreaLinesToPlot=!omitAnnotations,qualityPostNorm=qualityPostNorm,pause=FALSE, omitAnnotations=omitAnnotations,
+                              numChroms=numChroms)
 
   #
   ####################'
