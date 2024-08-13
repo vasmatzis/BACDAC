@@ -74,7 +74,7 @@ if(FALSE){
 
   cnvBinnedFile <- file.path(postProcessingDir, 'cnv/cnvBinned.Rdata')
   if(file.exists(cnvBinnedFile)){
-    cnvBinnedData <- loadRdata(cnvBinnedFile)
+    cnvBinnedData <- bmdTools::loadRdata(cnvBinnedFile)
   }else{
     logerror('cant find cnvBinned file: %s', cnvBinnedFile)
   }
@@ -90,11 +90,11 @@ if(FALSE){
   loginfo('writing %s',thirtyKbFile)
   saveRDS(readDepthPer30kbBin, file=thirtyKbFile )
 
-  wszPeaks <- 1000000
+  wszPeaks <- 100000
   readDepthPer100kbBin <- bmdSvPipeline:::getFreqArrayFromCnvBinned(cnvBinnedData, newWindowSize=wszPeaks, maxChrom=22)
-  oneHundredKbFile=file.path(outputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
-  loginfo('writing %s',oneHundredKbFile)
-  saveRDS(readDepthPer1kbBin, file=oneHundredKbFile )
+  hundredKbFile=file.path(outputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
+  loginfo('writing %s',hundredKbFile)
+  saveRDS(readDepthPer100kbBin, file=hundredKbFile )
 
 
 }
