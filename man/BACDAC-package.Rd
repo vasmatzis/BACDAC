@@ -4,7 +4,7 @@
 \name{BACDAC-package}
 \alias{BACDAC}
 \alias{BACDAC-package}
-\title{BACDAC: Ploidy Analysis using the Binomial Allelic Content with Digitization Algorithm and Constellation plot}
+\title{BACDAC: Ploidy Analysis using the Binomial Allelic Content with Discretization Algorithm and Constellation plot}
 \description{
 Reports tumor ploidy and purity from whole-genome sequencing data including low-pass low-tumor NGS.
     Inputs include read-depth and segmentation data, and ref/alt counts for common single nucleutide polymorphisms (SNPs). Calculates 
