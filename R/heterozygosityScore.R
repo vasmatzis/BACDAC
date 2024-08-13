@@ -341,9 +341,11 @@ loadHetScoreFromWig <- function(wigFile) {
 #'
 #'  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 #' # default cnv coloring (by default) and annotations
-#' makeHetScoreReportPdf(hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,
-#'                       segmentation=segmentation,readDepthBinnedData=readDepthBinnedData,
-#'                       readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
+#' makeHetScoreReportPdf(
+#'    hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,
+#'    segmentation=segmentation,readDepthBinnedData=readDepthBinnedData,
+#'    readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
+#'
 #' @export
 makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
                                   hetScorePerArmFile,

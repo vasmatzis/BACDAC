@@ -1,19 +1,16 @@
 #' Draw a linear genome plot
 #'
-#' Displays the read-depth array in a linear fashion. Can report CNV as all black or use color calls.
-#' If sampleId is provided, title annotations will be added. But should be specified in order to retrieve other data (segmentation, allelicSegData, normalPeakMethod),
-#' unless those are passed in too.
-#' Does not display structural variants.
+#' Displays the read-depth array in a linear fashion. Can report CNV as all gray or use color calls.
+#' If sampleId is provided, title annotations will be added.
 #'
 #' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
 #' @param readDepthBinSize size of each window
-#' @param yLimQuantile To prevent outliers from dominating the plot, we set the y axis to go up to
-#'                     this quantile (number 0-1, 1=100\%, 0.5=median)
+#' @param yLimQuantile To prevent an outlier from dominating the plot, we set the max y axis to this quantile (number 0-1, 1=100%, 0.5=median)
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
 #' @param sampleId plot y axis with normalize read depth to 2 for the median frequency
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #' @param gainColor color to use for gains in linear genome plot, default is blue
-#' @param lossColor color to use for losses in linear geneome plot, default is red
+#' @param lossColor color to use for losses in linear genome plot, default is red
 #' @param ... Parameters passed onto the actual plot command
 #'
 #' @examples
@@ -24,20 +21,20 @@
 #' segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
 #' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 #' readDepthBinnedData = readRDS(file=thirtyKbFile )
-
 #'
-#'  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
-#' # default cnv coloring (by default) and annotations
+#' op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
+#' # default cnv color coding and annotations
 #' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)
-#' # example with no cnv coloring
+#' # example with no cnv color coding
 #' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,noDelAmpDetection=TRUE,segmentation=segmentation)
-#' # reviewer preferred cnv coloring
+#' # reviewer preferred cnv color coding
 #' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
 #'
 #' @export
 linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQuantile=0.99, sampleId=NULL, segmentation=NULL,
                               noDelAmpDetection = FALSE, gainColor = 'blue', lossColor= 'red', ...) {
   # readDepthBinSize=30000; yLimQuantile=0.99; noDelAmpDetection = FALSE;  gainColor = 'blue'; lossColor= 'red'
+
   if(R.version$major>=4){
     # with R 4.0 the default color palette changed, making reds and blues in the genome plot not true red and blue anymore.
     # specifying the palette as the original color scheme to avoid these muted reds and blues in the genome plot, on exit return palette to the default
@@ -54,7 +51,7 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
 
 
   if(!is.null(segmentation)){
-    delAmp   <- makeLegacyDelAmp(segmentation,   rgdObject = rgdObject, coords = coords)
+    delAmp   <- makeLegacyDelAmp(segmentation, coords = coords)
   }else{
     delAmp  <-  NULL
   }

@@ -21,8 +21,7 @@ linearGenomePlot(
 
 \item{readDepthBinSize}{size of each window}
 
-\item{yLimQuantile}{To prevent outliers from dominating the plot, we set the y axis to go up to
-this quantile (number 0-1, 1=100\\%, 0.5=median)}
+\item{yLimQuantile}{To prevent an outlier from dominating the plot, we set the max y axis to this quantile (number 0-1, 1=100\%, 0.5=median)}
 
 \item{sampleId}{plot y axis with normalize read depth to 2 for the median frequency}
 
@@ -32,15 +31,13 @@ this quantile (number 0-1, 1=100\\%, 0.5=median)}
 
 \item{gainColor}{color to use for gains in linear genome plot, default is blue}
 
-\item{lossColor}{color to use for losses in linear geneome plot, default is red}
+\item{lossColor}{color to use for losses in linear genome plot, default is red}
 
 \item{...}{Parameters passed onto the actual plot command}
 }
 \description{
-Displays the read-depth array in a linear fashion. Can report CNV as all black or use color calls.
-If sampleId is provided, title annotations will be added. But should be specified in order to retrieve other data (segmentation, allelicSegData, normalPeakMethod),
-unless those are passed in too.
-Does not display structural variants.
+Displays the read-depth array in a linear fashion. Can report CNV as all gray or use color calls.
+If sampleId is provided, title annotations will be added.
 }
 \examples{
 sampleId='TCGA-14-1402-02A_ds'
@@ -51,12 +48,12 @@ segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); di
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 readDepthBinnedData = readRDS(file=thirtyKbFile )
 
- op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
-# default cnv coloring (by default) and annotations
+op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
+# default cnv color coding and annotations
 linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)
-# example with no cnv coloring
+# example with no cnv color coding
 linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,noDelAmpDetection=TRUE,segmentation=segmentation)
-# reviewer preferred cnv coloring
+# reviewer preferred cnv color coding
 linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
 
 }
