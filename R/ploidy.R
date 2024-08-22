@@ -991,11 +991,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
 
     ### one color for each chromosome
-    segColors <- c(RColorBrewer::brewer.pal(9, 'Set1')[-c(6,9)] ,                     # remove the yellow and gray
-                   'red', 'blue', 'cyan', 'gray45','magenta',                         # to get to 22
-                   RColorBrewer::brewer.pal(8, 'Set2')[-c(8)], 'gray75',              # replace the gray with a slightly lighter color
-                   'purple', "#00FF92FF"
-    )
+    segColors = getSegmentColors()
 
     if(FALSE){
       segColorsOld <- c(
@@ -2675,7 +2671,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
   ### return output -------------
   ploidyOutput <- list(expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp,
-                       percentTumor=percentTumor,
+                       percentTumor=round(percentTumor,1),
                        peakInfo=peakInfo,
                        segmentData=segmentData,
                        # hetScoreQuantiles=hetScoreQuantiles,
@@ -3269,7 +3265,7 @@ allelicCNV <- function(starLookUp, segmentDataIn){
       iHetScore <- segmentDataOut[i, 'lohScoreMedian']
 
       # find which hetScore in the starLookUp table is the closest to the segment hetScore
-      iCN <- segmentDataOut[i,'copy_umber']
+      iCN <- segmentDataOut[i,'copy_number']
       key <- which(starLookUp[,'cn']==iCN)
       keyInd <- which.min(abs(iHetScore-starLookUp[key,'hetScore']))
       #assign the major and minor values from the starLookUp table to the segment
@@ -3279,12 +3275,13 @@ allelicCNV <- function(starLookUp, segmentDataIn){
       }
     }
   }
-  # clean up data
-  segmentDataOut <- renameColumns(dataframe=segmentDataOut, file=NULL, map = list(
-    lohScoreMedian="heterozygosity_score",
-    cnLevel='copy_clonality',
-    nrd='normalized_read_depth',
-    rd='read_depth'))
+  # clean up columns
+  # names(df)[names(df) == 'old.var.name'] <- 'new.var.name'
+  names(segmentDataOut)[names(segmentDataOut) == "lohScoreMedian"] <- "heterozygosity_score"
+  names(segmentDataOut)[names(segmentDataOut) == "cnLevel"] <- "copy_clonality"
+  names(segmentDataOut)[names(segmentDataOut) == "nrd"] <- "normalized_read_depth"
+  names(segmentDataOut)[names(segmentDataOut) == "rd"] <- "read_depth"
+
 
   zero=which(segmentDataOut$minor_copy_number==0)
   segmentDataOut[zero,]

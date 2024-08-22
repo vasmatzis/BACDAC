@@ -1,77 +1,124 @@
 # code and example to run Jamie's stars in the clouds plot - the actual and theoretical heterozygosity scores vs NRD for a given tumor ratio
 # source this file first, to make the functions below available
 
+#' NRD of the main Peak in the ---cnvBinned data---
+#' Will equal 2 if main peak is the normal peak
+#' @param result output from \code{calculatePloidy()}
+#'
+getMainPeakNRD=function(result){
+  expReadsIn2NPeak_1bp= result$expReadsIn2NPeak_1bp
+  mainPeakKey=which(result$peakInfo$rankByHeight==1)
+  mainPeakReadDepth_1bp = result$peakInfo[mainPeakKey,'peakReadDepth_1bp']
+  mainPeakNRD = 2*(mainPeakReadDepth_1bp / expReadsIn2NPeak_1bp)  # TODO: can i use expReadsIn2NPeak_1bp like this? instead of cnvBinnedNormalBin=cnvBinnedData$expectedNormalBin? see notes
+  loginfo('mainPeakNRD = %.3f', mainPeakNRD) # mainPeakcnvBinnedNRD => mainPeakNRD
+ return(mainPeakNRD)
+
+  # Notes from bmdSvPipeline:: run_ploidy.R
+  # need mainPeakNRD for the cnvBinned Data, can't assume it is the same as the 2N peak;
+  #    pipeline ploidy output may not be the same as the ploidy output here.
+  # cnvBinned, if run in pipeline with other ploidy output may not be the same as the ploidy output here.
+
+}
+
+getDiploidPeakNRD=function(result){
+  mainPeakKey=which(result$peakInfo$rankByHeight==1)
+  rdNormX_Mainpeak = result$peakInfo[mainPeakKey,'peakReadDepth_normX']
+
+  diploidPeakKey=which(result$peakInfo$nCopy==2)
+  rdNormX_2Npeak = result$peakInfo[diploidPeakKey,'peakReadDepth_normX']
+
+  diploidPeakNRD <-round( mainPeakNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
+  loginfo('diploidPeakNRD: %.3f',diploidPeakNRD)  #dipVal => diploidPeakNRD
+  return(diploidPeakNRD)
+}
+
 
 #' load all the data necessary to make the plot
-#' @param mainPeakcnvBinnedNRD the NRD of the main Peak in the ---cnvBinned data---, if mainPeak based, will be 2, but if ploidybased, may be different
-loadStarsInTheClouds <- function(sampleId, postProcessingDir, rgdObject, cnvBinnedData,  wsz, mainPeakcnvBinnedNRD){
+#' @param mainPeakNRD the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak
+#'
+#' @examples
+#' sampleId='TCGA-14-1402-02A_ds'
+#' inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
+#' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+#'   ## load two reference files  ---------------
+#' # hsMat/lohMat: LOH analysis mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
+#' # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
+#' hsMat   <- bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
+#' testVals <-  bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
+#' hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
+#' readDepthPer30kbBin=  readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
+#' mainPeakNRD=getMainPeakNRD(result)
+#' starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, mainPeakNRD=mainPeakNRD)
 
-  # make sure we have a couple of necessary values first
-  if(is.na(cnvBinnedData$expectedNormalBin)){
-    # note this is a function, but this will probably bypass some of the purpose of testing for this value:     expectedNormalBin <- getExpectedNormalBin(cnvBinnedData)
-    # cnvBinnedData$expectedNormalBin=ploidyBasedNormalBin
-    stop('cnvBinnedData$expectedNormalBin is NA')
-  }
-  if(is.na(mainPeakcnvBinnedNRD)){
-    stop('mainPeakcnvBinnedNRD is NA')
-  }
+loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, wsz=30000, mainPeakNRD){
+  # TODO: testVals - not used, just passed out with the other data needed for the plot
 
+  yind=23
+  mainChromsNoY <- 1:23
+  mainChroms <- 1:24
+  autosomes= 1:22
+  coords <- getLinearCoordinates(rgdObject, chromosomes = mainChroms)
 
-  logdebug('mainPeakcnvBinnedNRD=%.3f',mainPeakcnvBinnedNRD)
-  bimaVersion <-rgdObject$processInformation$bimaVersion
-
-  lohChroms <- c(svaAutosomes(rgdObject), svaAllosomes(rgdObject, chromosome = "X"))
-  standardChroms <- unique(sort(c(svaAutosomes(rgdObject), svaAllosomes(rgdObject))))
-  coords <- cnvBinnedData[['coords']] # another way: getLinearCoordinates(rgdObject, standardChroms)
+  # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
+  inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
+  loginfo('loading ref and alt counts from dir: %s', inputDir)
 
   lohTot <- list()
   covTot <- list()
   snpTot <- list()
   ## load LOH Count and LOH SNP data  ---------------
-  for(chrNum in lohChroms) {
-    loginfo('load loh data for chr %i',chrNum)
-    # Counts of ref/alt occurrences for SNP position for each sva
-    lohCountBpFile <- getTypedFile("lohCountBpFull",postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path
-    lohData <- loadRdata(lohCountBpFile)
-    # SNP information for the matching lohCountBpFull for sva
-    lohSnpFile     <- getTypedFile("lohSnpFull",    postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path
-    snpData <- loadRdata(lohSnpFile)
-    lohTot[[chrNum]] <- lohData
-    covTot[[chrNum]] <- apply(lohData,1,sum) # coverage of all the SNPS, in each chrom
-    snpTot[[chrNum]] <- snpData
+  for (chrNum in mainChromsNoY) {
+    loginfo('chrom %i',chrNum)
+    ichrChar=convertChromToCharacter(chrNum)
+
+    # snpData/snpFull/snpVals: SNP information for the matching lohCountBpFull for sva
+    # lohData/countBPFull/countBP: Counts of ref/alt occurrences for SNP position for each sva
+    if(inputDirIsNextGenProjects){
+      # loading .Rdata output from bmdSvPipeline using bmdSvPipeline functions
+      snpFull= bmdTools::loadRdata(file.path(inputDir,    paste0(sampleId, '_snpVals_',chrNum,'.Rdata')), verbose = TRUE) # snpFull
+      #snpData <- loadRdata(getTypedFile("lohSnpFull",    postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path)
+
+      countBPFull = bmdTools::loadRdata(file.path(inputDir,paste0(sampleId, '_countBP_',chrNum,'.Rdata')), verbose = TRUE) # countBPFull
+      # lohData <- loadRdata(getTypedFile("lohCountBpFull",postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path)
+
+      iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
+    }else{
+      # loading BACDAC .Rds inputs
+      iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
+      loginfo('loading %s',iFile)
+
+      iRefAltCount = readRDS(file=iFile )
+      countBPFull=iRefAltCount[,c('ref', 'alt')]
+      snpFull=iRefAltCount[,'pos']
+    }
+
+
+
+    lohTot[[chrNum]] <- countBPFull #lohData
+    covTot[[chrNum]] <- apply(countBPFull,1,sum) # coverage of all the SNPS, in each chrom
+    snpTot[[chrNum]] <- snpFull #snpData
   }
 
 
-
-  ## load two reference files  ---------------
-  # lohMat: LOH analysis mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
-  # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
-  lohMat   <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
-  testVals <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
-
-
   ## load LOH wig file  ---------------
-  lohAnalysisWigFile <- getTypedFile("lohAnalysisWig",postProcessingDir,values=list(sampleId=sampleId), legacy = TRUE)@path
-  lohIn <- rtracklayer::import.wig(lohAnalysisWigFile)
+  lohIn <- rtracklayer::import.wig(hetScorePerBinWigFile)
 
 
   # load copy number data:   ---------------
   # need two arrays - count(freq count) and array indexes (after masking)
-  shrunkData  <- bmdSvPipeline:::shrinkCnvBinned(data=cnvBinnedData, wsz = wsz)
-  temp1 <- bmdSvPipeline:::cnvBinnedToLegacy(shrunkData)
+  # variable name changes: temp1 => readDepthPer30kbBin;   wdnsMSK=>goodWindowArray; frq=>readDepthArray
 
   ## make sure copy number chroms are the same as the loh chroms... remove Y from copy number data
   # otherwise you get errors in tabTemp when it gets to a Y chrom position; not likely to happen unless Y is gained as it is in SA43002
-  yind  <- svaAllosomes(rgdObject, chromosome = "Y")
-  chrYStartWsz <- binnedPosStart(cnvBinnedData[['coords']]@chromStart[yind], binSize = wsz)
-  w23   <- which(temp1$wdnsMSK < chrYStartWsz)
-  frq23 <- temp1$frq[w23]  # number of fragments, in a 1kb window converted to wsz, for chrs 1-23
-  wdnsMSK23 <- temp1$wdnsMSK[w23]
+  chrYStartWsz <- binnedPosStart(coords@chromStart[yind], binSize = wsz)
+  w23   <- which(readDepthPer30kbBin$goodWindowArray < chrYStartWsz)
+  frq23 <- readDepthPer30kbBin$readDepthArray[w23]  # number of fragments, in a 1kb window converted to wsz, for chrs 1-23
+  wdnsMSK23 <- readDepthPer30kbBin$goodWindowArray[w23]
 
-  chrStartKey <- array(0, shrunkData$coords@maxcn)
-  for(ichr in shrunkData$coords@chroms){
+  chrStartKey <- array(0, coords@maxcn)
+  for(ichr in coords@chroms){
     # Round the start coordinate to the new bin size
-    chrStartKey[ichr] <- 1+as.integer((shrunkData$coords@chromStart[ichr]-1)/wsz)
+    chrStartKey[ichr] <- 1+as.integer((coords@chromStart[ichr]-1)/wsz)
   }
 
 
@@ -79,8 +126,8 @@ loadStarsInTheClouds <- function(sampleId, postProcessingDir, rgdObject, cnvBinn
   ## processing of some sort??? --------------
   # normalize cnv to NRD with normal peak = 2
   # LOH (hetScore) also on a 30K bin, masked.
-
-  cnvListFull <- 2*frq23/(wsz*cnvBinnedData$expectedNormalBin) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
+  cnvListFull <- 2*frq23/(wsz*result$expReadsIn2NPeak_1bp) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
+  # cnvListFull <- 2*frq23/(wsz*cnvBinnedData$expectedNormalBin) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
   posListFull <- wdnsMSK23
   chrStart <- c(chrStartKey,max(wdnsMSK23))
   chrList <- as.character(lohIn@seqnames)
@@ -88,7 +135,7 @@ loadStarsInTheClouds <- function(sampleId, postProcessingDir, rgdObject, cnvBinn
   cnvListChrFull <- NULL
   chrEnd <- NULL
   # colList <- colors()[seq(1,length(colors()),length.out=24)[2:23]]
-  for(chrNum in svaAutosomes(rgdObject)) {
+  for(chrNum in autosomes) {
     logdebug('process chr %i',chrNum)
     lohSeqname <- convertChromToCharacter(chrNum, rgdObject = rgdObject, withChrPrefix=TRUE)
     lohChr <- lohIn$score[which(chrList==lohSeqname)]
@@ -101,9 +148,9 @@ loadStarsInTheClouds <- function(sampleId, postProcessingDir, rgdObject, cnvBinn
     oneSD <-0.0125
     cutoff <-lohMean-oneSD
 
-    lohChrMed <- apply(lohMat[which(chrList==lohSeqname),],1,
+    lohChrMed <- apply(hsMat[which(chrList==lohSeqname),],1,
                        function(x) length(which(x< cutoff))) # a value between 0-23 (0=none below, 23=all below)
-    numLohRefSamples<-ncol(lohMat) # currently 23, as in the 23 TCGA normals
+    numLohRefSamples<-ncol(hsMat) # currently 23, as in the 23 TCGA normals
     whichPlot <- which(lohChrMed[posListChr-chrStart[chrNum]+1] < numLohRefSamples/2) # keep the data where less than half the samples were below..
     lohChrOutFull <- c(lohChrOutFull,lohChrOut[whichPlot])
     cnvListChrFull <- c(cnvListChrFull,cnvListChr[whichPlot])
@@ -120,10 +167,10 @@ loadStarsInTheClouds <- function(sampleId, postProcessingDir, rgdObject, cnvBinn
 
   ### sample data in main peak
   ### find lambdaMain, the poisson that best fits the coverage
-  ### mainPeakcnvBinnedNRD is NRD of main peak in cnvBinnedData
+  ### mainPeakNRD is NRD of main peak in cnvBinnedData
 
-  sampLoc <- sample(x =  posListFull[(which(cnvListFull>= (mainPeakcnvBinnedNRD-0.025) & cnvListFull<(mainPeakcnvBinnedNRD+0.025)))],
-                    size = min(length(which(cnvListFull>= (mainPeakcnvBinnedNRD-0.025) & cnvListFull<(mainPeakcnvBinnedNRD+0.025))),1000)) # take 1000 unless there aren't 1000 data points available
+  sampLoc <- sample(x =  posListFull[(which(cnvListFull>= (mainPeakNRD-0.025) & cnvListFull<(mainPeakNRD+0.025)))],
+                    size = min(length(which(cnvListFull>= (mainPeakNRD-0.025) & cnvListFull<(mainPeakNRD+0.025))),1000)) # take 1000 unless there aren't 1000 data points available
   ## get the chrom number of the sampled positions
   # replaces Jamie's... sapply(sampLoc,function(x) which(order(c(x,chrStart))==1)-1)
   chrNumList <-linearToBima(rgdObject,globalPos = sampLoc, binSize =wsz )$svaNumber
@@ -149,37 +196,43 @@ loadStarsInTheClouds <- function(sampleId, postProcessingDir, rgdObject, cnvBinn
   starCloudPlotInputs <-(list(testVals=testVals,
                               lambdaMainOrig=lambdaMainOrig,
                               cnvListChrFullOrig=cnvListChrFullOrig,
-                              lohChrOutFull=lohChrOutFull,
-                              bimaVersion=bimaVersion))
-  loginfo('finished getting inputs')
+                              lohChrOutFull=lohChrOutFull))
+  loginfo('finished getting plot inputs')
   return(starCloudPlotInputs)
 }
 
 
 #' plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 #'
-#' @param dipVal               the NRD of the diploid peak in  ---cnvBinned data---, may not be 2 if you choose a different peak from the pipeline to normalize by
-#' @param mainPeakcnvBinnedNRD the NRD of the main Peak in the ---cnvBinned data---, if mainPeak based, will be 2, but if ploidybased, may be different
+#' @param diploidPeakNRD the NRD of the diploid peak in  ---cnvBinned data---, may not be 2 if you choose a different peak from the pipeline to normalize by
+#' @param mainPeakNRD the NRD of the main Peak in the ---cnvBinned data---, if mainPeak based, will be 2, but if ploidybased, may be different
 #' @param tau tumor ratio
-plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal, tau, plotEachChrom=FALSE, mainPeakcnvBinnedNRD,
+#' @examples
+#' sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
+#' tau=result$percentTumor/100; segmentData=result$segmentData; peakInfo=result$peakInfo
+#' diploidPeakNRD=getDiploidPeakNRD(result)
+#' op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
+#' plotStarsInTheClouds(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=TRUE, mainPeakNRD,segmentData=segmentData, peakInfo=peakInfo)
+#' par(op)
+plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=FALSE, mainPeakNRD,
                                  segmentData=NULL, peakInfo=NULL, # add the ploidy inputs
                                  bimaVersion=NULL, forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,minReasonableSegmentSize=5.5e6, # plot annotations
                                  digitalPeakZone = 0.05,heterozygosityScoreThreshold = 0.98,
                                  paperMode=FALSE  # without all the extra fluff, crisp and clean for papers and presentations
 ){
-  #  paperMode=TRUE; digitalPeakZone = 0.05; heterozygosityScoreThreshold = 0.98; dipVal=NULL; tau=min(1,result$percentTumor/100); plotEachChrom=FALSE; segmentData=result$segmentData; peakInfo=result$peakInfo
-
+  # diploidPeakNRD=NULL; tau=min(1,result$percentTumor/100);  segmentData=result$segmentData; peakInfo=result$peakInfo
+  # paperMode=TRUE; digitalPeakZone = 0.05; heterozygosityScoreThreshold = 0.98; plotEachChrom=FALSE; bimaVersion=NULL
 
   testVals <- starCloudPlotInputs$testVals;
   lambdaMainOrig <- starCloudPlotInputs$lambdaMainOrig;
   cnvListChrFullOrig <- starCloudPlotInputs$cnvListChrFullOrig;
   lohChrOutFull <- starCloudPlotInputs$lohChrOutFull
 
-  # do not assume the diploid peak NRD for cnvBinned = 2, so get it
 
+  # find the normalized read depth for the diploid peak (do not assume it is 2)
   if(!is.null(peakInfo)){
 
-    # use mainPeakcnvBinnedNRD then you don't have to assume  mainPeak was normalized to a read depth of 2
+    # get mainPeak info,  mainPeak may not be normalized to a read depth of 2
     # cnvBinned, if run in pipeline with other ploidy output may not be the same as the ploidy output here.
     rdNormX_Mainpeak    <- peakInfo[which(peakInfo$rankByHeight==1),        'peakReadDepth_normX']
 
@@ -195,33 +248,22 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
                                  rd1 = peakInfo[bestPeaksResult$bestPeakIndex,'peakReadDepth_normX'], rd2 = peakInfo[bestPeaksResult$secondBestPeakIndex,'peakReadDepth_normX']
       )
     }
-
-    if(is.null(dipVal)){
-      dipVal <-round( mainPeakcnvBinnedNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
-      loginfo('dipVal: %.3f',dipVal)
-    }
-  }
-  if(is.null(dipVal) | is.null(peakInfo)){
-    logerror('must provide peakInfo or dipVal')
   }
 
 
-
-  cnvListChrFull <- cnvListChrFullOrig*(2/dipVal) # scale cnvBinned NRD to be around the new 2N peak.
-  lambdaMain <- lambdaMainOrig*(dipVal/mainPeakcnvBinnedNRD)
+  cnvListChrFull <- cnvListChrFullOrig*(2/diploidPeakNRD) # scale cnvBinned NRD to be around the new 2N peak.
+  lambdaMain <- lambdaMainOrig*(diploidPeakNRD/mainPeakNRD)
 
   if(is.null(segmentData) || is.null(peakInfo)){
     plotMaxCN  <- round(min(12, quantile(cnvListChrFull,probs = .99)+2)) # add 2 to expand the plot just a bit but not too much
     ylimMinTemp <- calcNrd(cn=0, tau) # min(cnvListChrFull)
     loginfo('max(cnvListChrFull):%.2f',max(cnvListChrFull))
   }else{
-    if(!'nrd' %in% segmentData){
-      NRD <- bmdSvPipeline:::pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
-      segmentData[,'nrd'] <-  NRD
+    if(!'nrd' %in% names(segmentData)){
+      stop('nrd is missing from segmentData')
+      # NRD <- bmdSvPipeline:::pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
+      # segmentData[,'nrd'] <-  NRD
     }
-
-
-
 
     nearMaxNRD <- quantile(segmentData$nrd,probs = .99)
     nearMaxCN <- 2+(nearMaxNRD-2)/tau
@@ -276,11 +318,7 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
   ylimMinTemp <- min(ylimMinTemp, min(plotStarRange))
 
   ### one color for each chromosome 1-22
-  segColors <- c(RColorBrewer::brewer.pal(9, 'Set1')[-c(6,9)] ,                     # remove the yellow and gray
-                 'red', 'blue', 'cyan', 'gray45','magenta',                         # to get to 22
-                 RColorBrewer::brewer.pal(8, 'Set2')[-c(8)], 'gray75',              # replace the gray with a slightly lighter color
-                 'purple', "#00FF92FF"
-  )
+  segColors = getSegmentColors()
 
   # cnLohRatioA = lohContentA_maj2_min0
   # cnLohRatioB = lohContentB_maj1_min0
@@ -292,7 +330,7 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
     starInfoTemp <- list(starVals=starVals,medStarVals=medStarVals,plotStarRange=plotStarRange)
     starLookUp <- makeStarLookUpTable(starInfo=starInfoTemp,percentTumor=tau*100)
     allelicSegments <- allelicCNV(starLookUp, segmentDataIn=segmentData)
-    lohContent <- bmdSvPipeline:::getLohContent(allelicSegments)  ## getLohContent() is in ploidy.R
+    lohContent <- getLohContent(allelicSegments)  ## getLohContent() is in ploidy.R
     lohContentA_maj2_min0 <- lohContent$lohContentA_maj2_min0
     loginfo('2N+loh content (lohContentA_maj2_min0): %s',round(lohContentA_maj2_min0,3))
   }else{
@@ -342,8 +380,7 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
              pch=segmentData$chr,cex=0.9,
              col=scales::alpha(segColors[segmentData$chr],0.75))
 
-      # legend
-      legend("topleft", legend=c(1:22), col=segColors, pch=1:22, cex=.95)
+
 
       # peak rank labels
       if(!paperMode){
@@ -358,37 +395,8 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
     # LOH line
     lines(shiftVals/medVals,plotRange,type='l',xlim=c(0,1),col='purple')
     # stars for each heterozygosity ratio for each cn level - make sure this layers on top the segment data
-    points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green')
-
-    # plot annotation
-    mtext(paste0('lambdaMainOrig=',lambdaMainOrig,'   dipVal=',dipVal,'   mainPeakcnvBinnedNRD=',round(mainPeakcnvBinnedNRD,3)), side=3, line=2)
-
-    mtext(c(sampleId, folderId), side=3, adj=c(0,1))
-    mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
-    if(!is.null(bimaVersion)){
-      mtext(1, text=bimaVersion, adj = 0, line=3.0, cex=.9, col='gray')
-    }
-    if(!is.na(lohContentA_maj2_min0)){
-      mtext(1, text=round(lohContentA_maj2_min0,3), adj = 0, line=3.9, cex=.9, col='gray')
-    }
-
-    mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
-
-    if(forceFirstDigPeakCopyNum > 0){
-      mtext(1, text=paste0('manual 1st digital Peak: ', forceFirstDigPeakCopyNum, 'N'),adj=1, line=2.5, cex=.7, col=2)
-    }
-    if(origMaxPercentCutoffManual > 0){
-      mtext(1, text=paste0('manual peak height % cutoff: ', origMaxPercentCutoffManual),adj=1, line=3.0, cex=.7, col=2)
-    }
-    if(grabDataPercentManual > 0){
-      mtext(1, text=paste0('manual main peak width factor: ', grabDataPercentManual),        adj=1, line=3.5, cex=.7, col=2)
-    }
-    if(minPeriodManual > 0){
-      mtext(1, text=paste0('manual minPeriod: ', minPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
-    }
-    if(maxPeriodManual > 0){
-      mtext(1, text=paste0('manual maxPeriod: ', maxPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
-    }
+    points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
+    # points(starVals/medStarVals,plotStarRange,pch=1,cex=2,xlim=c(0,1),col='gray')
 
     # CN level annotations
     iCN <-0:plotMaxCN
@@ -396,13 +404,48 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
     # mtext(text='CN', side=4, col='black', las=1, line = 1.5)
     axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1)
 
-    # legend
+    # legends
+    legend("topleft", legend=c(1:22), col=segColors, pch=1:22, cex=.95)
     legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green', 'black'),lty=c(1,NA,NA), pch=c(NA, "*", "."),cex=.85,pt.cex=2)
+
+    # plot annotations
+    mtext(paste0('lambdaMainOrig=',lambdaMainOrig,'   diploidPeakNRD=',diploidPeakNRD,'   mainPeakNRD=',round(mainPeakNRD,3)), side=3, line=2)
+
+    mtext(c(sampleId, alternateId), side=3, adj=c(0,1))
+    mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
+    if(!is.null(bimaVersion)){
+      mtext(1, text=bimaVersion, adj = 0, line=3.0, cex=.9, col='gray')
+    }
+    if(!is.na(lohContentA_maj2_min0)){
+      mtext(1, text=round(lohContentA_maj2_min0,3), adj = 0, line=3.9, cex=.9, col='gray')
+    }
+    mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
+
+    # manual input annotations
+    if(TRUE){
+      if(forceFirstDigPeakCopyNum > 0){
+        mtext(1, text=paste0('manual 1st digital Peak: ', forceFirstDigPeakCopyNum, 'N'),adj=1, line=2.5, cex=.7, col=2)
+      }
+      if(origMaxPercentCutoffManual > 0){
+        mtext(1, text=paste0('manual peak height % cutoff: ', origMaxPercentCutoffManual),adj=1, line=3.0, cex=.7, col=2)
+      }
+      if(grabDataPercentManual > 0){
+        mtext(1, text=paste0('manual main peak width factor: ', grabDataPercentManual),        adj=1, line=3.5, cex=.7, col=2)
+      }
+      if(minPeriodManual > 0){
+        mtext(1, text=paste0('manual minPeriod: ', minPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
+      }
+      if(maxPeriodManual > 0){
+        mtext(1, text=paste0('manual maxPeriod: ', maxPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
+      }
+    }
+
   }
 
   # plot each chromosome individually -----
   if(plotEachChrom){
-    for(chrNum in 1:22) {
+    op=par(mfrow=c(2,2), mgp=c(2, 0.5, 0),mar=c(4.1, 4.1, 3.1, 2.5) ,oma=c(0,0,2,0))
+    for(chrNum in autosomes) {
       plot(lohChrOutFull[(chrEnd[chrNum]+1):chrEnd[chrNum+1]],cnvListChrFull[(chrEnd[chrNum]+1):chrEnd[chrNum+1]],
            pch='.',
            ylim=c(0,max(plotRange)),
@@ -412,16 +455,24 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
            col=scales::alpha('black',0.3),
            cex=2)
       lines(shiftVals/medVals,plotRange,type='l',xlim=c(0,1),col='purple')
-      points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green')
-      title(paste0("tau=",tau,", dipVal=",dipVal,", chr=",chrNum))
-      mtext(c(sampleId, folderId), side=3, adj=c(0,1))
+      points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
+      title(paste0("chr=",chrNum))
+
+
       # CN level annotations
-      for(i in 1:plotMaxCN) {
-        # lines(c(0,1.1),c(2+((i-2)*tau),2+((i-2)*tau)),lty=2,col='green')
-        abline(h= 2+((i-2)*tau), lty=2, col='green')
-        text(x=1.1,y=2+((i-2)*tau),labels=as.character(i))
+      iCN <-0:plotMaxCN
+      abline(h=2+((iCN-2)*tau), lty=2, col='gray85')
+      # mtext(text='CN', side=4, col='black', las=1, line = 1.5)
+      axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1)
+
+      # print once for each page
+      if(chrNum %% 1==0){
+        mtext(side=3, paste0('tumor: ',round(tau*100), '%'),    adj=0.05, outer = TRUE, line=-2)
+        mtext(side=3, text=paste('ploidy: ',round(ploidyCN,1)), adj=0.05,  outer = TRUE,line=-1)
+        mtext(c(sampleId, alternateId), side=3, line=0, adj=c(.05,.95), outer = TRUE)
       }
     }
+    par(op)
   }
 
   return(list(starVals=starVals,
@@ -429,7 +480,7 @@ plotStarsInTheClouds <- function(sampleId, folderId, starCloudPlotInputs, dipVal
               plotStarRange=plotStarRange,
               shiftVals=shiftVals,
               medVals=medVals,
-              dipVal=dipVal,
+              diploidPeakNRD=diploidPeakNRD,
               ploidyCN=ploidyCN,
               lohContent=lohContent,
               plotAxisLimits = list(hetScoreAxisLims=xlimits,

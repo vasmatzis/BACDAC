@@ -43,7 +43,6 @@
 
   ### call calculatePloidy, the function to do all the ploidy work ---------
   loginfo('calculate ploidy for %s ', sampleId)
-  # cnvBinnedData = readDepthBinnedData; cnvIntervals=segmentation; lohdata = hetScoreData
   result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, folderId=alternateId,
                          readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
                          segmentation=segmentation, centroArray = centroArray, hetScoreData = hetScoreData,
@@ -60,12 +59,12 @@
                          hsNormMat=hsNormMat
   )
 
-     print(result)
+  print(result)
 
   mainPeakIndex = which(result$peakInfo$rankByHeight==1)
   loginfo('Main peak is %sN',result$peakInfo[mainPeakIndex,'nCopy'])
   loginfo('tumor percentage: %s ',round(result$percentTumor) )
-
+  loginfo('approximate ploidy: %s ',round( mean(result$segmentData$cnLevel),1) ) # based on segment copy number and not adjusted for size
 
 
 }
