@@ -45,7 +45,7 @@
 calculateHetScore <- function(
     sampleId,
     inputDir,
-    outputDir=inputDir,
+    outputDir,
     segmentation=NULL,
     noPdf = FALSE,
     maximumCoverage = 1000,
