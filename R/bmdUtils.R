@@ -197,7 +197,54 @@ bimaToLinear <- function(rgd, svaNumber, svaPos, binSize=1)
 }
 
 
+#' Translate linear genome coordinates back to reference genome coordinates
+#'
+#' This is an inverse function to \link{bimaToLinear}.
+#'
+#' @param rgd Reference Genome Descriptor
+#' @param globalPos linear genome position (1-based)
+#' @param binSize Size of bin that was originally used
+#'
+#' #' @return A list with two elements:
+#' \tabular{ll}{
+#' \code{svaNumber} \tab reference sequence number \cr
+#' \code{svaPos} \tab position within the reference sequence (1-based) \cr
+#' }
+#'
+#' @family coordinates
+#'
+#' @export
+linearToBima <- function(rgd, globalPos, binSize=1)
+{
+  # store signs of the positions and take absolute values
+  posSign <- as.numeric(globalPos>=0)*2-1 # Convert >=0 to 1, <0 to -1
 
+  gp <- abs(globalPos)-1
+
+  # The offset part of the calculation
+  svaOffsets <- trunc((rgd$globalCoordinates$svaOffset-1)/binSize)
+
+  # Deal with NAs when broken sequence of svas
+  names(svaOffsets) <- seqFwd(from=0, to=length(svaOffsets)-1)
+  svaOffsets <- svaOffsets[!is.na(svaOffsets)]
+
+  # Find where our positions fall
+  intervals <- findInterval(gp, svaOffsets)
+
+  # Determine relative positions within those reference sequences
+  svaPos <- unname((gp - svaOffsets[intervals])*binSize) + 1
+
+  svaNumber <- as.integer(names(svaOffsets)[intervals])
+
+  # Re-apply signs
+  svaPos <- svaPos * posSign
+
+  result <- list(
+    svaNumber = svaNumber,
+    svaPos = svaPos
+  )
+  return(result)
+}
 
 #' For given position and bin size, return the binned position
 #'
