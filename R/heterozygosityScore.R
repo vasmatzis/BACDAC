@@ -63,8 +63,6 @@ calculateHetScore <- function(
     lossColor='red',
     noDelAmpDetection=FALSE  # FALSE = gray plot, TRUE= use gain and loss info to color plot
 ) {
-  # inst/examples/lohAnalysisExample.R
-
   # sysdata loaded automatically: rgdObject, ideogram
 
   # maximumCoverage = 1000;  trimFromAlt = 2;  trimFromRef = 1;  trimExtraPerCoverage = 0.1;  minSnpsToCalculateStatistic = 20;  samplingStep = 30000;  extraWindow = 1000000
@@ -96,7 +94,7 @@ calculateHetScore <- function(
 
   # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
   inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
-  loginfo('loading ref and alt counts from dir: %s', inputDir)
+  loginfo('loading ref and alt counts from inputDir: %s', inputDir)
 
   for (i in mainChromsNoY) {
     loginfo('loading chrom %i',i)
@@ -245,7 +243,7 @@ makeAndSaveHetScorePerArm <- function(hetScorePerArmFile, seqValsTotal, chromsTo
   # previously lohSummary and without the write to file
 
   #centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
-  centroArray <- getCentromerePositions(ideogram = ideogram)
+  centroArray <- getCentromerePositions()
 
   coords <- getLinearCoordinates(chromosomes = 1:24)
   numChromosomes <- length(chromsToSave)
