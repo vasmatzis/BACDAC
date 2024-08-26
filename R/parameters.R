@@ -7,7 +7,6 @@
 #' @param segmentationBinSize        bin size used for the read depth in the segmentation data
 #' @param readDepthPer30kbBin        read depth for 30 kb bins, with bin index in linear coordinates
 #' @param readDepthPer100kbBin       read depth for 100 kb bins, with bin index in linear coordinates
-#' @param centroArray                array with the positions of the centromeres for each chromosome
 #' @param hetScoreData               heterozygosity scores determined per 30 kb bin over a 1 Mb region
 #' @param numChroms                  number of chromosomes in the reference genome to consider
 #' @param dPeaksCutoff               dPeaksCutoff min grid height for a peak to be considered a digital peak

@@ -30,12 +30,8 @@
   readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
 
-
-
-
   # defaults
   segmentationBinSize=30000; numChroms=24;
-  centroArray <- getCentromerePositions(ideogram = ideogram)
   pause=FALSE; skipExtras=FALSE; omitAnnotations = FALSE;
   dPeaksCutoff=0.01;    penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1; maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;   # digital peaks
   grabDataPercentManual= -1; origMaxPercentCutoffManual=-1;  #  peaksByDensity
@@ -48,7 +44,7 @@
   loginfo('calculate ploidy for %s ', sampleId)
   result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
                          readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
-                         segmentation=segmentation, centroArray = centroArray, hetScoreData = hetScoreData,
+                         segmentation=segmentation, hetScoreData = hetScoreData,
 
                          segmentationBinSize=segmentationBinSize, numChroms=numChroms,
                          pause=pause, skipExtras=skipExtras, omitAnnotations = omitAnnotations,

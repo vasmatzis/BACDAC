@@ -919,7 +919,6 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
 #' Then find the expected number of reads in the 2N peak and normalize that value to one bp. Tumor percent is calcuated from the two biggest digital peaks.
 #'
-#' @param centroArray array with the positions of the centromeres for each chromosome
 #' @param hetScoreData heterozygosity scores determined per 30 kb bin over a 1 Mb region
 #' @param numChroms number of chromosomes in the reference genome to consider
 #' @param minGridHeight minimum value that can be assigned to the gridHeights
@@ -942,7 +941,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
                             readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
                             segmentation, segmentationBinSize=30000,
                             hetScoreData,
-                            numChroms=24,centroArray,
+                            numChroms=24,
                             dPeaksCutoff=0.01,    penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1,    # digital peaks
                             grabDataPercentManual= -1,  origMaxPercentCutoffManual=-1,  #  peaksByDensity
                             pause=FALSE, noPdf=FALSE,skipExtras=FALSE,forceFirstDigPeakCopyNum=-1,
@@ -972,6 +971,8 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
   coords <- getLinearCoordinates(chromosomes = 1:numChroms)
   maxcn <- numChroms
 
+  #centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
+  centroArray <- getCentromerePositions()
 
   ################################'
   ### peaks By density------
