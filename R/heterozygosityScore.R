@@ -408,14 +408,12 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
   # Row 2: heterozygosity scores -per bin- ----
   hetScore <- loadHetScoreFromWig(hetScorePerBinWigFile)
   plotHetScorePerBin(hetScore,
-                     chromsToPlot = mainChromsNoY,
                      ylab="Heterozygosity Score by bin" ) # aka plotLohAnalysis()
 
 
   # Row 3: heterozygosity scores -per arm- ----
   hetScorePerArm <- read.csv(file=hetScorePerArmFile, header = TRUE, comment.char = '#')
   plotHetScorePerArm(hetScorePerArm=hetScorePerArm,
-                     chromsToPlot=mainChromsNoY,
                      ylab="Heterozygosity Score by arm") # aka lohSummaryPlot()
 
   par(op)
@@ -434,22 +432,24 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
 #' for plot annotation only.
 #'
 #' @param hetScore binned heterozygosity scores as loaded from the hetScore wig file
-#' @param chromsToPlot Vector of chromosome numbers to plot
 #' @param sampleId sample id, will be used as the prefix for all input and output file names
 #' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
-#' @param segmentation segments with major and minor allelic specific copy number
 #' @param ylab label for y axis default "Heterozygosity Score"
+#' @param allelicSegments segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number
+#' @zebraStrips option to have alternating gray/white background for chromosome delineation
 #'
 #' @export
 #' @family hetScore
 
-plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
+plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
                             yMap=function(y) { y },
                             ylab="Heterozygosity Score",
-                            segmentation=NULL) {
+                            allelicSegments=NULL,
+                            zebraStrips=FALSE) {
   # @example inst/examples/plotLohAnalysisExample.R
 
   mainChroms <- 1:24
+  chromsToPlot = 1:23
   coords <- getLinearCoordinates(rgdObject, mainChroms)
 
   # Make an overview plot
@@ -473,15 +473,18 @@ plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
 
 
   ## option for Zebra bars for the chromosomes. Draw first so the dots can go over top
-  for(i in seq_len(length(chromsToPlot))) {
-    if(i%%2==1){
-      rect(xleft = coords@chromStart[i],
-           ybottom= yRange[1],
-           xright = coords@chromEnd[i],
-           ytop   = yRange[2]*1.04,
-           col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
+  if(zebraStrips){
+    for(i in seq_len(length(chromsToPlot))) {
+      if(i%%2==1){
+        rect(xleft = coords@chromStart[i],
+             ybottom= yRange[1],
+             xright = coords@chromEnd[i],
+             ytop   = yRange[2]*1.04,
+             col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
+      }
     }
   }
+
 
   for (i in chromsToPlot) {
     chromName <- convertChromToCharacter(i, rgdObject, withChrPrefix=TRUE)
@@ -493,31 +496,35 @@ plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
 
     points(hetScoreForChrom[['start']]+coords@chromStart[i]-1,
            yMap(hetScoreForChrom[['score']]),
-           col=ifelse(i%%2==0, 'black', 'black'),pch=".") # was alternating black, orange, but got rid of the orange and instead alternate shading the background
+           col=ifelse(i%%2==0, 'black', 'black'),pch=".") # was alternating black, orange, but opted instead to offer zebraStrips
   }
 
-  # TODO: test for minor, major columns segmentation
   # add purple lines for LOH segments
-  if(!is.null(segmentation)){
+  # load allelicSegments TODO:  check for "minor" and "major" in segmentation file?
+  if(!is.null(allelicSegments)){
     # we don't want to include the 1N segments
-    minorZeroSegments <- segmentation[which(segmentation$minor==0 & segmentation$major>=2),]
+    minorZeroSegments <- allelicSegments[which(allelicSegments$minor==0 & allelicSegments$major>=2),]
     if(nrow(minorZeroSegments)>0){
       # convert to linear coordinates
       linPosStart <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
       linPosEnd   <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
-
-      yloc <- par('usr')[3]/2 # to put it just below 0 but still on the plot
       # add allele=0 segments to plot and data.frame
-      segments(x0 = linPosStart, y0 = yloc, x1 = linPosEnd, y1 = yloc, col = 'purple', lwd=3)
+      segments(x0 = linPosStart, y0 = 0, x1 = linPosEnd, y1 = 0, col = 'purple', lwd=3)
     }
-
   }
+
+
+
+  ## vertical lines/ticks for the chromosomes
+  axis(side=3, at= coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray',cex.axis=1.2) # Draw ticks/lines
+
+  #horizontal line
+  # abline(h=yMap(1.0), col='green3')
 
   ## annotations
   chrCharacters <- convertChromToCharacter(chromsToPlot,rgdObject = rgdObject) # required for X aka 23
-  abline(h=yMap(1.0), col='green')
-  axis(side=3, at=coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='lightgray',cex.axis=1.2) # Draw ticks/lines
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+
   # add if sampleId is provided
   if(!is.null(sampleId)) {
     title(main= sampleId,    adj= 0)
@@ -526,22 +533,22 @@ plotHetScorePerBin <- function(hetScore, chromsToPlot, sampleId=NULL,
 }
 
 
-#' Plot the heterozygosity scores for evaluating LOH, summary values
+#' Plot the heterozygosity scores for evaluating LOH, arm level values
 #'
 #' @param hetScorePerArm A matrix with chr, arm and hetScore columns
-#' @param chromsToPlot Vector of chromosome numbers to plot
 #' @param sampleId sample id, will be used as the prefix for all input and output file names
 #' @param hetScoreMean Mean expected hetScore
 #' @param hetScoreStDev standard deviation of the hetScore values
 #' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
 #' @param ylab label for y axis
+#' @zebraStrips option to have alternating gray/white background for chromosome delineation
 #'
 #' @export
 #' @family hetScore
-plotHetScorePerArm <- function(hetScorePerArm, chromsToPlot,sampleId=NULL,
+plotHetScorePerArm <- function(hetScorePerArm, sampleId=NULL,
                                hetScoreMean=0.9875, hetScoreStDev=0.0125,
                                yMap=function(y) { 2 ^ (10*y) },
-                               ylab="Heterozygosity Score"
+                               ylab="Heterozygosity Score",zebraStrips=FALSE
 ) {
   # @example inst/examples/hetScoreSummaryPlotExample.R
   mainChroms <- 1:24
@@ -576,16 +583,19 @@ plotHetScorePerArm <- function(hetScorePerArm, chromsToPlot,sampleId=NULL,
 
 
   ## option for Zebra bars for the chromosomes. Draw first so the dots can go over
-  for(i in seq_len(length(chromsToPlot))) {
-    if(i%%2==1){
-      rect(xleft = coords@chromStart[i],
-           ybottom= yRangeWithLabel[1],
-           xright = coords@chromEnd[i],
-           ytop   = yRangeWithLabel[2]*1.04,
-           col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
+  if(zebraStrips){
+    for(i in seq_len(length(chromsToPlot))) {
+      if(i%%2==1){
+        rect(xleft = coords@chromStart[i],
+             ybottom= yRangeWithLabel[1],
+             xright = coords@chromEnd[i],
+             ytop   = yRangeWithLabel[2]*1.04,
+             col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
+      }
     }
   }
-  ## option for vertical lines/ticks for the chromosomes
+
+  ## vertical lines/ticks for the chromosomes
  axis(side=3, at= coords@chromEnd[chromsToPlot], labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks/lines
 
   pqLabelPos <- coords@chromStart[hetScorePerArm[,'chr']] +
@@ -594,7 +604,7 @@ plotHetScorePerArm <- function(hetScorePerArm, chromsToPlot,sampleId=NULL,
 
   ## annotations
   chrCharacters <- convertChromToCharacter(chromsToPlot) # required for X aka 23
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -2, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
   axis(side=3, at=pqLabelPos, line=-2.6, labels = hetScorePerArm[,'arm'], cex.axis=0.85, tick = FALSE) # Draw labels
   # add if sampleId is provided
   if(!is.null(sampleId)) {

@@ -8,7 +8,7 @@
 
   inputDir <- system.file('extdata', package = "BACDAC")
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile)
+  segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
 
   calculateHetScore(
     sampleId,

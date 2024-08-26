@@ -7,10 +7,12 @@
 #' @param readDepthBinSize size of each window
 #' @param yLimQuantile To prevent an outlier from dominating the plot, we set the max y axis to this quantile (number 0-1, 1=100%, 0.5=median)
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
+#' @param allelicSegments segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number
 #' @param sampleId plot y axis with normalize read depth to 2 for the median frequency
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear genome plot, default is red
+#' @zebraStrips option to have alternating gray/white background for chromosome delineation
 #' @param ... Parameters passed onto the actual plot command
 #'
 #' @examples
@@ -31,9 +33,9 @@
 #' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
 #'
 #' @export
-linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQuantile=0.99, sampleId=NULL, segmentation=NULL,
-                              noDelAmpDetection = FALSE, gainColor = 'blue', lossColor= 'red', ...) {
-  # readDepthBinSize=30000; yLimQuantile=0.99; noDelAmpDetection = FALSE;  gainColor = 'blue'; lossColor= 'red'
+linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQuantile=0.99, sampleId=NULL, alternateId=NULL, segmentation=NULL,
+                              allelicSegments=NULL, noDelAmpDetection = FALSE, gainColor = 'blue', lossColor= 'red', zebraStrips=FALSE, ...) {
+  # readDepthBinSize=30000; yLimQuantile=0.99; noDelAmpDetection = FALSE;  gainColor = 'blue'; lossColor= 'red';alternateId=NULL
 
   if(R.version$major>=4){
     # with R 4.0 the default color palette changed, making reds and blues in the genome plot not true red and blue anymore.
@@ -79,11 +81,24 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
          ylab=ylabel,xlab="",cex.axis=1,col=colorVector) # Plot the summed array
     title(xlab='chromosome', line=0, cex.lab=1.5)
 
+    ## option for Zebra bars for the chromosomes. Draw first so the dots can go over
+    if(zebraStrips){
+      for(i in seq_len(length(chromsToPlot))) {
+        if(i%%2==1){
+          rect(xleft = coords@chromStart[i],
+               ybottom= yRangeWithLabel[1],
+               xright = coords@chromEnd[i],
+               ytop   = yRangeWithLabel[2]*1.04,
+               col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
+        }
+      }
+    }
+
     # add purple lines for LOH segments
     # load segmentation TODO:  check for "minor" and "major" in segmentation file?
-    if(!is.null(segmentation)){
+    if(!is.null(allelicSegments)){
       # we don't want to include the 1N segments
-      minorZeroSegments <- segmentation[which(segmentation$minor==0 & segmentation$major>=2),]
+      minorZeroSegments <- allelicSegments[which(allelicSegments$minor==0 & allelicSegments$major>=2),]
       if(nrow(minorZeroSegments)>0){
         # convert to linear coordinates
         linPosStart <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
@@ -102,7 +117,7 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
     chromosomeStarts <- coords@chromStart[coords@chroms]/readDepthBinSize
     chromosomeEnds   <- coords@chromEnd[coords@chroms]/readDepthBinSize
     axis(side=3, at=chromosomeEnds, labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
-    axis(side=3, at=chromosomeStarts+(chromosomeEnds-chromosomeStarts)/2, line = -2, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+    axis(side=3, at=chromosomeStarts+(chromosomeEnds-chromosomeStarts)/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
   } else {
     plotEmptyLinearGenomePlot(chromsToPlot=mainChroms,coords=coords)
   }
@@ -111,7 +126,9 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
   if(!is.null(sampleId)) {
     title(main= sampleId,    adj= 0, line=1)
   }
-
+  if(!is.null(alternateId)) {
+    title(main= alternateId, adj= 1, line=1)
+  }
 
 }
 

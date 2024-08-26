@@ -10,11 +10,15 @@
   ### load data ###
   inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
 
+  # hetScores from 23 Normals,  101046 x 23 rows, one row for each 30kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment
+  # TODO: can I also make this example data? or should it be downloaded separately? file size= 18.6M
+  hsNormMat <- bmdTools::loadRdata('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata') # aka lohMat
+
   # segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
   segmentation= loadSegmentationFile(segmentationFile)
 
-  # hetScore data
+  # hetScore data - the output from calculateHetScore()
   hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
   hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScoreData <- as.data.frame(rtracklayer::import.wig(hetScorePerBinWigFile))
@@ -25,9 +29,8 @@
   hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
   readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
-  # TODO: can I also make this example data? or should it be downloaded separately? file size= 18.6M
-  hsNormMat <- bmdTools::loadRdata('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata') # aka lohMat
-  # hsNormMat=NULL
+
+
 
 
   # defaults
@@ -35,7 +38,7 @@
   centroArray <- getCentromerePositions(ideogram = ideogram)
   pause=FALSE; skipExtras=FALSE; omitAnnotations = FALSE;
   dPeaksCutoff=0.01;    penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1; maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;   # digital peaks
-  grabDataPercentManual= -1; cnvNormalizationInfo=NULL; origMaxPercentCutoffManual=-1;  #  peaksByDensity
+  grabDataPercentManual= -1; origMaxPercentCutoffManual=-1;  #  peaksByDensity
   minReasonableSegmentSize=5.5e6;
   heterozygosityScoreThreshold=0.98;  # If segment hetScore is more than this, the segment is heterozygous
   allowedTumorPercent = 106
@@ -43,21 +46,25 @@
 
   ### call calculatePloidy, the function to do all the ploidy work ---------
   loginfo('calculate ploidy for %s ', sampleId)
-  result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, folderId=alternateId,
+  result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
                          readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
                          segmentation=segmentation, centroArray = centroArray, hetScoreData = hetScoreData,
 
-                         segmentationBinSize=30000, numChroms=24,
-                         pause=FALSE, skipExtras=FALSE, omitAnnotations = FALSE,
+                         segmentationBinSize=segmentationBinSize, numChroms=numChroms,
+                         pause=pause, skipExtras=skipExtras, omitAnnotations = omitAnnotations,
 
-                         dPeaksCutoff=0.01,    penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1, forceFirstDigPeakCopyNum=-1,   # digital peaks
-                         grabDataPercentManual= -1, cnvNormalizationInfo=NULL, origMaxPercentCutoffManual=-1,  #  peaksByDensity
+                         dPeaksCutoff=dPeaksCutoff,    penaltyCoefForAddingGrids=penaltyCoefForAddingGrids, minGridHeight=minGridHeight, minPeriodManual=minPeriodManual, maxPeriodManual=maxPeriodManual, forceFirstDigPeakCopyNum=forceFirstDigPeakCopyNum,   # digital peaks
+                         grabDataPercentManual= grabDataPercentManual,  origMaxPercentCutoffManual=origMaxPercentCutoffManual,  #  peaksByDensity
 
-                         minReasonableSegmentSize=5.5e6,
-                         heterozygosityScoreThreshold=0.98,  # If segment hetScore is more than this, the segment is heterozygous
-                         allowedTumorPercent = 106,
+                         minReasonableSegmentSize=minReasonableSegmentSize,
+                         heterozygosityScoreThreshold=heterozygosityScoreThreshold,  # If segment hetScore is more than this, the segment is heterozygous
+                         allowedTumorPercent = allowedTumorPercent,
                          hsNormMat=hsNormMat
   )
+
+  calcPloidyResultOutputFile=file.path(outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
+  loginfo('saving result to: %s',calcPloidyResultOutputFile)
+  saveRDS(result, file=calcPloidyResultOutputFile)
 
   print(result)
 
