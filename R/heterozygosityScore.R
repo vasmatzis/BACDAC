@@ -75,7 +75,7 @@ calculateHetScore <- function(
   mainChroms <- 1:24
   # We skip Y chromosome because hetScore does not make much sense there
   mainChromsNoY <- 1:23
-  coords <- getLinearCoordinates(rgdObject, mainChroms)
+  coords <- getLinearCoordinates(mainChroms)
 
   # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
   if(!dir.exists(file.path(outputDir, 'reports'))){
@@ -210,7 +210,7 @@ saveHetScoreToWig <- function(wigFile, seqListTotal, seqValsTotal, chromsToSave,
                                  samplingStep) {
   # We go through GRanges object which is a bit of an overkill
   # but it allows us to use different formats than just wig if we wanted to
-  seqNames = convertChromToCharacter(chromsToSave, rgdObject, withChrPrefix = TRUE)
+  seqNames = convertChromToCharacter(chromsToSave, withChrPrefix = TRUE)
   data <- NULL
   for (i in chromsToSave) {
     part <- data.frame(seqname=seqNames[i], start=seqListTotal[[i]], value=seqValsTotal[[i]])
@@ -247,7 +247,7 @@ makeAndSaveHetScorePerArm <- function(hetScorePerArmFile, seqValsTotal, chromsTo
   #centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
   centroArray <- getCentromerePositions(ideogram = ideogram)
 
-  coords <- getLinearCoordinates(rgdObject, chromosomes = 1:24)
+  coords <- getLinearCoordinates(chromosomes = 1:24)
   numChromosomes <- length(chromsToSave)
 
   pVals <- chromsToSave * 0
@@ -362,7 +362,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
   mainChroms <- 1:24
   # We skip Y chromosome because hetScore does not make much sense there
   mainChromsNoY <- 1:23
-  coords <- getLinearCoordinates(rgdObject, mainChroms)
+  coords <- getLinearCoordinates(mainChroms)
 
   # check segmentation data (cnvIntervals)
   if(is.null(segmentation)) {
@@ -450,7 +450,7 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
 
   mainChroms <- 1:24
   chromsToPlot = 1:23
-  coords <- getLinearCoordinates(rgdObject, mainChroms)
+  coords <- getLinearCoordinates(mainChroms)
 
   # Make an overview plot
   # Get a plot started
@@ -487,7 +487,7 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
 
 
   for (i in chromsToPlot) {
-    chromName <- convertChromToCharacter(i, rgdObject, withChrPrefix=TRUE)
+    chromName <- convertChromToCharacter(i, withChrPrefix=TRUE)
 
     hetScoreForChrom <- hetScore[
       hetScore[['seqnames']]==chromName,
@@ -506,8 +506,8 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
     minorZeroSegments <- allelicSegments[which(allelicSegments$minor==0 & allelicSegments$major>=2),]
     if(nrow(minorZeroSegments)>0){
       # convert to linear coordinates
-      linPosStart <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
-      linPosEnd   <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
+      linPosStart <- abs(bimaToLinear(svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
+      linPosEnd   <- abs(bimaToLinear(svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
       # add allele=0 segments to plot and data.frame
       segments(x0 = linPosStart, y0 = 0, x1 = linPosEnd, y1 = 0, col = 'purple', lwd=3)
     }
@@ -522,7 +522,7 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
   # abline(h=yMap(1.0), col='green3')
 
   ## annotations
-  chrCharacters <- convertChromToCharacter(chromsToPlot,rgdObject = rgdObject) # required for X aka 23
+  chrCharacters <- convertChromToCharacter(chromsToPlot) # required for X aka 23
   axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
 
   # add if sampleId is provided
@@ -552,7 +552,7 @@ plotHetScorePerArm <- function(hetScorePerArm, sampleId=NULL,
 ) {
   # @example inst/examples/hetScoreSummaryPlotExample.R
   mainChroms <- 1:24
-  coords <- getLinearCoordinates(rgdObject, mainChroms)
+  coords <- getLinearCoordinates(mainChroms)
 
 
   # Make an overview plot

@@ -4,7 +4,7 @@
 \alias{markChromEdges}
 \title{add vertical lines to linear genome plot}
 \usage{
-markChromEdges(chromStarts, maxcn, rgdObject, vCol = "gray90")
+markChromEdges(chromStarts, maxcn, vCol = "gray90")
 }
 \arguments{
 \item{chromStarts}{must be same window size scale as the plotted frequency data}

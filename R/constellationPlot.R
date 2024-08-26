@@ -29,7 +29,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   mainChromsNoY <- 1:23
   mainChroms <- 1:24
   autosomes= 1:22
-  coords <- getLinearCoordinates(rgdObject, chromosomes = mainChroms)
+  coords <- getLinearCoordinates(chromosomes = mainChroms)
 
   # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
   inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
@@ -109,7 +109,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   # colList <- colors()[seq(1,length(colors()),length.out=24)[2:23]]
   for(chrNum in autosomes) {
     logdebug('process chr %i',chrNum)
-    lohSeqname <- convertChromToCharacter(chrNum, rgdObject = rgdObject, withChrPrefix=TRUE)
+    lohSeqname <- convertChromToCharacter(chrNum, withChrPrefix=TRUE)
     lohChr <- lohIn$score[which(chrList==lohSeqname)]
     posListChr <- posListFull[which(posListFull%in%c(chrStart[chrNum]:(chrStart[chrNum+1]-1)))]
     cnvListChr <- cnvListFull[which(posListFull%in%c(chrStart[chrNum]:(chrStart[chrNum+1]-1)))]
@@ -145,7 +145,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
                     size = min(length(which(cnvListFull>= (mainPeakNRD-0.025) & cnvListFull<(mainPeakNRD+0.025))),1000)) # take 1000 unless there aren't 1000 data points available
   ## get the chrom number of the sampled positions
   # replaces Jamie's... sapply(sampLoc,function(x) which(order(c(x,chrStart))==1)-1)
-  chrNumList <-linearToBima(rgdObject,globalPos = sampLoc, binSize =wsz )$svaNumber
+  chrNumList <-linearToBima(globalPos = sampLoc, binSize =wsz )$svaNumber
   posValTemp <- (sampLoc-chrStart[chrNumList]+1)*30000-15000
 
   # hist of the coverage you've sampled

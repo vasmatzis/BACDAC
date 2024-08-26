@@ -530,8 +530,8 @@ calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,d
 #'
 #' @param chromStarts must be same window size scale as the plotted frequency data
 #' @param maxcn max chromosome number
-markChromEdges <- function(chromStarts,maxcn,rgdObject,vCol='gray90'){
-  chroms <- convertChromToCharacter(1:maxcn, rgdObject = rgdObject)
+markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
+  chroms <- convertChromToCharacter(1:maxcn)
   abline(v=chromStarts[1:maxcn], col=vCol)
   for(ic in 1:maxcn) {
     mtext(side = 1, text = chroms[ic], line=-1, at = (chromStarts[ic]+chromStarts[ic+1])/2, cex=0.7)

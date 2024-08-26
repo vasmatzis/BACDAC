@@ -4,10 +4,7 @@
 \alias{getCentromerePositions}
 \title{Get centromere positions, will return NULL if no centromeres exist (i.e. in mouse, rat)}
 \usage{
-getCentromerePositions(ideogram)
-}
-\arguments{
-\item{ideogram}{sysdata object with cytoband descriptions for GRCh38}
+getCentromerePositions()
 }
 \value{
 Centromere position array. Two-dimensions - first is chromosome number, the other separates start and end positions.

@@ -17,10 +17,10 @@
 peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
                           addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,alternateId=NULL){
   # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
-  # peaksByDensity(sampleId,  rgdObject, cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08,pause=F);
+  # peaksByDensity(sampleId,  cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08,pause=F);
   #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; pause=F;origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
 
-  coords <- getLinearCoordinates(rgdObject, chromosomes = 1:numChroms)
+  coords <- getLinearCoordinates(chromosomes = 1:numChroms)
 
   ### get frequency array ---------------
   frqToUse <- readDepthPer100kbBin$readDepthArray
@@ -922,13 +922,10 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @param centroArray array with the positions of the centromeres for each chromosome
 #' @param hetScoreData heterozygosity scores determined per 30 kb bin over a 1 Mb region
 #' @param numChroms number of chromosomes in the reference genome to consider
-#' @param dPeaksCutoff
-#' @param penaltyCoefForAddingGrids
 #' @param minGridHeight minimum value that can be assigned to the gridHeights
 #' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
 #' @param pause pause execution until user prompts to continue, available interactively only, useful during testing
-#' @param noPdf
 #' @param skipExtras logical to turn on/off plots used for testing and debugging
 #' @param minPeriodManual manually set \code{minPeriod} within \code{calculatePloidy}
 #' @param maxPeriodManual manually set \code{maxPeriod} within \code{calculatePloidy}
@@ -972,7 +969,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
 
 
   xind <-23 # index of chrX
-  coords <- getLinearCoordinates(rgdObject, chromosomes = 1:numChroms)
+  coords <- getLinearCoordinates(chromosomes = 1:numChroms)
   maxcn <- numChroms
 
 
@@ -1079,8 +1076,8 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
 
 
       # TODO V1: remove/skip the centromeres and genomeGaps (heterochromatin etc.), they have noisy cnv and loh...might be skipped in wdnsMSK00, but not in segmentation
-      # gapArray    <- getGenomeGapPositions(ideogram=exampleIdeogram(), rgd = rgdObject)
-      # centroArray <- getCentromerePositions(ideogram = ideogram, rgd = rgdObject)
+      # gapArray    <- getGenomeGapPositions(ideogram=exampleIdeogram() )
+      # centroArray <- getCentromerePositions(ideogram = ideogram )
 
       # TODO: what is an appropriate min number of segments?  just enough so it doesn't crash?
       #       ie. PT626 has only 48 segments (none of which are in the first digital peak) for minReasonableSegmentSize <- 5.5e6, but 65 at minReasonableSegmentSize <- 5.0e6
@@ -1332,7 +1329,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
           }else{
             mtext(3, text=c(sampleId),adj=c(0))
           }
-          markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, rgdObject=rgdObject, vCol='gray30')
+          markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, vCol='gray30')
         }
 
         # mean and median Het. score for each segment
@@ -1357,7 +1354,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
           chrEnd   <- binnedPosEnd(coords@chromEnd[cn1], binSize = wsz)
 
           ### heterozygosity scores
-          lohSeqname <- convertChromToCharacter(cn1, rgdObject = rgdObject, withChrPrefix=TRUE)
+          lohSeqname <- convertChromToCharacter(cn1, withChrPrefix=TRUE)
           intersectingLoh <- which(hetScoreData[,'seqnames']==lohSeqname &
                                      hetScoreData[,'start'] >= segment[['start']] &
                                      hetScoreData[,'start'] < segment[['end']]) # TODO: should this be hetScoreData[,'end']?????
@@ -1382,7 +1379,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
                 points(hsNormMat[,i],type = 'p', col=i)
               }
               temp00chrStart <- binnedPosStart(coords@chromStart, binSize = wsz) # start positions must be same bin size as the plotted data
-              markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, rgdObject=rgdObject, vCol='gray30')
+              markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, vCol='gray30')
             }
 
             if(length(passedMaskedIntersectingLoh) > 0){

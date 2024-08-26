@@ -1,13 +1,12 @@
 #' Get object describing linear coordinate space for main chromosomes
 #'
-#' @param rgdObject sysdata object GRCh38 reference genome descriptor used for translating some chromosome names to numbers
 #' @param chromosomes List of main chromosomes (technically .sva files) to form the coordinate system from
 #' @return \link{linearCoordinates}
 #'
 #' @family coordinates
 #'
 #' @export
-getLinearCoordinates <- function(rgdObject, chromosomes=1:24) {
+getLinearCoordinates <- function(chromosomes=1:24) {
   uniqueChroms <- sort(unique(chromosomes))
 
   # Test that we have consecutive chromosome numbers. Our algorithms depend on this now.
@@ -298,12 +297,11 @@ seqFwd <- function(from=1, to=1) {
 #' Option to include "chr" prefix, if FALSE and if the 'chr' prefix is present, 'chr' will be removed.
 #'
 #' @param ichr number vector, for example:  2 or c(2,5,23)
-#' @param rgdObject Reference genome descriptor, if NULL assumes autosomes= chr1-22 and allosomes= chr23,24
 #' @param withChrPrefix if TRUE, will add "chr" to the front of every ichr value
 #'
 #' @return character vector of ichr
 #'
-convertChromToCharacter <- function(ichr,rgdObject=NULL, withChrPrefix=FALSE){
+convertChromToCharacter <- function(ichr,withChrPrefix=FALSE){
   result <- vector(mode = "numeric", length = length(ichr))
 
   # remove the 'chr' first to simplify the tests, and to make sure all are consistant
@@ -334,15 +332,13 @@ convertChromToCharacter <- function(ichr,rgdObject=NULL, withChrPrefix=FALSE){
 
 #' Get centromere positions, will return NULL if no centromeres exist (i.e. in mouse, rat)
 #'
-#' @param ideogram sysdata object with cytoband descriptions for GRCh38
-#'
 #' @return Centromere position array. Two-dimensions - first is chromosome number, the other separates start and end positions.
 #'
 #' @family ideogram
 #'
 #'
 #' @export
-getCentromerePositions <- function(ideogram) {
+getCentromerePositions <- function() {
   cytobands <- ideogram[['cytoBands']]
 
   xind <- 23

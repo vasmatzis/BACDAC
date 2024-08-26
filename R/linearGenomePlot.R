@@ -45,7 +45,7 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
   }
 
   mainChroms <- 1:24
-  coords <- getLinearCoordinates(rgdObject, mainChroms)
+  coords <- getLinearCoordinates(mainChroms)
 
   x <- readDepthBinnedData$goodWindowArray
   y = readDepthBinnedData$readDepthArray
@@ -69,7 +69,7 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
   if(length(x)>0) {
 
     chromosomesToDisplay <- mainChroms
-    chrCharacters <- convertChromToCharacter(coords@chroms,rgdObject=rgdObject)
+    chrCharacters <- convertChromToCharacter(coords@chroms)
 
     xlim <- c(0, binnedPosEnd(max(coords@chromEnd[chromosomesToDisplay]), readDepthBinSize))
     #ylim=c(0,max(y)/2)
@@ -101,8 +101,8 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
       minorZeroSegments <- allelicSegments[which(allelicSegments$minor==0 & allelicSegments$major>=2),]
       if(nrow(minorZeroSegments)>0){
         # convert to linear coordinates
-        linPosStart <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
-        linPosEnd   <- abs(bimaToLinear(rgd=rgdObject,  svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
+        linPosStart <- abs(bimaToLinear(svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
+        linPosEnd   <- abs(bimaToLinear(svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$end) )
         # convert to binned - linear coordinates
         linBinStart <- binnedPosStart(linPosStart, readDepthBinSize)
         linBinEnd <- binnedPosEnd(linPosEnd, readDepthBinSize)
@@ -233,9 +233,9 @@ makeLegacyDelAmp <- function(segmentation, coords) {
       interpretation <- 2
     }
 
-    binStart <- binnedPosStart(bimaToLinear(rgdObject, svaNumber = chrom_number, svaPos = edge1),
+    binStart <- binnedPosStart(bimaToLinear(svaNumber = chrom_number, svaPos = edge1),
                                wsz)
-    binEnd <- binnedPosEnd(bimaToLinear(rgdObject, svaNumber = chrom_number, svaPos = edge2),
+    binEnd <- binnedPosEnd(bimaToLinear(svaNumber = chrom_number, svaPos = edge2),
                            wsz)
 
     if (interpretation == 2) {

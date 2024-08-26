@@ -4,11 +4,9 @@
 \alias{getLinearCoordinates}
 \title{Get object describing linear coordinate space for main chromosomes}
 \usage{
-getLinearCoordinates(rgdObject, chromosomes = 1:24)
+getLinearCoordinates(chromosomes = 1:24)
 }
 \arguments{
-\item{rgdObject}{sysdata object GRCh38 reference genome descriptor used for translating some chromosome names to numbers}
-
 \item{chromosomes}{List of main chromosomes (technically .sva files) to form the coordinate system from}
 }
 \value{

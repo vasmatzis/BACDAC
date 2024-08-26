@@ -4,12 +4,10 @@
 \alias{convertChromToCharacter}
 \title{Convert chromosome integer to a character string}
 \usage{
-convertChromToCharacter(ichr, rgdObject = NULL, withChrPrefix = FALSE)
+convertChromToCharacter(ichr, withChrPrefix = FALSE)
 }
 \arguments{
 \item{ichr}{number vector, for example:  2 or c(2,5,23)}
-
-\item{rgdObject}{Reference genome descriptor, if NULL assumes autosomes= chr1-22 and allosomes= chr23,24}
 
 \item{withChrPrefix}{if TRUE, will add "chr" to the front of every ichr value}
 }
