@@ -18,15 +18,17 @@
 #' @param pause                      pause execution until user prompts to continue, available interactively only, useful during testing
 #' @param noPdf                      if present, do not create pdfs
 #' @param skipExtras                 logical to turn on/off plots used for testing and debugging
-#' @param minPeriodManual            manually set \code{minPeriod} within \code{calculatePloidy}
-#' @param maxPeriodManual            manually set \code{maxPeriod} within \code{calculatePloidy}
+#' @param minPeriodManual            user provided \code{minPeriod} for digital grid, default is -1 to indicate no user input
+#' @param maxPeriodManual            user provided \code{maxPeriod} for digital grid, default is -1 to indicate no user input
 #' @param forceFirstDigPeakCopyNum   value to force copy number of first digital peak, use only when ploidy calculation is wrong
 #' @param minReasonableSegmentSize   initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found
 #' @param outputDir                  output directory
 #' @param heterozygosityScoreThreshold peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation
 #' @param hsNormMat                  hetScores from  a database of 23 Normals,  101046 x 23 rows, one row for each 30 kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment
 
-#'
+#' @param peakInfo summary table of info for each peak found in \code{peaksByDensity}
+#' @param n00                       Precision for creating initial grid
+
 #' @param ideogram             The \link{ideogram} object. If not present, we attempt to use referenceGenomeDescriptor
 #'
 commonParameters <- function(

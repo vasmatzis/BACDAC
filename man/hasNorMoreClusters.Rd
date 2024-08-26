@@ -16,6 +16,8 @@ hasNorMoreClusters(
 
 \item{N}{minimum number of clusters}
 
+\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation}
+
 \item{minObservations}{required number of input values to determine number of clusters present}
 }
 \description{

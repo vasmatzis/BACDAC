@@ -10,7 +10,7 @@ digitalGrid(
   dPeaksCutoff,
   penaltyCoefForAddingGrids,
   n00,
-  someNumber = 8,
+  bonusFactor = 8,
   sampleId = NULL,
   alternateId = NULL,
   gridIteration,
@@ -26,18 +26,40 @@ digitalGrid(
 \arguments{
 \item{peakInfo}{summary table of info for each peak found in \code{peaksByDensity}}
 
-\item{dPeaksCutoff}{min grid height for a peak to be considered a digital peak}
+\item{gridHeights}{group of 8-10 grid heights set for each peak}
+
+\item{dPeaksCutoff}{dPeaksCutoff min grid height for a peak to be considered a digital peak}
+
+\item{penaltyCoefForAddingGrids}{penalty for adding additional peaks to the digital peak alignment}
+
+\item{n00}{Precision for creating initial grid}
+
+\item{bonusFactor}{factor for assigning bonuses to the peaks}
 
 \item{sampleId}{sample Identifier}
 
-\item{alternateId}{secondary sample identifier}
+\item{alternateId}{optional secondary sample identifier}
 
-\item{minPeriodManual}{user provided minPeriod, default is -1 to indicate no user input}
+\item{gridIteration}{iteration count for digital grid}
+
+\item{minPeriodManual}{user provided \code{minPeriod} for digital grid, default is -1 to indicate no user input}
+
+\item{maxPeriodManual}{user provided \code{maxPeriod} for digital grid, default is -1 to indicate no user input}
+
+\item{numOfGridCoordsToTest}{number of grid coordinates to test for the first digital peak}
+
+\item{previousPeriod}{period used in the previous \code{gridIteration}}
+
+\item{minGridHeight}{minimum value that can be assigned to the gridHeights}
+
+\item{iterationStats}{stats collected during each \code{gridIteration}}
+
+\item{omitAnnotations}{should extra annotation be included in digital grid plot}
 
 \item{absMinPeriod}{the smallest minPeriod allowed}
 }
 \value{
-dPeaks-the coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
+dPeaks grid coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
 decision tree for maxPeriodToTry, do not allow period to get bigger than this, set to firstToMainPeakGap when: 5 <= mainPeakIndex < 7
 decision tree for minPeriod
 }

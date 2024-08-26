@@ -12,6 +12,8 @@
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
 #' @param qualityPostNorm used to set max allowed value for grabDataPercent
 #'
+#' @inheritParams commonParameters
+#'
 peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
                           addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,alternateId=NULL){
   # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
@@ -270,6 +272,10 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
               scaledGrabDataPercentPerPeak    = scaledGrabDataPercentPerPeak))
 }
 
+#' each peak gets a group of grid heights based on the mode of the peak
+#'
+#' @inheritParams commonParameters
+#'
 assignGridHeights <- function(peakInfo, n00, minGridHeight){
   gridModes <- round(peakInfo$peakReadDepth_normX*n00)
   gridHeights <- array(0,c(10*n00))
@@ -342,33 +348,28 @@ assignGridHeights <- function(peakInfo, n00, minGridHeight){
 
 
 
-
 #' fit a group of peaks to a digital grid
 #'
 #' @param peakInfo summary table of info for each peak found in \code{peaksByDensity}
-#' @param gridHeights
-#' @param dPeaksCutoff min grid height for a peak to be considered a digital peak
-#' @param penaltyCoefForAddingGrids
-#' @param minGridHeight
-#' @param n00
-#' @param gridIteration
-#' @param numOfGridCoordsToTest
-#' @param previousPeriod
-#' @param minPeriodManual
-#' @param maxPeriodManual
-#' @param someNumber
-#' @param sampleId sample Identifier
-#' @param alternateId secondary sample identifier
+#' @param gridHeights group of 8-10 grid heights set for each peak
+#' @param gridIteration iteration count for digital grid
+#' @param numOfGridCoordsToTest number of grid coordinates to test for the first digital peak
+#' @param previousPeriod period used in the previous \code{gridIteration}
+#' @param bonusFactor factor for assigning bonuses to the peaks
+#' @param iterationStats stats collected during each \code{gridIteration}
+#' @param omitAnnotations should extra annotation be included in digital grid plot
 #'
-#' @return dPeaks-the coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
+#' @inheritParams commonParameters
+#'
+#' @return dPeaks grid coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
 digitalGrid <- function(peakInfo, gridHeights,
                         dPeaksCutoff, penaltyCoefForAddingGrids,
-                        n00, someNumber=8, sampleId=NULL, alternateId=NULL,
+                        n00, bonusFactor=8, sampleId=NULL, alternateId=NULL,
                         gridIteration, minPeriodManual=minPeriodManual,maxPeriodManual=maxPeriodManual,
                         numOfGridCoordsToTest=NULL,
                         previousPeriod=NULL,
                         minGridHeight,iterationStats,omitAnnotations=FALSE){
-  # dPeaksCutoff=0.01; minGridHeight=0.2; penaltyCoefForAddingGrids=0.049; n00=100;someNumber=8; previousPeriod=NULL;omitAnnotations=FALSE
+  # dPeaksCutoff=0.01; minGridHeight=0.2; penaltyCoefForAddingGrids=0.049; n00=100;bonusFactor=8; previousPeriod=NULL;omitAnnotations=FALSE
 
   gridModes       <- round(peakInfo$peakReadDepth_normX*n00)
   peakRD_normX    <- peakInfo$peakReadDepth_normX
@@ -468,7 +469,7 @@ digitalGrid <- function(peakInfo, gridHeights,
           if(plotDigDebug){
             # make a new plot since the previous one is probably getting cluttered
             if(iCol %% 8 ==0){
-              yMin <- -someNumber/10
+              yMin <- -bonusFactor/10
               plot(x=gridModes,
                    y=peakHeights,
                    main=paste('Digital grid iteration:',gridIteration),
@@ -515,7 +516,7 @@ digitalGrid <- function(peakInfo, gridHeights,
   # Plot digital grid results
   plotDigitalGrid <- function(omitAnnotations){
     if(TRUE){
-      yMin <- -someNumber/10
+      yMin <- -bonusFactor/10
       plot(x=gridModes,
            y=peakHeights,
            main="",
@@ -656,8 +657,9 @@ digitalGrid <- function(peakInfo, gridHeights,
   }
 
   #' decision tree for minPeriod
-  #' @param minPeriodManual user provided minPeriod, default is -1 to indicate no user input
   #' @param absMinPeriod the smallest minPeriod allowed
+  #'
+  #' @inheritParams commonParameters
   setMinPeriod <- function(previousPeriod,minPeriodManual,absMinPeriod,firstToSecPeakGap,firstToThirdPeakGap,firstToForthPeakGap,firstToFifthPeakGap){
     if(minPeriodManual < 0){
 
@@ -957,8 +959,6 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
   coords <- getLinearCoordinates(rgdObject, chromosomes = 1:numChroms)
   maxcn <- numChroms
 
-  # TODO: do we still want/need this?
-  # hsNormMat   <- loadRdata(file.path(mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata')) # aka lohMat
 
   ################################'
   ### peaks By density------
@@ -1017,8 +1017,8 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
     bonusLinear <- bonusLinear[reorderIndex]
 
     ## 2)  normalized to the max peak which is 1
-    someNumber <- 8  # heuristic, if it changes how should penalty change?
-    bonusRelative <- peakInfo$peakHeight*someNumber
+    bonusFactor <- 8  # heuristic, if it changes how should penalty change?
+    bonusRelative <- peakInfo$peakHeight*bonusFactor
 
     ## 3)  both options
     bonusOther <- 1 # bonusRelative* bonusLinear
@@ -1032,7 +1032,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
 
   ### load data ----------
   if(TRUE){
-    wsz <- 30000
+    wsz <- readDepthPer30kbBin$windowSize
 
     ### get frequency array ---------------
     frq00 <- readDepthPer30kbBin$readDepthArray       # y axis
@@ -1145,7 +1145,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
     minSegment <- round(min(segmentData$size)/1000000,1)
     maxSegment <- round(max(segmentData$size)/1000000,1)
     meanSegment <- round(mean(segmentData$size)/1000000,1)
-    logdebug('segmentData: min = %s Mb  max = %s Mb  mean = %s Mb', minSegment, maxSegment, meanSegment)
+    logdebug('segmentData from segmentation: min = %s Mb  max = %s Mb  mean = %s Mb', minSegment, maxSegment, meanSegment)
 
     segmentDataSizes=list(minReasonableSegmentSizeFinal=minReasonableSegmentSizeFinal,
                           minSegment=minSegment,
@@ -1196,7 +1196,6 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
   ## layout Grid coordinates (red dots) ------
   ## heights (bonus) and positions (at grid modes)
   n00 <- 100 # Precision with which the "digital grid" is created
-  # minGridHeight             TODO: what is the correct value?
   gridHeights <- assignGridHeights(peakInfo, n00, minGridHeight )
   nonZeroGridCoords <- which(gridHeights > 0)
 
@@ -1217,7 +1216,7 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
 
     digGridResult <- digitalGrid(peakInfo, gridHeights,
                                  dPeaksCutoff,penaltyCoefForAddingGrids,
-                                 n00=n00, someNumber = someNumber, sampleId=sampleId, alternateId=alternateId,
+                                 n00=n00, bonusFactor = bonusFactor, sampleId=sampleId, alternateId=alternateId,
                                  gridIteration=gridIteration, minPeriodManual=minPeriodManual, maxPeriodManual=maxPeriodManual,
                                  numOfGridCoordsToTest=numOfGridCoordsToTest,
                                  previousPeriod = period,minGridHeight=minGridHeight,

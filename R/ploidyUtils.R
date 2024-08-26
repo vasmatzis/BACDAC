@@ -35,8 +35,8 @@ getDiploidPeakNRD=function(result){
 #'
 #' @param hetScoreDensityResult hetScore values returned from density function
 #' @param N minimum number of clusters
-#' @param heterozygosityScoreThreshold
 #' @param minObservations required number of input values to determine number of clusters present
+#' @inheritParams commonParameters
 hasNorMoreClusters <- function(hetScoreDensityResult, N, heterozygosityScoreThreshold, minObservations=20){
   # hetScoreDensityResult=densityFirstDigPeak
   if(hetScoreDensityResult$observ > minObservations){
@@ -561,12 +561,12 @@ getCNcolors <- function(){
 
 #' create the starLookUp table
 #' @export
-makeStarLookUpTable <- function(starInfo,percentTumor){
+makeStarLookUpTable <- function(starCloudResult,percentTumor){
   # percentTumor= ploidyOutput$percentTumor
 
   # create the starLookUp table
-  hetScore <- starInfo$starVals / starInfo$medStarVals
-  nrd <- starInfo$plotStarRange
+  hetScore <- starCloudResult$starVals / starCloudResult$medStarVals
+  nrd <- starCloudResult$plotStarRange
   cn <- round(calcCopyNumber(NRD=nrd, tau=percentTumor/100))
   starLookUp <- data.frame(hetScore,
                            nrd=round(nrd,3),
@@ -705,13 +705,13 @@ getLohContent <- function(allelicSegData){
 #' RMSD is not appropriate for this test because RMSD squares the data to get only positive values,
 #' we want to check for too large of a negative difference, large positive differences may occur especially at high tumor
 #' when the clouds shift right of the loh line but this does not signal an error in the ploidy determination
-#' @param starInfo
+#' @param starCloudResult result output from \code{plotStarsInTheClouds}
 #' @param segmentData segments used in calculatePloidy which has meanLOH per segment
 #' @param percentTumor as output from calculateploidy
-ploidyCheck <- function(starInfo, segmentData, percentTumor){
+ploidyCheck <- function(starCloudResult, segmentData, percentTumor){
   #  segmentData <- allelicSegData; percentTumor=result$percentTumor
 
-  starLookUp <- makeStarLookUpTable(starInfo,percentTumor)
+  starLookUp <- makeStarLookUpTable(starCloudResult,percentTumor)
 
   lohIndexes <- which(segmentData$minor==0) # & segmentData$copy_number>0)
   lohSegments <- segmentData[lohIndexes,]  # lohSegments[lohSegments$chr==8,]; segmentData[segmentData$chr==8,]

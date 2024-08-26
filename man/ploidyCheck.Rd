@@ -4,9 +4,11 @@
 \alias{ploidyCheck}
 \title{calculate the error in hetScore between the loh segments and the corresponding theoretical value}
 \usage{
-ploidyCheck(starInfo, segmentData, percentTumor)
+ploidyCheck(starCloudResult, segmentData, percentTumor)
 }
 \arguments{
+\item{starCloudResult}{result output from \code{plotStarsInTheClouds}}
+
 \item{segmentData}{segments used in calculatePloidy which has meanLOH per segment}
 
 \item{percentTumor}{as output from calculateploidy}

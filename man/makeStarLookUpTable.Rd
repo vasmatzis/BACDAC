@@ -4,7 +4,7 @@
 \alias{makeStarLookUpTable}
 \title{create the starLookUp table}
 \usage{
-makeStarLookUpTable(starInfo, percentTumor)
+makeStarLookUpTable(starCloudResult, percentTumor)
 }
 \description{
 create the starLookUp table

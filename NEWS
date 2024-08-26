@@ -1,2 +1,4 @@
 Changes in BACDAC 0.0.1
   o first version of BACDAC released, passing check() with working examples and documentation
+Changes in BACDAC 0.0.2
+  o added more functions, examples, documentation

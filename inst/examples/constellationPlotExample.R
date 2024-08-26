@@ -3,7 +3,7 @@
   library(BACDAC)
 
   # intialize
-  starInfo=NULL;
+  starCloudResult=NULL;
   saveHetScoreRdata=FALSE
   starCloudPlotInputs=NULL
   noPdf=TRUE
@@ -45,7 +45,7 @@
       on.exit(dev.off(), add=TRUE)
     }
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
-  starInfo=plotStarsInTheClouds(sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+  starCloudResult=plotStarsInTheClouds(sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
                                   plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
                                   segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
                                   digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
@@ -74,7 +74,7 @@
 
     # figure 1
     op <- par(mar=c(5,3, 2,2.5),mgp=c(1.5, 0.5,0))
-    starInfo=plotStarsInTheClouds(sampleId=NULL, alternateId=NULL,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+    starCloudResult=plotStarsInTheClouds(sampleId=NULL, alternateId=NULL,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
                                   plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
                                   segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
                                   digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
@@ -83,12 +83,12 @@
 
     # figure 2
     op <- par(mar=c(1,3,2,1),mgp=c(1.5, 0.5,0))
-    plotHetScorePerBin(hetScore,  allelicSegments=starInfo$allelicSegments, sampleId=sampleId)
+    plotHetScorePerBin(hetScore,  allelicSegments=starCloudResult$allelicSegments, sampleId=sampleId)
 
     # figure 3
     op <- par(mar=c(2, 3, 1,1),mgp=c(1.5, 0.5,0))
     linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
-                      allelicSegments=starInfo$allelicSegments,
+                      allelicSegments=starCloudResult$allelicSegments,
                       gainColor = 'blue', lossColor= 'red')
     par(op)
 
@@ -103,7 +103,7 @@
 
     # figure 1
     op <- par(mar=c(5,3, 2,2.5),mgp=c(1.5, 0.5,0))
-    starInfo=plotStarsInTheClouds(sampleId=NULL, alternateId=NULL,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+    starCloudResult=plotStarsInTheClouds(sampleId=NULL, alternateId=NULL,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
                                   plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
                                   segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
                                   digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
@@ -113,14 +113,14 @@
     # figure 2
     op <- par(mar=c(2, 3, 1,1),mgp=c(1.5, 0.5,0))
     linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
-                      allelicSegments=starInfo$allelicSegments,
+                      allelicSegments=starCloudResult$allelicSegments,
                       gainColor = 'blue', lossColor= 'red')
     par(op)
 
 
     ### save some data ----
 
-    starLookUp=makeStarLookUpTable(starInfo,percentTumor=calcPloidyResult$percentTumor)
+    starLookUp=makeStarLookUpTable(starCloudResult,percentTumor=calcPloidyResult$percentTumor)
 
     # save the data for future use
     # WARNING: this must match exactly what is in cnvDetect2 where it is typically saved
@@ -130,12 +130,12 @@
       starLookUp=starLookUp,
       expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp,
       percentTumor=calcPloidyResult$percentTumor,
-      ploidyCN=starInfo$ploidyCN,
-      diploidPeakNRD=starInfo$diploidPeakNRD,
+      ploidyCN=starCloudResult$ploidyCN,
+      diploidPeakNRD=starCloudResult$diploidPeakNRD,
       mainPeakNRD=mainPeakNRD,
       ploidySegments=calcPloidyResult$segmentData,
-      lohContent=starInfo$lohContent,
-      plotAxisLimits=starInfo$plotAxisLimits,
+      lohContent=starCloudResult$lohContent,
+      plotAxisLimits=starCloudResult$plotAxisLimits,
       # inputs:
       forceFirstDigPeakCopyNum=forceFirstDigPeakCopyNum,
       grabDataPercentManual=grabDataPercentManual,

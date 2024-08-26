@@ -36,6 +36,8 @@ peaksByDensity(
 
 \item{qualityPostNorm}{used to set max allowed value for grabDataPercent}
 
+\item{pause}{pause execution until user prompts to continue, available interactively only, useful during testing}
+
 \item{alternateId}{secondary sample identifier}
 }
 \description{
