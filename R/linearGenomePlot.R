@@ -12,7 +12,7 @@
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear genome plot, default is red
-#' @zebraStrips option to have alternating gray/white background for chromosome delineation
+#' @param zebraStrips option to have alternating gray/white background for chromosome delineation
 #' @param ... Parameters passed onto the actual plot command
 #'
 #' @examples

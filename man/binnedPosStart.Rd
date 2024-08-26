@@ -35,6 +35,7 @@ Other coordinates:
 \code{\link{bimaToLinear}()},
 \code{\link{binnedPosEnd}()},
 \code{\link{getLinearCoordinates}()},
-\code{\link{linearCoordinates}}
+\code{\link{linearCoordinates}},
+\code{\link{linearToBima}()}
 }
 \concept{coordinates}

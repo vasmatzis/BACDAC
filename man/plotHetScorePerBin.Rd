@@ -6,17 +6,15 @@
 \usage{
 plotHetScorePerBin(
   hetScore,
-  chromsToPlot,
   sampleId = NULL,
   yMap = function(y) {     y },
   ylab = "Heterozygosity Score",
-  segmentation = NULL
+  allelicSegments = NULL,
+  zebraStrips = FALSE
 )
 }
 \arguments{
 \item{hetScore}{binned heterozygosity scores as loaded from the hetScore wig file}
-
-\item{chromsToPlot}{Vector of chromosome numbers to plot}
 
 \item{sampleId}{sample id, will be used as the prefix for all input and output file names}
 
@@ -24,7 +22,9 @@ plotHetScorePerBin(
 
 \item{ylab}{label for y axis default "Heterozygosity Score"}
 
-\item{segmentation}{segments with major and minor allelic specific copy number}
+\item{allelicSegments}{segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number}
+
+\item{zebraStrips}{option to have alternating gray/white background for chromosome delineation}
 }
 \description{
 These plots show the heterozygosity scores per bin.

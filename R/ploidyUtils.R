@@ -29,8 +29,12 @@ getDiploidPeakNRD=function(result){
   return(diploidPeakNRD)
 }
 
-
-#' @param N min number of clusters
+#' determine if the peak has a minimum number of clusters
+#'
+#' @param hetScoreDensityResult hetScore values returned from density function
+#' @param N minimum number of clusters
+#' @param heterozygosityScoreThreshold
+#' @param minObservations required number of input values to determine number of clusters present
 hasNorMoreClusters <- function(hetScoreDensityResult, N, heterozygosityScoreThreshold, minObservations=20){
   # hetScoreDensityResult=densityFirstDigPeak
   if(hetScoreDensityResult$observ > minObservations){

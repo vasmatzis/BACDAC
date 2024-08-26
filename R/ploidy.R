@@ -933,7 +933,6 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @param maxPeriodManual manually set \code{maxPeriod} within \code{calculatePloidy}
 #' @param forceFirstDigPeakCopyNum value to force copy number of first digital peak, use only when ploidy calculation is wrong
 #' @param minReasonableSegmentSize initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found
-#' @inheritParams commonParameters
 #'
 #' @example inst/examples/calculatePloidyExample.R
 #'
