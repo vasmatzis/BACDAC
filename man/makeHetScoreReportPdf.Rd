@@ -11,6 +11,7 @@ makeHetScoreReportPdf(
   readDepthBinnedData = NULL,
   readDepthBinSize = 30000,
   sampleId,
+  alternateId = NULL,
   outputDir,
   gainColor = "blue",
   lossColor = "red",
@@ -29,7 +30,9 @@ makeHetScoreReportPdf(
 
 \item{readDepthBinSize}{size of each window}
 
-\item{sampleId}{sample id, will be used as the prefix for all input and output file names}
+\item{sampleId}{sample Identifier}
+
+\item{alternateId}{optional secondary sample identifier}
 
 \item{outputDir}{full path for output files}
 
@@ -39,21 +42,29 @@ makeHetScoreReportPdf(
 
 \item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
 
-\item{noPdf}{When TRUE, pdf files will not be generated, instead plots are drawn on default device}
+\item{noPdf}{if present, do not create pdfs}
 }
 \description{
 Will show 3 separate plots contrasting CNV, heterozygosity score per 30K and heterozygosity score per arm.
 }
 \examples{
 sampleId='TCGA-14-1402-02A_ds'
-inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
-hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
+alternateId=NULL
+outputDir <- tempdir()
+
+# inputDir is the path to input data, either the users data, or in this example, the package data
+inputDir <- system.file('extdata', package = "BACDAC")
+outputDir = '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+hetScoreDir=file.path(outputDir, 'reports') # outputDir here is the outputDir for calculateHetScore.R
 hetScorePerArmFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerArm.csv'))
 hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
+
 segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 readDepthBinnedData = readRDS(file=thirtyKbFile )
+
+gainColor = 'blue'; lossColor= 'red'; noDelAmpDetection=FALSE; noPdf=TRUE
 
  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 # default cnv coloring (by default) and annotations
@@ -61,5 +72,4 @@ makeHetScoreReportPdf(
    hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,
    segmentation=segmentation,readDepthBinnedData=readDepthBinnedData,
    readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
-
 }

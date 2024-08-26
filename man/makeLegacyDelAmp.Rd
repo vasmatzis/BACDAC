@@ -9,7 +9,7 @@ makeLegacyDelAmp(segmentation, coords)
 \arguments{
 \item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
 
-\item{coords}{linear genome coordinates, loaded via \code{getLinearCoordinates(rgd=rgdObject)}}
+\item{coords}{linear genome coordinates, loaded via \code{getLinearCoordinates()}}
 }
 \description{
 for compatibility with genomePlot. Make George's old array from new structure: 1=normal, -1=loss, 2=gain

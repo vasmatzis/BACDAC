@@ -23,27 +23,21 @@
 #'
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
-#' inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'
-#' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-#'
-#'
-#'  sampleId='TCGA-14-1402-02A_ds'
-#'  inputDir <- system.file('extdata', package = "BACDAC")
-#'  outputDir <- tempdir()
-#'  segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-#'  segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE)
-#'  # check for required columns
-#'  requiredColumns=c('chr', 'start', 'end','rd')
-#'  missingColumnKey=which(!requiredColumns %in% names(segmentation))
-#'  if(length(missingColumnKey)>0){
-#'    logerror('missing required column: %s',requiredColumns[missingColumnKey])
-#'  }
+#' # inputDir is the path to the load package data
+#' inputDir <- system.file('extdata', package = "BACDAC")
+#' outputDir = tempDir() # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+#' segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+#' segmentation= loadSegmentationFile(segmentationFile) # per segment: chr, start, end, rd
+#' # defaults:
+#' noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1; trimExtraPerCoverage = 0.1; minSnpsToCalculateStatistic = 20; samplingStep = 30000; extraWindow = 1000000
+#' readDepthBinnedData=NULL; readDepthBinSize=30000; gainColor='blue'; lossColor='red'; noDelAmpDetection=FALSE
 #'
 #' @example inst/examples/calculateHetScoreExample.R
 #'
 #' @export
 calculateHetScore <- function(
     sampleId,
+    alternateId=NULL,
     inputDir,
     outputDir,
     segmentation=NULL,
@@ -64,11 +58,6 @@ calculateHetScore <- function(
     noDelAmpDetection=FALSE  # FALSE = gray plot, TRUE= use gain and loss info to color plot
 ) {
   # sysdata loaded automatically: rgdObject, ideogram
-
-  # maximumCoverage = 1000;  trimFromAlt = 2;  trimFromRef = 1;  trimExtraPerCoverage = 0.1;  minSnpsToCalculateStatistic = 20;  samplingStep = 30000;  extraWindow = 1000000
-
-  # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-  # sampleId='TCGA-14-1402-02A_ds'; inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/data'; outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 
   mainChroms <- 1:24
   # We skip Y chromosome because hetScore does not make much sense there
@@ -97,7 +86,7 @@ calculateHetScore <- function(
   loginfo('loading ref and alt counts from inputDir: %s', inputDir)
 
   for (i in mainChromsNoY) {
-    loginfo('loading chrom %i',i)
+    loginfo('calculating chrom %i',i)
     ichrChar=convertChromToCharacter(i)
 
 
@@ -110,7 +99,7 @@ calculateHetScore <- function(
     }else{
       # loading BACDAC .Rds inputs
       iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
-      loginfo('%i loading %s',i, iFile)
+      logdebug('%i loading %s',i, iFile)
 
       iRefAltCount = readRDS(file=iFile )
       countBPFull=iRefAltCount[,c('ref', 'alt')]
@@ -186,7 +175,7 @@ calculateHetScore <- function(
     segmentation=segmentation,
     readDepthBinnedData=readDepthBinnedData,
     readDepthBinSize=readDepthBinSize,
-    sampleId=sampleId,
+    sampleId=sampleId, alternateId = alternateId,
     outputDir=outputDir,
     gainColor = gainColor, lossColor= lossColor,noDelAmpDetection=noDelAmpDetection,
     noPdf=noPdf)
@@ -316,21 +305,21 @@ loadHetScoreFromWig <- function(wigFile) {
 #' @param hetScorePerBinWigFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
 #' @param hetScorePerArmFile full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
-#' @param sampleId sample id, will be used as the prefix for all input and output file names
 #' @param outputDir full path for output files
 #' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
 #' @param readDepthBinSize size of each window
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear geneome plot, default is red
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
-#' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
-#'
+#' @inheritParams commonParameters
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
+#' alternateId=NULL
 #' outputDir <- tempdir()
 #'
 #' # inputDir is the path to input data, either the users data, or in this example, the package data
 #' inputDir <- system.file('extdata', package = "BACDAC")
+#' outputDir = '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 #' hetScoreDir=file.path(outputDir, 'reports') # outputDir here is the outputDir for calculateHetScore.R
 #' hetScorePerArmFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerArm.csv'))
 #' hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
@@ -340,6 +329,8 @@ loadHetScoreFromWig <- function(wigFile) {
 #' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 #' readDepthBinnedData = readRDS(file=thirtyKbFile )
 #'
+#' gainColor = 'blue'; lossColor= 'red'; noDelAmpDetection=FALSE; noPdf=TRUE
+
 #'
 #'  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 #' # default cnv coloring (by default) and annotations
@@ -347,7 +338,6 @@ loadHetScoreFromWig <- function(wigFile) {
 #'    hetScorePerBinWigFile=hetScorePerBinWigFile,hetScorePerArmFile=hetScorePerArmFile,
 #'    segmentation=segmentation,readDepthBinnedData=readDepthBinnedData,
 #'    readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
-#'
 #' @export
 makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
                                   hetScorePerArmFile,
@@ -355,6 +345,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
                                   readDepthBinnedData=NULL,
                                   readDepthBinSize=30000,
                                   sampleId,
+                                  alternateId=NULL,
                                   outputDir,
                                   gainColor = 'blue', lossColor= 'red', noDelAmpDetection=FALSE,
                                   noPdf=FALSE) {
@@ -398,12 +389,14 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
                       sampleId=NULL, noDelAmpDetection = noDelAmpDetection,
                       gainColor = gainColor, lossColor= lossColor)
   }else{
+    logwarn('no readDepthBinnedData provided so printing and empty linear Genome Plot')
     plotEmptyLinearGenomePlot(chromsToPlot=mainChromsNoY,coords=coords)
   }
 
   # annotate with title and sampleId in the upper left
   title(main= 'Heterozygosity Score Report', outer = TRUE)
   mtext(sampleId,side=3, adj=0)
+  mtext(alternateId,side=3, adj=1)
   # mtext(sampleId, side = 3, line= 1, outer=TRUE, cex= 1, adj=0)
 
 
@@ -525,7 +518,7 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
 
   ## annotations
   chrCharacters <- convertChromToCharacter(chromsToPlot) # required for X aka 23
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -1.3, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
 
   # add if sampleId is provided
   if(!is.null(sampleId)) {
@@ -555,7 +548,9 @@ plotHetScorePerArm <- function(hetScorePerArm, sampleId=NULL,
   # @example inst/examples/hetScoreSummaryPlotExample.R
   mainChroms <- 1:24
   coords <- getLinearCoordinates(mainChroms)
-
+  # We skip Y chromosome because hetScore does not make much sense there
+  mainChromsNoY <- 1:23
+  chromsToPlot = mainChromsNoY
 
   # Make an overview plot
   # Get a plot started
@@ -606,7 +601,7 @@ plotHetScorePerArm <- function(hetScorePerArm, sampleId=NULL,
 
   ## annotations
   chrCharacters <- convertChromToCharacter(chromsToPlot) # required for X aka 23
-  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+  axis(side=3, at=(coords@chromEnd[chromsToPlot]+coords@chromStart[chromsToPlot])/2, line = -1.3, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
   axis(side=3, at=pqLabelPos, line=-2.6, labels = hetScorePerArm[,'arm'], cex.axis=0.85, tick = FALSE) # Draw labels
   # add if sampleId is provided
   if(!is.null(sampleId)) {

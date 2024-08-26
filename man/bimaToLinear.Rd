@@ -4,11 +4,9 @@
 \alias{bimaToLinear}
 \title{Translate from BIMA coordinates to linear genome.}
 \usage{
-bimaToLinear(rgd, svaNumber, svaPos, binSize = 1)
+bimaToLinear(svaNumber, svaPos, binSize = 1)
 }
 \arguments{
-\item{rgd}{Reference Genome Descriptor}
-
 \item{svaNumber}{BIMA chromosome number (as present in the SVA file)}
 
 \item{svaPos}{Position within the sequence (1-based)}
@@ -25,12 +23,6 @@ return negative number.
 Translate a list of BIMA chromosomes (svaNumbers) and BIMA positions to the
 linear genome coordinates. The linear genome starts at position 1 and
 consists of all sequences in linear order.
-}
-\note{
-Fix the bug with binSize rounding in two passes
-
-\code{bimaToLinear(rgd, svaNumber, abs(svaPos), binSize=10000)} replaces
-the original \code{conver10Kserial(svaPos, svaNumber)}
 }
 \seealso{
 Other coordinates: 

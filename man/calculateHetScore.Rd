@@ -6,6 +6,7 @@
 \usage{
 calculateHetScore(
   sampleId,
+  alternateId = NULL,
   inputDir,
   outputDir,
   segmentation = NULL,
@@ -65,39 +66,37 @@ To plot see \link{plotHetScorePerBin} and the three graph plot function \link{ma
 }
 \examples{
 sampleId='TCGA-14-1402-02A_ds'
-inputDir='/research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/loh'
-outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-
-
- sampleId='TCGA-14-1402-02A_ds'
- inputDir <- system.file('extdata', package = "BACDAC")
- outputDir <- tempdir()
- segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
- segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE)
- # check for required columns
- requiredColumns=c('chr', 'start', 'end','rd')
- missingColumnKey=which(!requiredColumns \%in\% names(segmentation))
- if(length(missingColumnKey)>0){
-   logerror('missing required column: \%s',requiredColumns[missingColumnKey])
- }
+# inputDir is the path to the load package data
+inputDir <- system.file('extdata', package = "BACDAC")
+outputDir = tempDir() # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+segmentation= loadSegmentationFile(segmentationFile) # per segment: chr, start, end, rd
+# defaults:
+noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1; trimExtraPerCoverage = 0.1; minSnpsToCalculateStatistic = 20; samplingStep = 30000; extraWindow = 1000000
+readDepthBinnedData=NULL; readDepthBinSize=30000; gainColor='blue'; lossColor='red'; noDelAmpDetection=FALSE
 
 \dontrun{
 
   library(BACDAC)
   # calculateHetScoreExample.R
+  # generate heterozygosity score by bin and by arm
+  # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm
+
   basicConfig("DEBUG")
-  sampleId='TCGA-14-1402-02A_ds'
+  sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
   outputDir <- tempdir()
 
+  # inputDir is the path to the load package data
   inputDir <- system.file('extdata', package = "BACDAC")
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
   segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
 
   calculateHetScore(
-    sampleId,
-    inputDir,
+    sampleId=sampleId,
+    inputDir=inputDir,
     outputDir=outputDir,
     segmentation=segmentation,
     noPdf = TRUE)
+
 }
 }

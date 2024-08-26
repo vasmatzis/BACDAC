@@ -163,7 +163,6 @@ binnedPosStart <- function(pos, binSize=1000) {
 #' linear genome coordinates. The linear genome starts at position 1 and
 #' consists of all sequences in linear order.
 #'
-#' @param rgd Reference Genome Descriptor
 #' @param svaNumber BIMA chromosome number (as present in the SVA file)
 #' @param svaPos Position within the sequence (1-based)
 #' @param binSize How to round the coordinates. The result will be divided by this number.
@@ -173,24 +172,18 @@ binnedPosStart <- function(pos, binSize=1000) {
 #' @return Linear genome position (1-based). For negative \code{svaPos}
 #' return negative number.
 #'
-#' @note Fix the bug with binSize rounding in two passes
-#'
-#' @note \code{bimaToLinear(rgd, svaNumber, abs(svaPos), binSize=10000)} replaces
-#' the original \code{conver10Kserial(svaPos, svaNumber)}
 #'
 #' @family coordinates
 #'
 #' @export
-bimaToLinear <- function(rgd, svaNumber, svaPos, binSize=1)
+bimaToLinear <- function(svaNumber, svaPos, binSize=1)
 {
-  # checkSvaNumber(svaNumber)
-
   # store signs of the positions and take absolute values
   posSign <- as.numeric(svaPos>=0)*2-1 # Convert >=0 to 1, <0 to -1
   svaPos <- pmax(0, abs(svaPos)-1) # Clamp because inconsistency of BIMA
 
   # Convert BIMA coordinates to global ones
-  globalPos <- trunc((rgd$globalCoordinates$svaOffset[svaNumber+1]-1)/binSize)+trunc(svaPos/binSize)+1
+  globalPos <- trunc((rgdObject$globalCoordinates$svaOffset[svaNumber+1]-1)/binSize)+trunc(svaPos/binSize)+1
 
   return(globalPos * posSign)
 }
@@ -200,7 +193,6 @@ bimaToLinear <- function(rgd, svaNumber, svaPos, binSize=1)
 #'
 #' This is an inverse function to \link{bimaToLinear}.
 #'
-#' @param rgd Reference Genome Descriptor
 #' @param globalPos linear genome position (1-based)
 #' @param binSize Size of bin that was originally used
 #'
@@ -213,7 +205,7 @@ bimaToLinear <- function(rgd, svaNumber, svaPos, binSize=1)
 #' @family coordinates
 #'
 #' @export
-linearToBima <- function(rgd, globalPos, binSize=1)
+linearToBima <- function(globalPos, binSize=1)
 {
   # store signs of the positions and take absolute values
   posSign <- as.numeric(globalPos>=0)*2-1 # Convert >=0 to 1, <0 to -1
@@ -221,7 +213,7 @@ linearToBima <- function(rgd, globalPos, binSize=1)
   gp <- abs(globalPos)-1
 
   # The offset part of the calculation
-  svaOffsets <- trunc((rgd$globalCoordinates$svaOffset-1)/binSize)
+  svaOffsets <- trunc((rgdObject$globalCoordinates$svaOffset-1)/binSize)
 
   # Deal with NAs when broken sequence of svas
   names(svaOffsets) <- seqFwd(from=0, to=length(svaOffsets)-1)

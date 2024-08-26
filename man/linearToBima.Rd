@@ -4,11 +4,9 @@
 \alias{linearToBima}
 \title{Translate linear genome coordinates back to reference genome coordinates}
 \usage{
-linearToBima(rgd, globalPos, binSize = 1)
+linearToBima(globalPos, binSize = 1)
 }
 \arguments{
-\item{rgd}{Reference Genome Descriptor}
-
 \item{globalPos}{linear genome position (1-based)}
 
 \item{binSize}{Size of bin that was originally used

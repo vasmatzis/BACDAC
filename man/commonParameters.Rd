@@ -45,8 +45,6 @@ commonParameters(
 
 \item{readDepthPer100kbBin}{read depth for 100 kb bins, with bin index in linear coordinates}
 
-\item{centroArray}{array with the positions of the centromeres for each chromosome}
-
 \item{hetScoreData}{heterozygosity scores determined per 30 kb bin over a 1 Mb region}
 
 \item{numChroms}{number of chromosomes in the reference genome to consider}

@@ -785,7 +785,7 @@ getAdjustablePloidyConfigParams <- function(){
   return(columns)
 }
 
-
+# TODO - remove
 #' retrieve recommended non-default config inputs to calculatePloidy() for a given folder
 #' @param numfolder 5-digit folder number for a sample as provided in samplenames.csv loaded by \code{getSampleDatabase()}
 #' @return dataframe with param and value, row name will be the folder

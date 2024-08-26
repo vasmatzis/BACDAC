@@ -45,6 +45,10 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
   }
 
   mainChroms <- 1:24
+  # We skip Y chromosome because hetScore does not make much sense there
+  mainChromsNoY <- 1:23
+  chromsToPlot = mainChromsNoY
+
   coords <- getLinearCoordinates(mainChroms)
 
   x <- readDepthBinnedData$goodWindowArray
@@ -65,13 +69,10 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
     colorVector <- makeCNVcolorVector(x=x, delAmp,gainColor = gainColor, lossColor= lossColor)
   }
 
-
   if(length(x)>0) {
-
-    chromosomesToDisplay <- mainChroms
     chrCharacters <- convertChromToCharacter(coords@chroms)
 
-    xlim <- c(0, binnedPosEnd(max(coords@chromEnd[chromosomesToDisplay]), readDepthBinSize))
+    xlim <- c(0, binnedPosEnd(max(coords@chromEnd[chromsToPlot]), readDepthBinSize))
     #ylim=c(0,max(y)/2)
     extraYAxis <- 1.3 # Fudge factor - add a little bit of extra space on top
     ylim <- c(0, quantile(x=y, probs=yLimQuantile)/yLimQuantile*extraYAxis) # Stretch the y axis, assuming linear distribution of data
@@ -119,7 +120,7 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
     axis(side=3, at=chromosomeEnds, labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
     axis(side=3, at=chromosomeStarts+(chromosomeEnds-chromosomeStarts)/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
   } else {
-    plotEmptyLinearGenomePlot(chromsToPlot=mainChroms,coords=coords)
+    plotEmptyLinearGenomePlot(chromsToPlot=chromsToPlot,coords=coords)
   }
 
   # ## annotate, if sampleId is provided
@@ -213,7 +214,7 @@ grayColorVector=function(x){
 
 #' for compatibility with genomePlot. Make George's old array from new structure: 1=normal, -1=loss, 2=gain
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
-#' @param coords linear genome coordinates, loaded via \code{getLinearCoordinates(rgd=rgdObject)}
+#' @param coords linear genome coordinates, loaded via \code{getLinearCoordinates()}
 #'
 makeLegacyDelAmp <- function(segmentation, coords) {
   wsz <- 10000
