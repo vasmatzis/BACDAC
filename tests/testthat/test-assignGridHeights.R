@@ -1,5 +1,5 @@
 test_that("assignGridHeights works", {
-  peakInfoTest=data.frame(
+  peakInfo=data.frame(
     peakCol=c("green3",  "blue",    "red",     "cyan" ,   "magenta"),
     scaledGrabDataPercent=c(0.1094,0.0895, 0.0830,0.0769,0.0697),
     peakReadDepth_1bp=c(0.01569796, 0.02342289, 0.02725890,  0.03178275, 0.03866112),
