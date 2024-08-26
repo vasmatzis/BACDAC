@@ -329,15 +329,19 @@ loadHetScoreFromWig <- function(wigFile) {
 #'
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
-#' inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
-#' hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
+#' outputDir <- tempdir()
+#'
+#' # inputDir is the path to input data, either the users data, or in this example, the package data
+#' inputDir <- system.file('extdata', package = "BACDAC")
+#' hetScoreDir=file.path(outputDir, 'reports') # outputDir here is the outputDir for calculateHetScore.R
 #' hetScorePerArmFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerArm.csv'))
 #' hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
+#'
 #' segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 #' segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
 #' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 #' readDepthBinnedData = readRDS(file=thirtyKbFile )
-
+#'
 #'
 #'  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 #' # default cnv coloring (by default) and annotations
