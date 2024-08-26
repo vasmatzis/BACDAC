@@ -919,10 +919,6 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
 #' Then find the expected number of reads in the 2N peak and normalize that value to one bp. Tumor percent is calcuated from the two biggest digital peaks.
 #'
-
-#' @param segmentation identified regions of the genome with constant read depth. Contains chromosome, start, end, expected CNV, actual CNV and other values we do not need.
-#' @param segmentationBinSize bin size used for the read depth in the segmentation data
-#' @param cnvBinnedData "binned copy number variant (actually read depth) values, linear coordinates, with normal (cnvBinned)"
 #' @param centroArray array with the positions of the centromeres for each chromosome
 #' @param hetScoreData heterozygosity scores determined per 30 kb bin over a 1 Mb region
 #' @param numChroms number of chromosomes in the reference genome to consider

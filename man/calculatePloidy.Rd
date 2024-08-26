@@ -60,9 +60,9 @@ calculatePloidy(
 
 \item{minGridHeight}{minimum value that can be assigned to the gridHeights}
 
-\item{minPeriodManual}{user provided \code{minPeriod} for digital grid, default is -1 to indicate no user input}
+\item{minPeriodManual}{manually set \code{minPeriod} within \code{calculatePloidy}}
 
-\item{maxPeriodManual}{user provided \code{maxPeriod} for digital grid, default is -1 to indicate no user input}
+\item{maxPeriodManual}{manually set \code{maxPeriod} within \code{calculatePloidy}}
 
 \item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width}
 
