@@ -1,36 +1,7 @@
 # code and example to run Jamie's stars in the clouds plot - the actual and theoretical heterozygosity scores vs NRD for a given tumor ratio
 # source this file first, to make the functions below available
 
-#' NRD of the main Peak in the ---cnvBinned data---
-#' Will equal 2 if main peak is the normal peak
-#' @param result output from \code{calculatePloidy()}
-#'
-getMainPeakNRD=function(result){
-  expReadsIn2NPeak_1bp= result$expReadsIn2NPeak_1bp
-  mainPeakKey=which(result$peakInfo$rankByHeight==1)
-  mainPeakReadDepth_1bp = result$peakInfo[mainPeakKey,'peakReadDepth_1bp']
-  mainPeakNRD = 2*(mainPeakReadDepth_1bp / expReadsIn2NPeak_1bp)  # TODO: can i use expReadsIn2NPeak_1bp like this? instead of cnvBinnedNormalBin=cnvBinnedData$expectedNormalBin? see notes
-  loginfo('mainPeakNRD = %.3f', mainPeakNRD) # mainPeakcnvBinnedNRD => mainPeakNRD
- return(mainPeakNRD)
 
-  # Notes from bmdSvPipeline:: run_ploidy.R
-  # need mainPeakNRD for the cnvBinned Data, can't assume it is the same as the 2N peak;
-  #    pipeline ploidy output may not be the same as the ploidy output here.
-  # cnvBinned, if run in pipeline with other ploidy output may not be the same as the ploidy output here.
-
-}
-
-getDiploidPeakNRD=function(result){
-  mainPeakKey=which(result$peakInfo$rankByHeight==1)
-  rdNormX_Mainpeak = result$peakInfo[mainPeakKey,'peakReadDepth_normX']
-
-  diploidPeakKey=which(result$peakInfo$nCopy==2)
-  rdNormX_2Npeak = result$peakInfo[diploidPeakKey,'peakReadDepth_normX']
-
-  diploidPeakNRD <-round( mainPeakNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
-  loginfo('diploidPeakNRD: %.3f',diploidPeakNRD)  #dipVal => diploidPeakNRD
-  return(diploidPeakNRD)
-}
 
 
 #' load all the data necessary to make the plot
@@ -48,9 +19,10 @@ getDiploidPeakNRD=function(result){
 #' hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
 #' readDepthPer30kbBin=  readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
 #' mainPeakNRD=getMainPeakNRD(result)
+#' expReadsIn2NPeak_1bp=result$expReadsIn2NPeak_1bp
 #' starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, mainPeakNRD=mainPeakNRD)
 
-loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, wsz=30000, mainPeakNRD){
+loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, wsz=30000, mainPeakNRD, expReadsIn2NPeak_1bp){
   # TODO: testVals - not used, just passed out with the other data needed for the plot
 
   yind=23
@@ -126,7 +98,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   ## processing of some sort??? --------------
   # normalize cnv to NRD with normal peak = 2
   # LOH (hetScore) also on a 30K bin, masked.
-  cnvListFull <- 2*frq23/(wsz*result$expReadsIn2NPeak_1bp) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
+  cnvListFull <- 2*frq23/(wsz*expReadsIn2NPeak_1bp) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
   # cnvListFull <- 2*frq23/(wsz*cnvBinnedData$expectedNormalBin) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
   posListFull <- wdnsMSK23
   chrStart <- c(chrStartKey,max(wdnsMSK23))
@@ -158,7 +130,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   }
   chrEnd <- c(0,chrEnd)
 
-  loginfo('calc theoretical lambda')
+  loginfo('calculating theoretical lambda, the poisson that best fits the coverage')
   # crux of the algorithm, where it determines the theoretical lambda based on the assumption of a poisson for extrapolation to higher or lower copy number
   #
   # Sample data from the mainPeak (not the 2N peak) to be sure to get a good sampling, in case the 2N peak is small ie. 26273
@@ -196,8 +168,9 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   starCloudPlotInputs <-(list(testVals=testVals,
                               lambdaMainOrig=lambdaMainOrig,
                               cnvListChrFullOrig=cnvListChrFullOrig,
-                              lohChrOutFull=lohChrOutFull))
-  loginfo('finished getting plot inputs')
+                              lohChrOutFull=lohChrOutFull,
+                              chrEnd=chrEnd))
+  loginfo('finished loading constellation plot inputs')
   return(starCloudPlotInputs)
 }
 
@@ -209,25 +182,30 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 #' @param tau tumor ratio
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
-#' tau=result$percentTumor/100; segmentData=result$segmentData; peakInfo=result$peakInfo
-#' diploidPeakNRD=getDiploidPeakNRD(result)
+#' tau=min(1,calcPloidyResult$percentTumor/100); segmentData=calcPloidyResult$segmentData; peakInfo=calcPloidyResult$peakInfo
+#' mainPeakNRD= getMainPeakNRD(calcPloidyResult); diploidPeakNRD=NULL; #getDiploidPeakNRD(result)
+#' digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']]
 #' op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
 #' plotStarsInTheClouds(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=TRUE, mainPeakNRD,segmentData=segmentData, peakInfo=peakInfo)
 #' par(op)
 plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=FALSE, mainPeakNRD,
                                  segmentData=NULL, peakInfo=NULL, # add the ploidy inputs
-                                 bimaVersion=NULL, forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,minReasonableSegmentSize=5.5e6, # plot annotations
+                                 forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,minReasonableSegmentSize=5.5e6, # plot annotations
                                  digitalPeakZone = 0.05,heterozygosityScoreThreshold = 0.98,
                                  paperMode=FALSE  # without all the extra fluff, crisp and clean for papers and presentations
 ){
-  # diploidPeakNRD=NULL; tau=min(1,result$percentTumor/100);  segmentData=result$segmentData; peakInfo=result$peakInfo
-  # paperMode=TRUE; digitalPeakZone = 0.05; heterozygosityScoreThreshold = 0.98; plotEachChrom=FALSE; bimaVersion=NULL
 
+
+  # forceFirstDigPeakCopyNum=-1;grabDataPercentManual=-1; origMaxPercentCutoffManual=-1;minPeriodManual=-1;maxPeriodManual=-1;minReasonableSegmentSize=5.5e6; # plot annotations
+  # digitalPeakZone = 0.05;heterozygosityScoreThreshold = 0.98; paperMode=FALSE  # without all the extra fluff, crisp and clean for papers and presentations
+
+
+  autosomes=1:22
   testVals <- starCloudPlotInputs$testVals;
   lambdaMainOrig <- starCloudPlotInputs$lambdaMainOrig;
   cnvListChrFullOrig <- starCloudPlotInputs$cnvListChrFullOrig;
   lohChrOutFull <- starCloudPlotInputs$lohChrOutFull
-
+  chrEnd <- starCloudPlotInputs$chrEnd
 
   # find the normalized read depth for the diploid peak (do not assume it is 2)
   if(!is.null(peakInfo)){
@@ -247,6 +225,16 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
                                  cn1 = peakInfo[bestPeaksResult$bestPeakIndex, 'nCopy'],              cn2 = peakInfo[bestPeaksResult$secondBestPeakIndex, 'nCopy'],
                                  rd1 = peakInfo[bestPeaksResult$bestPeakIndex,'peakReadDepth_normX'], rd2 = peakInfo[bestPeaksResult$secondBestPeakIndex,'peakReadDepth_normX']
       )
+    }
+
+    if(is.null(diploidPeakNRD)){
+      diploidPeakNRD <-round( mainPeakNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
+      logdebug('derived diploidPeakNRD: %.3f',diploidPeakNRD)
+    }
+
+  }else{
+    if(is.null(diploidPeakNRD)){
+      logerror('must provide either peakInfo or diploidPeakNRD')
     }
   }
 
@@ -302,28 +290,12 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
   ploidyNRD <- mean(cnvListChrFull)
   ploidyCN <- calcCopyNumber(NRD=ploidyNRD, tau)
 
-  # this doesn't seem to be used for anything?
-  if(FALSE){
-    whichScore <- rep(0,length(cnvListChrFull))
-    for(x in 1:length(starVals)) {
-      whichScore[which(cnvListChrFull >  plotStarRange[x]*0.9 &
-                         cnvListChrFull <  plotStarRange[x]*1.1 &
-                         lohChrOutFull  > (starVals[x]/medStarVals[x])*0.9 &
-                         lohChrOutFull  < (starVals[x]/medStarVals[x])*1.1)] <- 1
-    }
-    optScore <- length(which(whichScore==1))
-  }
 
   xlimTemp <- min(0.6,0.9*min(starVals/medStarVals,na.rm = TRUE))
   ylimMinTemp <- min(ylimMinTemp, min(plotStarRange))
 
   ### one color for each chromosome 1-22
   segColors = getSegmentColors()
-
-  # cnLohRatioA = lohContentA_maj2_min0
-  # cnLohRatioB = lohContentB_maj1_min0
-  # mcnGtEq2Ratio = lohContentC_maj2
-
 
 
   if(!is.null(segmentData)){
@@ -332,13 +304,16 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
     allelicSegments <- allelicCNV(starLookUp, segmentDataIn=segmentData)
     lohContent <- getLohContent(allelicSegments)  ## getLohContent() is in ploidy.R
     lohContentA_maj2_min0 <- lohContent$lohContentA_maj2_min0
-    loginfo('2N+loh content (lohContentA_maj2_min0): %s',round(lohContentA_maj2_min0,3))
+    loginfo('2N+LOH content: %s',round(lohContentA_maj2_min0,3))
   }else{
     lohContentA_maj2_min0 <- NA
   }
 
+  logdebug('poisson Cov Fit= %s\t diploidPeakNRD= %s\t mainPeakNRD=%s',lambdaMainOrig,diploidPeakNRD, round(mainPeakNRD,3))
+
   # plot once with all chromosome data -------
   if(TRUE){
+
     # set up plot
     xlimits <- c(xlimTemp, 1.1)
     ylimits <- c(ylimMinTemp, max(plotRange))
@@ -363,7 +338,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
       box() # redraw border
 
       ### vertical line to mark cutoff
-      abline(v=heterozygosityScoreThreshold, col='red')
+      abline(v=heterozygosityScoreThreshold, col='red',lty='dashed')
       mtext(text=heterozygosityScoreThreshold, side=1, at = heterozygosityScoreThreshold, cex=.75, col='red', line=-0.2)
     }
 
@@ -387,8 +362,8 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
         ymax <- par('usr')[4]
         colorCodeRank <- ifelse(is.na(peakInfo$dPeaks),'gray80', 'gray50')
         mtext(text=peakInfo$rankByHeight, side=4, at=peakInfo$peakReadDepth_normX*2/rdNormX_2Npeak, las=2, line=-.5, col=colorCodeRank, adj=1, cex=.8)
-        mtext(text='Peak', side=4, at=ymax*.98, col='gray50', las=1, line=-1.7, cex=.8)
-        mtext(text='Rank', side=4, at=ymax*.96, col='gray50', las=1, line=-1.7, cex=.8)
+        mtext(text='Peak', side=4, at=ymax*.98, col='gray50', las=1, line=-1.7, cex=.7)
+        mtext(text='Rank', side=4, at=ymax*.96, col='gray50', las=1, line=-1.7, cex=.7)
       }
     }
 
@@ -409,20 +384,16 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
     legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green', 'black'),lty=c(1,NA,NA), pch=c(NA, "*", "."),cex=.85,pt.cex=2)
 
     # plot annotations
-    mtext(paste0('lambdaMainOrig=',lambdaMainOrig,'   diploidPeakNRD=',diploidPeakNRD,'   mainPeakNRD=',round(mainPeakNRD,3)), side=3, line=2)
-
     mtext(c(sampleId, alternateId), side=3, adj=c(0,1))
     mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
-    if(!is.null(bimaVersion)){
-      mtext(1, text=bimaVersion, adj = 0, line=3.0, cex=.9, col='gray')
-    }
-    if(!is.na(lohContentA_maj2_min0)){
-      mtext(1, text=round(lohContentA_maj2_min0,3), adj = 0, line=3.9, cex=.9, col='gray')
-    }
     mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
+    if(!is.na(lohContentA_maj2_min0)){
+      mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.5, cex=.9, col='gray40')
+    }
 
-    # manual input annotations
-    if(TRUE){
+    if(!paperMode){
+
+      # manual input annotations
       if(forceFirstDigPeakCopyNum > 0){
         mtext(1, text=paste0('manual 1st digital Peak: ', forceFirstDigPeakCopyNum, 'N'),adj=1, line=2.5, cex=.7, col=2)
       }
@@ -439,7 +410,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
         mtext(1, text=paste0('manual maxPeriod: ', maxPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
       }
     }
-
+    par(op)
   }
 
   # plot each chromosome individually -----
@@ -484,9 +455,12 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
               ploidyCN=ploidyCN,
               lohContent=lohContent,
               plotAxisLimits = list(hetScoreAxisLims=xlimits,
-                                    nrdAxisLims=ylimits)
+                                    nrdAxisLims=ylimits),
+              allelicSegments=allelicSegments
   ))
 }
+
+
 
 
 #' make a blank plot, no data, used as a stand in when combining lots of samples into one pdf
@@ -510,10 +484,10 @@ blankPlotStarsInTheClouds=function(
        ylim=c(0, 5),
        xlim=c(.4, 1.1),
        xlab="Heterozygosity Score",
-       ylab="NRD")
+       ylab="read depth normalized to 2N peak (NRD)")
 
   ### vertical line to mark cutoff
-  abline(v=heterozygosityScoreThreshold, col='red')
+  abline(v=heterozygosityScoreThreshold, col='red',lty='dashed')
   mtext(text=heterozygosityScoreThreshold, side=1, at = heterozygosityScoreThreshold, cex=.75, col='red', line=-0.2)
 
   ### one color for each chromosome 1-22

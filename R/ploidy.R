@@ -3,7 +3,7 @@
 #' peaks are returned in order of read depth with most common (highest frequency) read depth peak listed first
 #'
 #' @param sampleId sample Identifier
-#' @param folderId secondary sample identifier
+#' @param alternateId secondary sample identifier
 #' @param rgdObject loaded rgd file as an object
 #' @param cnvBinnedData binned copy number variant (actually read depth) values, linear coordinates, with normal
 #' @param segmentation identified regions of the genome with constant read depth
@@ -13,7 +13,7 @@
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
 #' @param qualityPostNorm used to determine grabDataPercentMax
 peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
-                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,folderId=NULL){
+                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,alternateId=NULL){
   # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
   # peaksByDensity(sampleId,  rgdObject, cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08,pause=F);
   #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; pause=F;origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
@@ -94,12 +94,9 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
 
   plot(denTempOrig$x, denTempOrig$y, type='n',  xlim=c(xMinPlot, xMaxPlot), xlab = '', ylab = '');
   title(xlab=paste0('read depth per window (',wszPeaks/1000,' kb)')) #(passing mask)
-  mtext(3, text=c(sampleId, folderId),adj=c(0,1),line=0.5)
-  if(!omitAnnotations){
-    mtext(1, text= 'chr 1-22', adj=1, cex=.9, line=1.5, col='darkgrey')
-    if(!is.null(qualityPostNorm)){
-      mtext(3, text= paste0('qualityCNV: ',qualityPostNorm), adj=0, cex=.8, line=-1)}
-  }
+  mtext(3, text=c(sampleId, alternateId),adj=c(0,1),line=0.5)
+  mtext(3, text='Peak Rank',adj=0, line=0, cex=.7)
+
 
   polygon(denTempOrig$x, denTempOrig$y, col='gray92',border='gray92')
   abline(h=origMaxPercentCutoff*origMaxPeakY, col='orange')
@@ -216,7 +213,6 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
       # extra lines which tend to make the plot cluttered but can be useful for debugging
       if(addAreaLinesToPlot){
         mtext(paste(peakInt,round(scaledGrabDataPercent,3), sep=': '), side=3, line= -peakInt, adj=1)
-        # mtext(round(scaledGrabDataPercent,3), side=3, line=0, at = newpeakReadDepth, cex=.75, las=2)
 
         # lines to illustrate what data will be grabbed by "whichChoose"
         abline(v=newpeakReadDepth*(1+scaledGrabDataPercent), col=cnColors[i], lty='dashed', lwd=0.8)
@@ -249,7 +245,7 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
     }
 
     if(peakInt >= 15){
-      # safe guard against a continuous while loop, if too many peaks are found, exit out of while loop
+      # prevent a non-stop while loop, if too many peaks are found, exit out of while loop
       # digital grid while loop will also stop after 'numPeaks' loops
       break
     }
@@ -260,12 +256,12 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
   # annotate plot with the approx number of fragments
   # if(!skipExtras){
   if(!omitAnnotations){
-    mtext(1, text='fragments ',adj=1, line=-3)
+    mtext(1, text='~fragments',adj=1, line=-3)
     mtext(1, text='chr1-22 ',adj=1, line=-2)
-    mtext(1, text=round(sum(frqToUse)/1000000,2),adj=1, line=-1)
+    mtext(1, text=paste(round(sum(frqToUse)/1000000,1), 'mil') ,adj=1, line=-1)
   }
   # }
-  # print(table(colNew))
+
 
   # peakReadDepthList_per1bp = X positions of peaks (normalized as if window size was 1), this is so the output is consistent no matter what wsz was used, don't need to know what wsz was used later to use the values
   # normalize the peakHeightList so biggest peak has a height of one
@@ -365,7 +361,7 @@ assignGridHeights <- function(peakInfo, n00, minGridHeight){
 #' @export
 digitalGrid <- function(peakInfo, gridHeights,
                         dPeaksCutoff, penaltyCoefForAddingGrids,
-                        n00, someNumber=8, sampleId=NULL, folderId=NULL,
+                        n00, someNumber=8, sampleId=NULL, alternateId=NULL,
                         gridIteration, minPeriodManual=minPeriodManual,maxPeriodManual=maxPeriodManual,
                         numOfGridCoordsToTest=NULL,
                         previousPeriod=NULL,
@@ -528,7 +524,7 @@ digitalGrid <- function(peakInfo, gridHeights,
       if(!omitAnnotations){
         title(main=paste('Digital grid iteration:',gridIteration) )
         if(!is.null(sampleId)){mtext(3, text=sampleId,adj=0)}
-        if(!is.null(folderId)){mtext(3, text=folderId,adj=1)}
+        if(!is.null(alternateId)){mtext(3, text=alternateId,adj=1)}
       }
       axis(2, at=c(0,.5, 1), labels= c(0,.5, 1))
       abline(h=0.01,col="black")
@@ -551,8 +547,8 @@ digitalGrid <- function(peakInfo, gridHeights,
         text(dPeaks,rep((yMin-.02),length(nCopyPeaks_dig)),labels=nCopyPeaks_dig)
         mtext(3, text=paste('penaltyCoefForAddingGrids:',penaltyCoefForAddingGrids),adj=0, line=-1)
         mtext(3, text=paste0('numOfGridCoordsToTest: ',numOfGridCoordsToTest),adj=0, line=-2)
-        mtext(3, text=paste('minPeriod:',minPeriod),adj=0, line=-4)
-        mtext(3, text=paste('period:',maxPeriod),adj=0, line=-5)
+        mtext(3, text=paste('minPeriod:',minPeriod),adj=0, line=-3)
+        mtext(3, text=paste('period:',maxPeriod),adj=0, line=-4)
 
         legend('topright', legend=c('gridHeights>0', 'Peaks'), col=c('red', 'black'), pch = 19, pt.cex=c(0.3, 0.5))
       }
@@ -929,7 +925,6 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @param penaltyCoefForAddingGrids
 #' @param minGridHeight minimum value that can be assigned to the gridHeights
 #' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width
-#' @param cnvNormalizationInfo cnv normalization information including: method (bestNormal or content) and quality post normalization
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
 #' @param pause pause execution until user prompts to continue, available interactively only, useful during testing
 #' @param noPdf
@@ -945,14 +940,14 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @return expReadsIn2NPeak_1bp, percentTumor,peakInfo, hetScoreQuantiles
 #'
 #' @export
-calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
+calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
                             readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
                             segmentation, segmentationBinSize=30000,
                             hetScoreData,
 
                             numChroms=24,centroArray,
                             dPeaksCutoff=0.01,    penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1,    # digital peaks
-                            grabDataPercentManual= -1, cnvNormalizationInfo=NULL, origMaxPercentCutoffManual=-1,  #  peaksByDensity
+                            grabDataPercentManual= -1,  origMaxPercentCutoffManual=-1,  #  peaksByDensity
                             pause=FALSE, noPdf=FALSE,skipExtras=FALSE,forceFirstDigPeakCopyNum=-1,
                             minReasonableSegmentSize=5.5e6,
                             omitAnnotations = FALSE,
@@ -960,11 +955,8 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
                             allowedTumorPercent = 106,
                             hsNormMat=NULL
 ){
-  ### defaults passed into cnvDetect
+  ### defaults
   # dPeaksCutoff=0.01; penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1; pause=FALSE; skipExtras=FALSE; heterozygosityScoreThreshold=0.98
-  #
-  # cnvBinnedData = preliminaryCnvBinned;  segmentation = colctDelGainInfoAccum;   cnvNormalizationInfo=list(cnvNormalizationMethod= normalizationMethod, qualityPostNorm =  round(qualityPostNorm,2) )
-
 
   # TODO: consider moving this out of function, as part of set up etc.
   if (!noPdf) {
@@ -977,207 +969,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
     pdf(file = ploidyPdfFile@path, paper="a4r", width=8, height=10, title=paste0('Ploidy_',sampleId))
     on.exit(dev.off(),add = TRUE)
   }
-  ## Plot Het. score vs frequency mode (by segment)  --------------------------'
-  plotHetScoreVsPeakMode <- function(){
-    # segmentData=result$segmentData; percentTumor=result$percentTumor;  peakInfo= result$peakInfo
-    # rdNormX_2Npeak      <- peakInfo[ which(peakInfo$nCopy==2), 'peakReadDepth_normX']
 
-    firstDigPeakKey <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
-    logdebug('firstDigPeakKey %i ',firstDigPeakKey)
-
-    rdNormX_firstDigPeak <- peakInfo[firstDigPeakKey, 'peakReadDepth_normX']  # index = firstDigPeakIndex
-
-
-
-
-    ### one color for each chromosome
-    segColors = getSegmentColors()
-
-    if(FALSE){
-      segColorsOld <- c(
-        'black',
-        RColorBrewer::brewer.pal(9, 'Set1')[-c(6)] ,                     # remove the yellow and gray
-        palette()[-7],
-        '#FF0000FF', '#00FF92FF', '#FFDB00FF',  '#0092FFFF',  '#4900FFFF',  '#FF00DBFF'
-      )
-      plot(1:22, type='n');    #abline(v=7.5);    abline(v=13.5)
-      points(x=1:22, y=rep(5,22), pch=1:22, cex=2,col=segColors)
-      points(x=1:22, y=rep(3,22), pch=1:22, cex=2,col=segColorsOld)
-    }
-
-    rowsToView <- 1:nrow(segmentData) # used for debugging, to look at a few rows at a time, ie 1:17 for chr1 in sample...
-    maxXplot <- max(segmentData$lohScoreMedian[rowsToView],1)
-
-    #sometime the coverage is so low, there is little to no hetScore data
-    nValidHetScores <- sum(segmentData$lohScoreMedian>0)
-    # TODO: 100 is a heuristic, maybe should be based on a percentage of total segments?
-    # need to avoid failing when there are very few data points.
-    if(nValidHetScores<100){
-      minXplot <- 0
-      legendPlacement <- "topright"
-      minYplot <- quantile(segmentData$pkmod,probs = .005) # range(segmentData$pkmod)[1]
-      maxYplot <- quantile(segmentData$pkmod,probs = .995) # range(segmentData$pkmod)[2]
-    }else{
-      minXplot <- 0.08
-      legendPlacement <- "topleft"
-
-      # use some data to figure out how big to make the y axis, but be careful not to make it too big
-      if(numDigPeaks == 1){
-        # do not know tumor percentage if there is only one peak
-        atMaxCN <- NULL
-      }else{
-        maxCN <- max(peakInfo$nCopy,na.rm = TRUE)+2 # expand for plotting
-        nrdMaxCN <- 2+((maxCN-2)* percentTumor/100)  # these values are in NRD coordinates, need to convert 1st dig Peak read depth
-        atMaxCN <- nrdMaxCN/2*(rdNormX_2Npeak/rdNormX_firstDigPeak) # rdNormX_2Npeak and rdNormX_firstDigPeak are calculated in calculatePloidy, pkmodToNRD
-      }
-
-      yQuantile98 <- quantile(segmentData$pkmod[segmentData$lohScoreMedian>0],probs = .98)
-      maxYplot <- min(c(5,                         # y axis max will be between 1.4 - 5 pkmod
-                        max( c(1.4, yQuantile98*1.2, atMaxCN), na.rm = TRUE)) )
-      minYplot <- min(c(0.7, min(segmentData$pkmod[segmentData$lohScoreMedian>0])))  # y axis min will be at least 0.7
-    }
-
-    segmentPloidy <- sum(segmentData$size * segmentData$cnLevel)/sum(segmentData$size) # weighted by length of segment
-
-    graphics::layout(1)
-    op <- par(mar=c(5.5, 4, 3.5, 3.5),mgp=c(1.5, 0.5,0))
-    plot(segmentData$lohScoreMedian[rowsToView], segmentData$pkmod[rowsToView], type='n',
-         xlim=c(minXplot,maxXplot),
-         ylim= c(minYplot,maxYplot),
-         xlab="Heterozygosity Score",
-         ylab="pkmod: mean read depth per segment normalized by 1st digital peak",
-         main=segmentCountText)
-    if(!is.null(folderId)){
-      mtext(3, text=c(sampleId, folderId),adj=c(0,1))
-    }else{
-      mtext(3, text=c(sampleId),adj=c(0))
-    }
-
-
-
-
-    # annotate normalized peak locations
-    # add boxes to show the zones around the peaks
-    rect(xleft  = 0, xright = par('usr')[2],
-         ybottom = peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak - digitalPeakZone,
-         ytop    = peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak + digitalPeakZone,
-         border = NA,  col="#f9edfa")
-    box()
-    mtext(1, text=paste('segData ploidy:', round(segmentPloidy,1)), adj = 0, line=-2, cex=.9)
-
-
-    # add points overtop the zone boxes
-    points(segmentData$lohScoreMedian[rowsToView], segmentData$pkmod[rowsToView],
-           pch=segmentData$chr[rowsToView],
-           col=scales::alpha(segColors[segmentData$chr[rowsToView]],.5))
-
-
-    # identify scores that are not valid
-    notValidRows <- segmentData$valid==0
-    points(segmentData$lohScoreMedian[notValidRows], segmentData$pkmod[notValidRows],
-           pch=1,col='orange', cex=1.75)
-
-    ### add lines -----------------'
-    ## vertical lines to mark cutoff
-    abline(v=hetTestScoreFor1stDigPeak, col="black", lty='dashed')
-    abline(v=heterozygosityScoreThreshold, col='red', lty='dotted')
-    # mtext('cutoff', side=3, at = heterozygosityScoreThreshold, cex=.7)
-    mtext(round(hetTestScoreFor1stDigPeak,3), side=3, at = hetTestScoreFor1stDigPeak, cex=.7, line = -.75, col='black')
-
-    ## horizontal lines to mark each digital peak
-    # abline(h=peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak, col='gray')              #  on the digital grid
-    abline(h=peakInfo[ is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak, col='gray', lty='dotted')    #  NOT on the digital grid
-
-
-    ## horizontal lines to mark boundary of first digital peak
-    abline(h= peakInfo[firstDigPeakKey, 'peakReadDepth_normX']/normXofFirstDigPeak - digitalPeakZone ,col="red", lwd=1.3)
-    # abline(h= peakInfo[which(digitalPeakIndex==firstDigPeakKey) , 'peakReadDepth_normX']/normXofFirstDigPeak - digitalPeakZone ,col="red", lwd=1.5)
-    abline(h= peakInfo[firstDigPeakKey, 'peakReadDepth_normX']/normXofFirstDigPeak + digitalPeakZone ,col="red", lwd=1.3)
-
-    # NOTE: do Not use 'hetTestScoreFor3NPeak' from calculatePloidy, does not get updated if there is a decrease or increase to copy number during test3Npeaks
-    threeNPeakKey <- which(peakInfo$nCopy==3)
-    if(length(threeNPeakKey)==1){
-      hetScore3NPeak <- peakInfo[threeNPeakKey, 'hetScore']
-      abline(v=hetScore3NPeak, col='purple', lty='dashed')
-      mtext(paste('3N:',round(hetScore3NPeak,3)), side=1, at = hetScore3NPeak, cex=.65, line = -.25, col='purple')
-    }
-
-    ## short lines for 75th, 85th hetScoreQuantile of peaks
-    markAllDigPeaks <- FALSE # if false just do MainPeakIndex
-    if(markAllDigPeaks){
-      dpeakIndexes <- which(!is.na(peakInfo$dPeaks))
-      for(i in 1:numDigPeaks){
-        lines(x=  rep(keyHetScoresPerPeak[dpeakIndexes[i],'q0.75'],2),
-              y = c(peakModes[dpeakIndexes][i]-digitalPeakZone, peakModes[dpeakIndexes][i]+digitalPeakZone), col='cyan', lwd=2)
-        lines(x=  rep(keyHetScoresPerPeak[dpeakIndexes[i],'q0.85'],2),
-              y = c(peakModes[dpeakIndexes][i]-digitalPeakZone, peakModes[dpeakIndexes][i]+digitalPeakZone), col='magenta', lwd=2)
-      }
-    }else if(!markAllDigPeaks){
-      lines(x=  rep(keyHetScoresPerPeak[mainPeakIndex,'q0.75'],2),
-            y = c(peakModes[mainPeakIndex]-digitalPeakZone*1.1, peakModes[mainPeakIndex]+digitalPeakZone*1.1), col='cyan', lwd=2)
-      lines(x=  rep(keyHetScoresPerPeak[mainPeakIndex,'q0.85'],2),
-            y = c(peakModes[mainPeakIndex]-digitalPeakZone*1.1, peakModes[mainPeakIndex]+digitalPeakZone*1.1), col='magenta', lwd=2)
-    }
-
-
-    ### add annotations -----------------'
-    # peak rank labels
-    ymin <- par('usr')[3]
-    ymax <- par('usr')[4]
-    colorCodeRank <- ifelse(is.na(peakInfo$dPeaks),'gray40', 'black')
-    mtext(text=peakInfo$rankByHeight, side=4, at=peakInfo$peakReadDepth_normX/normXofFirstDigPeak, las=2, line=-.25, col=colorCodeRank, adj=1, cex=.7)
-    # mtext(text='Rank', side=4, at=ymin*1.1, col='black', las=1, line=-1.5, cex=.8, col='gray') # bottom
-    mtext(text='Peak', side=4, at=ymax*.98, col='gray40', las=1, line=-1.5, cex=.8)
-    mtext(text='Rank', side=4, at=ymax*.96, col='gray40', las=1, line=-1.5, cex=.8) # top
-
-
-    legend(legendPlacement, legend=c(1:22), col=segColors, pch=1:22, cex=.95) # do legend after lines so the legend is on top
-    mtext(paste('pink zone: +/-',digitalPeakZone), side=1, adj=0, line=.75, cex=.8, col='hotpink')
-    # mtext(paste('cyan: 75th'), side=1, adj=0, line=0, cex=.8, col='cyan')
-    # mtext(paste('magenta: 85th'), side=1, adj=0, line=.75, cex=.8, col='magenta')
-
-    ## segment Data stats
-    mtext(text=paste('min CNV:', round(minReasonableSegmentSizeFinal/1e6, 1),'Mb'), side=1, adj=0, line=1.5, cex=.8) # cnv segment size before breaking up into smaller chunks
-    mtext(text=paste('min:', minSegment,'Mb'), side=1, adj=0, line=2.25, cex=.8)
-    mtext(text=paste('max:', maxSegment,'Mb'), side=1, adj=0, line=3,   cex=.8)
-    mtext(text=paste('mean:',meanSegment,'Mb'),side=1, adj=0, line=3.75, cex=.8)
-
-    ## label peak CN
-    if(numDigPeaks == 1){
-      mtext(text='CN', side=4, at=ymax*.99, col='black', las=1, line=1)
-      colorCodeCN <- ifelse(is.na(peakInfo$dPeaks),'gray', 'black')
-      axis(side=4, at=peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak, labels = FALSE, tick=TRUE) # tick marks only
-      mtext(text=paste0(peakInfo$nCopy,"N"), side=4, at=peakInfo$peakReadDepth_normX/normXofFirstDigPeak, las=1, line=1, col=colorCodeCN) #, adj=1
-    }else{
-      # CN level annotations based on Tumor percent
-      maxCN <- max(20,max(peakInfo$nCopy,na.rm = TRUE)) # expand for plotting
-      tau <- percentTumor/100
-      iCN <-0:maxCN
-      nrdCN <- 2+((iCN-2)*tau)  # these values are in NRD coordinates, need to convert 1st dig Peak read depth
-      cnAt <- nrdCN/2*(rdNormX_2Npeak/rdNormX_firstDigPeak) # rdNormX_2Npeak and rdNormX_firstDigPeak are calculated in calculatePloidy, pkmodToNRD
-
-      axis(side=4, at=cnAt, labels=paste0(iCN,'N'), tick=TRUE, las=1)
-    }
-
-    mtext(paste0('tumor: ', round(percentTumor,0), '%'),side = 1, adj=1, line=1.9)
-    if(forceFirstDigPeakCopyNum >=0){
-      mtext(1, text=paste0('manual 1st digital Peak: ', forceFirstDigPeakCopyNum, 'N'),adj=1, line=2.5, cex=.7, col=2)
-    }
-    if(origMaxPercentCutoffManual > 0){
-      mtext(1, text=paste0('manual peak height % cutoff: ', origMaxPercentCutoffManual),adj=1, line=3.0, cex=.7, col=2)
-    }
-    if(grabDataPercentManual > 0){
-      mtext(1, text=paste0('manual main peak width factor: ', grabDataPercentManual),        adj=1, line=3.5, cex=.7, col=2)
-    }
-    if(minPeriodManual > 0){
-      mtext(1, text=paste0('manual minPeriod: ', minPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
-    }
-    if(maxPeriodManual > 0){
-      mtext(1, text=paste0('manual maxPeriod: ', maxPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
-    }
-
-    par(op)
-  } # CLOSE: plotHetScoreVsPeakMode()
 
   xind <-23 # index of chrX
   coords <- getLinearCoordinates(rgdObject, chromosomes = 1:numChroms)
@@ -1199,7 +991,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
                               segmentation=segmentation, segmentationBinSize=segmentationBinSize,
                               grabDataPercentManual= grabDataPercentManual, origMaxPercentCutoffManual=origMaxPercentCutoffManual,
                               addAreaLinesToPlot=!omitAnnotations,qualityPostNorm=qualityPostNorm,pause=FALSE, omitAnnotations=omitAnnotations,
-                              folderId=folderId)
+                              alternateId=alternateId)
 
   #
   ####################'
@@ -1372,6 +1164,11 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
     maxSegment <- round(max(segmentData$size)/1000000,1)
     meanSegment <- round(mean(segmentData$size)/1000000,1)
     logdebug('segmentData: min = %s Mb  max = %s Mb  mean = %s Mb', minSegment, maxSegment, meanSegment)
+
+    segmentDataSizes=list(minReasonableSegmentSizeFinal=minReasonableSegmentSizeFinal,
+                          minSegment=minSegment,
+                          maxSegment=maxSegment,
+                          meanSegment=meanSegment)
   }
 
 
@@ -1388,7 +1185,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
     ## 2 ## HetScore quantile scores for each digital peak
     hetScoreQuantiles <-  data.frame(sampleId,
-                                     folderId=ifelse(is.null(folderId),NA,folderId),
+                                     alternateId=ifelse(is.null(alternateId),NA,alternateId),
                                      'nCopy'=peakInfo$nCopy,
                                      keyHetScoresPerPeak )
 
@@ -1438,7 +1235,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
     digGridResult <- digitalGrid(peakInfo, gridHeights,
                                  dPeaksCutoff,penaltyCoefForAddingGrids,
-                                 n00=n00, someNumber = someNumber, sampleId=sampleId, folderId=folderId,
+                                 n00=n00, someNumber = someNumber, sampleId=sampleId, alternateId=alternateId,
                                  gridIteration=gridIteration, minPeriodManual=minPeriodManual, maxPeriodManual=maxPeriodManual,
                                  numOfGridCoordsToTest=numOfGridCoordsToTest,
                                  previousPeriod = period,minGridHeight=minGridHeight,
@@ -1533,8 +1330,8 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
                ylim = c(0,  yMaxPlot),
                xlim = c(0,  temp00chrEnd[maxcn]), # temp00chrEnd[maxcn] will extend the axis to the end of chrY rather than the end of the Y data
                xaxt="n", xaxs='i')
-          if(!is.null(folderId)){
-            mtext(3, text=c(sampleId, folderId),adj=c(0,1))
+          if(!is.null(alternateId)){
+            mtext(3, text=c(sampleId, alternateId),adj=c(0,1))
           }else{
             mtext(3, text=c(sampleId),adj=c(0))
           }
@@ -1604,8 +1401,8 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
               op <- par(mfrow=c(2,1),mar=c(2.5, 3.5, 1.5, 1),mgp=c(1.5, 0.5,0))
               hist(lohChrMed, breaks = 23, col='gray', main=paste('chrom: ', cn1, 'segmentId:', segmentId))
               abline(v=hsNormMatCutoff)
-              if(!is.null(folderId)){
-                mtext(3, text=c(sampleId, folderId),adj=c(0,1))
+              if(!is.null(alternateId)){
+                mtext(3, text=c(sampleId, alternateId),adj=c(0,1))
               }else{
                 mtext(3, text=c(sampleId),adj=c(0))
               }
@@ -1790,20 +1587,20 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
           ### method 3: check the max MODE from het score density of the first digital peak ------------------
           op <- par(mfrow=c(2,1),mar=c(2.75, 3.5, 2, 1.5),mgp=c(1.5, 0.5,0))
 
-          densityFirstDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=firstDigPeakIndex,sampleId,folderId, skipPlot = skipExtras, plotTextPrefix='1st digital peak:',
+          densityFirstDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=firstDigPeakIndex,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix='1st digital peak:',
                                                  heterozygosityScoreThreshold=heterozygosityScoreThreshold)
           hetTestScoreFor1stDigPeak <- densityFirstDigPeak$testScore
           loginfo('het test score for first digital peak: %.3f',densityFirstDigPeak$testScore)
 
           # not used right away but is used later
           if(all(peakInfo$dPeaks != min(peakInfo$dPeaks, na.rm = TRUE))){
-            stop('all NAs need to inspect and debug this step %s %s', sampleId, folderId)
+            stop('all NAs need to inspect and debug this step %s %s', sampleId, alternateId)
           }
 
           if(numDigPeaks>1){
             secondDigPeak  <-  min(peakInfo$dPeaks[peakInfo$dPeaks != min(peakInfo$dPeaks, na.rm = TRUE)], na.rm = TRUE)
             secondDigPeakIndex <-     which(peakInfo$dPeaks== secondDigPeak)
-            densitySecondDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=secondDigPeakIndex,sampleId,folderId, skipPlot = skipExtras, plotTextPrefix='2nd digital peak:',
+            densitySecondDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=secondDigPeakIndex,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix='2nd digital peak:',
                                                     heterozygosityScoreThreshold=heterozygosityScoreThreshold)
             loginfo('het test score for second digital peak: %.3f',densitySecondDigPeak$testScore)
           }else{
@@ -2063,7 +1860,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
         if(length(nCopyPeaks_while)>=3){
           thirdDigPeak  <-  min(peakInfo$dPeaks[!peakInfo$dPeaks %in% c(peakInfo$dPeaks[firstDigPeakIndex], secondDigPeak) ], na.rm = TRUE)
           thirdDigPeakIndex <-     which(peakInfo$dPeaks== thirdDigPeak)
-          densityThirdDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=thirdDigPeakIndex,sampleId,folderId, skipPlot = skipExtras, plotTextPrefix='1st digital peak:',
+          densityThirdDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=thirdDigPeakIndex,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix='1st digital peak:',
                                                  heterozygosityScoreThreshold=heterozygosityScoreThreshold)
           if(densityThirdDigPeak$testScore < heterozygosityScoreThreshold &
              densityThirdDigPeak$observ > 15){
@@ -2169,7 +1966,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
         # already have this, don't need to redo
         densityResult2 <- densitySecondDigPeak
       }else{
-        densityResult2 <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn2indexTemp,sampleId,folderId, skipPlot = skipExtras,plotTextPrefix='temp 2N,',
+        densityResult2 <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn2indexTemp,sampleId,alternateId, skipPlot = skipExtras,plotTextPrefix='initial 2N peak:',
                                           heterozygosityScoreThreshold=heterozygosityScoreThreshold)
       }
     }else{
@@ -2187,7 +1984,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
         # already have this, don't need to redo
         densityResult3 <- densitySecondDigPeak
       }else {
-        densityResult3 <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn3indexTemp,sampleId,folderId, skipPlot = skipExtras,plotTextPrefix='temp 3N,',
+        densityResult3 <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn3indexTemp,sampleId,alternateId, skipPlot = skipExtras,plotTextPrefix='initial 3N peak:',
                                           heterozygosityScoreThreshold=heterozygosityScoreThreshold)
       }
 
@@ -2200,7 +1997,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
 
         if(cn4existsTemp){
-          densityResult4 <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn4indexTemp,sampleId,folderId, skipPlot = skipExtras,plotTextPrefix='temp 4N,',
+          densityResult4 <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn4indexTemp,sampleId,alternateId, skipPlot = skipExtras,plotTextPrefix='initial 4N peak:',
                                             heterozygosityScoreThreshold=heterozygosityScoreThreshold)
         }else{
           densityResult4 <- NA
@@ -2410,7 +2207,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
 
   ### add NRD and copy number level ----------
-  nrd <- bmdSvPipeline:::pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
+  nrd <- pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
   segmentData[,'nrd'] <- nrd
   segmentData[,'cnLevel'] <- calcCopyNumber(NRD=nrd, # read depth normalized to 2N level
                                             tau= percentTumor/100)
@@ -2470,7 +2267,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
     threeNpasses <- NA
     if(length(cn3index) > 0){
       # add hetScore to peak info
-      testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn3index,sampleId,folderId, skipPlot = skipExtras, plotTextPrefix= paste('double check? 3N peak'),
+      testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn3index,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix= paste('double check 3N peak:'),
                                           heterozygosityScoreThreshold=heterozygosityScoreThreshold)
       peakInfo[cn3index,'hetScore'] <- testScoreForPeak$testScore
       peakInfo[cn3index,'hetScoreObserv'] <- testScoreForPeak$observ
@@ -2518,7 +2315,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
     if(length(cn4index) > 0){
 
       # add hetScore to peak info
-      testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn4index,sampleId,folderId, skipPlot = TRUE,
+      testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn4index,sampleId,alternateId, skipPlot = TRUE,
                                           heterozygosityScoreThreshold=heterozygosityScoreThreshold)
       peakInfo[cn4index,'hetScore'] <- testScoreForPeak$testScore
       peakInfo[cn4index,'hetScoreObserv'] <- testScoreForPeak$observ
@@ -2535,7 +2332,7 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
       if( length(cn5index) > 0){
         # add hetScore to peak info
-        testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn5index,sampleId,folderId, skipPlot = TRUE,
+        testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn5index,sampleId,alternateId, skipPlot = TRUE,
                                             heterozygosityScoreThreshold=heterozygosityScoreThreshold)
         peakInfo[cn5index,'hetScore'] <- testScoreForPeak$testScore
         peakInfo[cn5index,'hetScoreObserv'] <- testScoreForPeak$observ
@@ -2625,10 +2422,13 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
 
 
   ### 2D plot -------
-  # do last so it doesn't get mixed up in the density plots
-  # if(!skipExtras){
-  plotHetScoreVsPeakMode()
-  # }
+  # do last, after all the density plots
+  plotHetScoreVsPeakMode(peakInfo,segmentData,sampleId, alternateId, percentTumor,
+                         segmentCountText,digitalPeakZone,keyHetScoresPerPeak,segmentDataSizes,
+                         heterozygosityScoreThreshold,
+                         origMaxPercentCutoffManual,grabDataPercentManual ,minPeriodManual,maxPeriodManual)
+
+
 
 
   if(interactive() & pause){BBmisc::pause()}
@@ -2645,13 +2445,13 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
   dPeakIndexes <- c(1:nrow(peakInfo))[!is.na(peakInfo$dPeaks)]
   for( i in dPeakIndexes){
     # i=1
-    hsdResult <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=i,sampleId,folderId, skipPlot = T,
+    hsdResult <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=i,sampleId,alternateId, skipPlot = T,
                                  heterozygosityScoreThreshold=heterozygosityScoreThreshold)
     testScores <- c(testScores,hsdResult$testScore)
 
     # TODO: replace this code below which is scattered about, using the stuff above
     # # add hetScore to peak info
-    # testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn3index,sampleId,folderId, skipPlot = skipExtras, plotTextPrefix= paste('double check? 3N peak'),
+    # testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn3index,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix= paste('double check? 3N peak'),
     #                                     heterozygosityScoreThreshold=heterozygosityScoreThreshold)
     # peakInfo[cn3index,'hetScore'] <- testScoreForPeak$testScore
     # peakInfo[cn3index,'hetScoreObserv'] <- testScoreForPeak$observ
@@ -2669,11 +2469,11 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
   mainPeakIndex <- which(peakInfo$rankByHeight==1)
   loginfo('Main peak is %sN',peakInfo[mainPeakIndex,'nCopy'])
 
-  ### return output -------------
+  ## return output -------------
   ploidyOutput <- list(expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp,
                        percentTumor=round(percentTumor,1),
                        peakInfo=peakInfo,
-                       segmentData=segmentData,
+                       segmentedData=segmentData,
                        # hetScoreQuantiles=hetScoreQuantiles,
                        iterationStatsAll=iterationStatsAll)
 
@@ -2681,825 +2481,182 @@ calculatePloidy <- function(sampleId, outputDir,folderId=NULL,
   return(ploidyOutput)
 }
 
+## Plot segments-Het. score vs peak mode --------------------------
+plotHetScoreVsPeakMode <- function(peakInfo,segmentData,sampleId, alternateId, percentTumor,
+                                   segmentCountText,digitalPeakZone,keyHetScoresPerPeak,segmentDataSizes,
+                                   heterozygosityScoreThreshold,
+                                   origMaxPercentCutoffManual,grabDataPercentManual ,minPeriodManual,maxPeriodManual){
+
+  # segmentData=result$segmentData; percentTumor=result$percentTumor;  peakInfo= result$peakInfo
+
+  mainPeakIndex <- which(peakInfo$rankByHeight==1)
+  rdNormX_2Npeak      <- peakInfo[ which(peakInfo$nCopy==2), 'peakReadDepth_normX']
+  firstDigPeakIndex <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
+  normXofFirstDigPeak <- peakInfo$peakReadDepth_normX[firstDigPeakIndex] # 1 if first digital peak is first peak, but get this value in case it isn't
+  # translate in case the first digital peak is not the first peak
+  peakModes <- peakInfo[, 'peakReadDepth_normX']/normXofFirstDigPeak  # normXofFirstDigPeak will be 1 if first peak is first digital peak (dPeak)
 
 
-#' @param N min number of clusters
-hasNorMoreClusters <- function(hetScoreDensityResult, N, heterozygosityScoreThreshold, minObservations=20){
-  # hetScoreDensityResult=densityFirstDigPeak
-  if(hetScoreDensityResult$observ > minObservations){
-    if(!is.na(hetScoreDensityResult$numHetClusters) && hetScoreDensityResult$numHetClusters >= N){
-      if(N==2){
-        if(hetScoreDensityResult$testScore < .45){  #19063 =.508 because there is a clone at .508  TODO: what is the 2:0 value when tu% is 99% - it is close to .45 but is .51 too much?
-          test <- FALSE # the max testScore is too low, if there are multiple clusters, they are subclones
-        }else{
-          test <- TRUE
-        }
-      }else if(N==3){
-        if(hetScoreDensityResult$testScore >= heterozygosityScoreThreshold){  # not a requirement for N=2 because 3N could have two peaks but won't be above the threshold
-          test <- TRUE
-        }else{
-          test <- FALSE # testScore is too low
-        }
-      }else{
-        test <- TRUE
-      }
+
+
+
+  firstDigPeakKey <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
+  logdebug('firstDigPeakKey %i ',firstDigPeakKey)
+
+  rdNormX_firstDigPeak <- peakInfo[firstDigPeakKey, 'peakReadDepth_normX']  # index = firstDigPeakIndex
+  numDigPeaks = sum(!is.na(peakInfo$dPeaks))
+
+  ### one color for each chromosome
+  segColors = getSegmentColors()
+
+  rowsToView <- 1:nrow(segmentData) # used for debugging, to look at a few rows at a time, ie 1:17 for chr1 in sample...
+  maxXplot <- max(segmentData$lohScoreMedian[rowsToView],1)
+
+  #sometime the coverage is so low, there is little to no hetScore data
+  nValidHetScores <- sum(segmentData$lohScoreMedian>0)
+  # TODO: 100 is a heuristic, maybe should be based on a percentage of total segments?
+  # need to avoid failing when there are very few data points.
+  if(nValidHetScores<100){
+    minXplot <- 0
+    legendPlacement <- "topright"
+    minYplot <- quantile(segmentData$pkmod,probs = .005) # range(segmentData$pkmod)[1]
+    maxYplot <- quantile(segmentData$pkmod,probs = .995) # range(segmentData$pkmod)[2]
+  }else{
+    minXplot <- 0.08
+    legendPlacement <- "topleft"
+
+    # use some data to figure out how big to make the y axis, but be careful not to make it too big
+    if(numDigPeaks == 1){
+      # do not know tumor percentage if there is only one peak
+      atMaxCN <- NULL
     }else{
-      test <- FALSE # incorrect # clusters
+      maxCN <- max(peakInfo$nCopy,na.rm = TRUE)+2 # expand for plotting
+      nrdMaxCN <- 2+((maxCN-2)* percentTumor/100)  # these values are in NRD coordinates, need to convert 1st dig Peak read depth
+      atMaxCN <- nrdMaxCN/2*(rdNormX_2Npeak/rdNormX_firstDigPeak) # rdNormX_2Npeak and rdNormX_firstDigPeak are calculated in calculatePloidy, pkmodToNRD
     }
+
+    yQuantile98 <- quantile(segmentData$pkmod[segmentData$lohScoreMedian>0],probs = .98)
+    maxYplot <- min(c(5,                         # y axis max will be between 1.4 - 5 pkmod
+                      max( c(1.4, yQuantile98*1.2, atMaxCN), na.rm = TRUE)) )
+    minYplot <- min(c(0.7, min(segmentData$pkmod[segmentData$lohScoreMedian>0])))  # y axis min will be at least 0.7
+  }
+
+  segmentPloidy <- sum(segmentData$size * segmentData$cnLevel)/sum(segmentData$size) # weighted by length of segment
+
+  graphics::layout(1)
+  op <- par(mar=c(5.5, 4, 3.5, 3.5),mgp=c(1.5, 0.5,0))
+  plot(segmentData$lohScoreMedian[rowsToView], segmentData$pkmod[rowsToView], type='n',
+       xlim=c(minXplot,maxXplot),
+       ylim= c(minYplot,maxYplot),
+       xlab="Heterozygosity Score",
+       ylab="read depth per segment normalized by 1st digital peak",
+       main=segmentCountText)
+  if(!is.null(alternateId)){
+    mtext(3, text=c(sampleId, alternateId),adj=c(0,1))
   }else{
-    test  <-  FALSE # too few observations to know for sure
+    mtext(3, text=c(sampleId),adj=c(0))
   }
-  return(test)
-}
+
+  # annotate normalized peak locations
+  # add boxes to show the zones around the peaks
+  rect(xleft  = 0, xright = par('usr')[2],
+       ybottom = peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak - digitalPeakZone,
+       ytop    = peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak + digitalPeakZone,
+       border = NA,  col="#f9edfa")
+  box()
+  mtext(1, text=paste('segment ploidy:', round(segmentPloidy,1)), adj = 0, line=-2, cex=.9)
+
+
+  # add points overtop the zone boxes
+  points(segmentData$lohScoreMedian[rowsToView], segmentData$pkmod[rowsToView],
+         pch=segmentData$chr[rowsToView],
+         col=scales::alpha(segColors[segmentData$chr[rowsToView]],.5))
+
+
+  # identify scores that are not valid
+  notValidRows <- segmentData$valid==0
+  points(segmentData$lohScoreMedian[notValidRows], segmentData$pkmod[notValidRows],
+         pch=1,col='orange', cex=1.75)
+
+  ### add lines -----------------'
+  ## vertical lines to mark cutoff
+  abline(v=heterozygosityScoreThreshold, col='red', lty='dotted')
+  mtext(heterozygosityScoreThreshold, side=1, at = heterozygosityScoreThreshold, cex=.65, line = -1, col='red')
+
+  ## horizontal lines to mark peaks
+  # abline(h=peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak, col='gray', lty='dotted')     #  on the digital grid
+  abline(h=peakInfo[ is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak, col='gray', lty='dotted')    #  NOT on the digital grid
+
+  ## horizontal lines to mark boundary of first digital peak
+  abline(h= peakInfo[firstDigPeakKey, 'peakReadDepth_normX']/normXofFirstDigPeak - digitalPeakZone ,col="red", lwd=1.3)
+  # abline(h= peakInfo[which(digitalPeakIndex==firstDigPeakKey) , 'peakReadDepth_normX']/normXofFirstDigPeak - digitalPeakZone ,col="red", lwd=1.5)
+  abline(h= peakInfo[firstDigPeakKey, 'peakReadDepth_normX']/normXofFirstDigPeak + digitalPeakZone ,col="red", lwd=1.3)
+
+  ## vertical line to mark 3N peak hetScore mode
+  # NOTE: do Not use 'hetTestScoreFor3NPeak' from calculatePloidy, does not get updated if there is a decrease or increase to copy number during test3Npeaks
+  threeNPeakKey <- which(peakInfo$nCopy==3)
+  if(length(threeNPeakKey)==1){
+    hetScore3NPeak <- peakInfo[threeNPeakKey, 'hetScore']
+    abline(v=hetScore3NPeak, col='gray40', lty='dashed')
+    mtext(paste('3N:',round(hetScore3NPeak,3)), side=1, at = hetScore3NPeak, cex=.65, line = -.25, col='gray40')
+  }
 
 
 
-hetScoreDensity <- function(segmentsCloseToPeak,segmentData, index,sampleId,folderId, plotTextPrefix=NULL,skipPlot=FALSE, minObserv=15, heterozygosityScoreThreshold){
-  # plotTextPrefix=NULL;skipPlot=FALSE; minObserv=15
-  validPeakIndexes <- which(segmentsCloseToPeak[,index] &
-                              segmentData$valid==1)
-  lohScores <- segmentData[validPeakIndexes,'lohScoreMedian']
-  if(is.null(plotTextPrefix)){
-    plotTextPrefix  <-  paste('peak',index)
+  ### add annotations -----------------'
+  # peak rank labels
+  ymin <- par('usr')[3]
+  ymax <- par('usr')[4]
+  colorCodeRank <- ifelse(is.na(peakInfo$dPeaks),'gray40', 'black')
+  mtext(text=peakInfo$rankByHeight, side=4, at=peakInfo$peakReadDepth_normX/normXofFirstDigPeak, las=2, line=-.25, col=colorCodeRank, adj=1, cex=.7)
+  # mtext(text='Rank', side=4, at=ymin*1.1, col='black', las=1, line=-1.5, cex=.8, col='gray') # bottom
+  mtext(text='Peak', side=4, at=ymax*.98, col='gray40', las=1, line=-1.7, cex=.75)
+  mtext(text='Rank', side=4, at=ymax*.96, col='gray40', las=1, line=-1.7, cex=.75) # top
+
+  legend(legendPlacement, legend=c(1:22), col=segColors, pch=1:22, cex=1.1) # do legend after lines so the legend is on top
+  mtext(paste('pink zone: +/-',digitalPeakZone), side=1, adj=0, line=.75, cex=.8, col='hotpink')
+  # mtext(paste('cyan: 75th'), side=1, adj=0, line=0, cex=.8, col='cyan')
+  # mtext(paste('magenta: 85th'), side=1, adj=0, line=.75, cex=.8, col='magenta')
+
+  ## segment Data stats
+  mtext(text=paste('Initial segment min:', round(segmentDataSizes$minReasonableSegmentSizeFinal/1e6, 1),'Mb'), side=1, adj=0, line=1.5, cex=.8) # cnv segment size before breaking up into smaller chunks
+  mtext(text=paste('min:', segmentDataSizes$minSegment,'Mb'), side=1, adj=0, line=2.25, cex=.8)
+  mtext(text=paste('max:', segmentDataSizes$maxSegment,'Mb'), side=1, adj=0, line=3,   cex=.8)
+  mtext(text=paste('mean:',segmentDataSizes$meanSegment,'Mb'),side=1, adj=0, line=3.75, cex=.8)
+
+  ## label peak CN
+  if(numDigPeaks == 1){
+    mtext(text='CN', side=4, at=ymax*.99, col='black', las=1, line=1)
+    colorCodeCN <- ifelse(is.na(peakInfo$dPeaks),'gray', 'black')
+    axis(side=4, at=peakInfo[!is.na(peakInfo$dPeaks), 'peakReadDepth_normX']/normXofFirstDigPeak, labels = FALSE, tick=TRUE) # tick marks only
+    mtext(text=paste0(peakInfo$nCopy,"N"), side=4, at=peakInfo$peakReadDepth_normX/normXofFirstDigPeak, las=1, line=1, col=colorCodeCN) #, adj=1
   }else{
-    plotTextPrefix <- paste(plotTextPrefix, ' peak',index)
-  }
-  # use max score if not enough data points, otherwise use mode # TODO: what is 'enough'
-  densityResult <- getModeOrMaxScore(dataIn = lohScores,plotTextPrefix = plotTextPrefix, sampleId=sampleId,folderId=folderId,skipPlot=skipPlot,
-                                     minObserv=minObserv, heterozygosityScoreThreshold=heterozygosityScoreThreshold  )
-  return(densityResult)
-}
+    # CN level annotations based on Tumor percent
+    maxCN <- max(20,max(peakInfo$nCopy,na.rm = TRUE)) # expand for plotting
+    tau <- percentTumor/100
+    iCN <-0:maxCN
+    nrdCN <- 2+((iCN-2)*tau)  # these values are in NRD coordinates, need to convert 1st dig Peak read depth
+    cnAt <- nrdCN/2*(rdNormX_2Npeak/rdNormX_firstDigPeak) # rdNormX_2Npeak and rdNormX_firstDigPeak are calculated in calculatePloidy, pkmodToNRD
 
-
-#' Calculate density of loh scores
-#'
-#' If enough data ( >minObserv ) return testScore=right-most mode that is big enough (> consider PeakCutoff * max peak) and numHetClusters > 20% max peak
-#' If not enough data return max loh score and numHetClusters =NA
-#'
-#' @param data lohScores mean het scores for selected copy number segments
-#' @param considerPeakCutoff peaks must be bigger than this percentage of maxPeak to be considered # TODO: should this be adjusted higher when there are more data points, ie >100 or 125? 26297 requires >=0.06 not 0.05 which is what I've done all my testing on
-#' @param countPeakCutoff peaks must be bigger than this percentage of maxPeak to be counted for numClusters
-#' @param plotTextPrefix text to add to front of plot title
-#' @param default default return value
-#' @param skipPlot logical to control making density plot
-#' @param minObserv
-#'
-#' @keywords internal
-getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0.25, plotTextPrefix=NULL,
-                              folderId=NULL, sampleId=NULL, skipPlot=FALSE, minObserv=15,default=0, heterozygosityScoreThreshold) {
-  # dataIn=lohScores; considerPeakCutoff=0.06; countPeakCutoff=0.25; minObserv=15;skipPlot=FALSE;default=0
-  # considerPeakCutoff? PT58162 PT636 requires 0.031 or bigger when using bw=SJ
-  # considerPeakCutoff? PT58115 PT618 requires 0.028 or less when using bw=nrd
-  # considerPeakCutoff=0.028 for bw=nrd
-  # TODO: what is the minimum for minObserv 10? 15? 20?
-  data <- dataIn[dataIn <= 1] # do not take density with data greater than 1 aka noisy data # TODO: consider 1.001 instead of 1.0
-  observ <- length(data)
-
-  if (observ >= 2) {
-    xlimMin  <-  min( min(dataIn)*0.98, 0.6) # make sure the scale isn't too zoomed in which can be distracting and misleading
-    xlimits  <-  c(xlimMin, max(1,dataIn)) # specify max to make sure the plot includes the data that was removed
-
-    #  bw.SJ(data) : need at least 2 data points
-
-    # which bandwidth to use?
-    # bandwidth <- bw.ucv(data); bwMethod <- 'bw.ucv'                  # this option seems to do the least smoothing
-    # bandwidth <- bw.nrd(data); bwMethod <- 'bw.nrd' # PT58126 with nrd first peak only has 1 density peak but with nrd0 first peak has 2 which is not good
-    # bandwidth <- bw.nrd0(data); bwMethod <- 'bw.nrd0'
-    # bandwidth <- bw.bcv(data); bwMethod <- 'bw.bcv'                    # this option seems to do the MOST smoothing
-    # bandwidth <- bw.SJ(data); bwMethod <- 'bw.SJ' # defaults to 'bw.SJ-ste'
-    # bandwidth <- bw.SJ(data,method='ste'); bwMethod <- 'bw.SJ-ste' # this option seems to do the 2nd least smoothing
-    bandwidth <- bw.SJ(data,method='dpi'); bwMethod <- 'bw.SJ-dpi'
-
-    hetDen <- density(data,bw=bandwidth)
-    maxPeakX <- hetDen$x[which.max(hetDen$y)]
-    maxPeakY <- hetDen$y[which.max(hetDen$y)]
-
-    #Find the peaks
-    tp <- pastecs::turnpoints(hetDen$y)
-
-    if(FALSE){
-      summary(tp)
-      tp$points # =hetDen$y[tp$pos]; data points minus the exaequos positions
-      tp$pos    # =index into hetDen$y
-      tp$tppos  # index of turning points in original data (hetDen$y)
-      # plot using two different x axis scales
-      plot(hetDen$y, type='l');
-      points(tp$tppos,hetDen$y[tp$tppos],pch='*')
-
-      plot(hetDen,xlim=xlimits, main=paste(plotTextPrefix,'het score density via', bwMethod),type='l');rug(dataIn)
-      points(hetDen$x[tp$tppos],hetDen$y[tp$tppos],pch='*' )
-    }
-
-
-    # some stuff for plotting the densities with different bandwidth methods to visualize its affect on number of peaks
-    # see 58089 lohScores of peak 4 which has 3 clusters, "/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/58089_peak4HetScores.Rdata"
-    # nrd: only finds 2 peaks, the max being between the right 2 clusters,
-    # SJ-dpi: only finds two but the max is the far right of the right 2 clusters
-    # SJ-ste: finds three clusters
-    if(FALSE){
-      library(pastecs)
-      op <- par(mfrow=c(3,1),mar=c(3, 3.5, 1.5, 1),mgp=c(1.5, 0.5,0))
-      bwMethodsAll <-  c( "ucv", "nrd","nrd0","bcv", "SJ-dpi",  "SJ-ste")
-      for(bwMethod in bwMethodsAll ){
-        # bwMethod <- bwMethodsAll[2]
-        hetDen <- density(data,bw=bwMethod)
-        maxPeakY <- hetDen$y[which.max(hetDen$y)]
-        # Calculate turning points for this series
-        hetDenY.tp <- turnpoints(hetDen$y)
-        summary(hetDenY.tp)
-        # plot(hetDenY.tp)
-        #
-        ## Add envelope and median line to original data
-        # plot(hetDen$y, type = "l", main=bwMethod)
-        # lines(hetDenY.tp)
-        ## Note that lines() applies to the graph of original dataset
-
-        ## plot turning point object
-        # plot(hetDenY.tp)
-
-        plot(hetDen,main=bwMethod ); rug(dataIn)
-        # Get scores for peaks only
-        #peakScores <- hetDen$x[extract(hetDenY.tp, no.tp = FALSE, peak = TRUE, pit = FALSE)]
-
-        ## Get all the scores that seem interesting (i.e. big enough)
-        peakConsidX <- hetDen$x[hetDenY.tp$pos[which(hetDenY.tp$peaks & hetDenY.tp$points > considerPeakCutoff*maxPeakY)]]
-        pitConsidX   <- hetDen$x[hetDenY.tp$pos[which(hetDenY.tp$pit  & hetDenY.tp$points > considerPeakCutoff*maxPeakY)]]
-
-        abline(v=peakConsidX, lty='dotted', col='darkgray');
-        abline(v=pitConsidX, lty='dotted', col='darkgray');
-
-        abline(h=considerPeakCutoff*maxPeakY,col='darkgrey')
-        abline(h=countPeakCutoff*maxPeakY,col='darkgrey')
-        mtext(round(peakConsidX,3), side=3, at=peakConsidX, cex=0.7, line=-1)
-      }
-      par(op)
-    }
-
-    if(FALSE){
-      data <- firstPeakLohScores
-      # data <- lohScores # third peak
-
-      plot(density(data),xlim=xlimits);       rug(dataIn)
-      lines(density(data, bw = "nrd"), col = 2)
-      lines(density(data, bw = "ucv"), col = 3)
-      lines(density(data, bw = "bcv"), col = 4)
-      lines(density(data, bw = "SJ-ste"), col = 5)
-      lines(density(data, bw = "SJ-dpi"), col = 6)
-      legend('topleft',legend = c("nrd0", "nrd", "ucv", "bcv", "SJ-ste", "SJ-dpi"),
-             col = 1:6, lty = 1)
-    }
-
-    if(FALSE){
-      bwMethodsAll <-  c("nrd0", "nrd", "ucv", "bcv", "SJ-ste", "SJ-dpi")
-      plot(density(data,bw=bwMethodsAll[1]))
-      rug(dataIn)
-      for(i in 1:length(bwMethodsAll)){
-        bwMethod <- bwMethodsAll[i]
-        print(bwMethod)
-        hetDen <- density(data,bw=bwMethod)
-        hetDenY.tp <- pastecs::turnpoints(hetDen$y)
-        lines(hetDen, col = i)
-        peakScores <- hetDen$x[extract(hetDenY.tp, no.tp = FALSE, peak = TRUE, pit = FALSE)]
-        print(peakScores)
-        abline(v=peakScores, col=i);
-        # mtext(round(peakScores,3), side=3, at=peakScores, cex=0.5)
-      }
-
-      legend('topleft',legend = bwMethodsAll,col = 1:6, lty = 1, cex=0.9)
-    }
-
-
-    #Get all peaks that seem interesting (i.e. big enough)
-    topConsidX <- hetDen$x[tp$pos[which(tp$peaks & tp$points > considerPeakCutoff*maxPeakY)]]
-    topConsidY <- hetDen$y[tp$pos[which(tp$peaks & tp$points > considerPeakCutoff*maxPeakY)]]
-
-    (peakScoresX  <- hetDen$x[pastecs::extract(tp, no.tp = FALSE, peak = TRUE, pit = FALSE)])
-    (peakScoresY  <- hetDen$y[pastecs::extract(tp, no.tp = FALSE, peak = TRUE, pit = FALSE)])
-
-    # density height cut off for counting peaks
-    # countPeakCutoff=0.25
-    topCountX <- hetDen$x[tp$pos[which(tp$peaks & tp$points > countPeakCutoff*maxPeakY)]] # 20 was too low for 58047 while using bw.SJ
-    topCountY <- hetDen$y[tp$pos[which(tp$peaks & tp$points > countPeakCutoff*maxPeakY)]]
-
-    (pitScoresX  <- hetDen$x[pastecs::extract(tp, no.tp = FALSE, peak = FALSE, pit = TRUE)])
-    (pitScoresY  <- hetDen$y[pastecs::extract(tp, no.tp = FALSE, peak = FALSE, pit = TRUE)])
-
-    # instead of counting the number of peaks to get the number of clusters, check that there is a deep enough pit(saddle) between the peaks
-    # valid pits are those that 1) are between two peaks that are far enough apart to be legit
-    #                           2) are high enough (countPeakCutoff*maxPeakY) i.e. 25% of the maxPeak,
-    #                           3) but have a deep enough saddle, aka dip low enough between its adjacent peaks
-    #
-    validPits <- NULL
-    if(length(topCountX)>1){
-      for(i in 2:length(topCountX)){
-        peakToPeakDistance <- topCountX[i]-topCountX[i-1]
-        if(peakToPeakDistance>0.028){  # 26243 needs >0.0177; 19019>=0.023; 19033>0.027 # TODO: what is the correct value? don't go smaller than 3:1 and 2:2 clusters for 4N at low tumor which is probably around .04
-          # find all the pits between two top peaks
-          pitsBetween <- pitScoresX[data.table::between(pitScoresX,topCountX[i-1],topCountX[i])]
-          if(length(pitsBetween)>0){
-            # get the min (y) pit
-            testPitY <- min(pitScoresY[(pitScoresX %in% pitsBetween)])
-            # test the y value
-            if(abs(topCountY[i-1] - testPitY) > topCountY[i-1]*0.27 &  # TODO: what is the correct value, 26% too small: 66291,58149;58172
-               abs(topCountY[i]   - testPitY) > topCountY[i]*0.27){
-              iValidPits <- pitScoresX[which(pitScoresY== testPitY)][1] # take just the first one if there are multiple # ie LU19091 peak 3
-              validPits <- c(validPits,iValidPits)
-            }
-          }else{
-            next
-          }
-        }else{
-          next
-        }
-
-      }
-    }
-
-
-    ## second max
-    # max2 = function(x) max( x[-which.max(x)]) #// return a second max even if it happens to equal the first max, while the following code will not:  max( x[x!=max(x)])
-    # max2PeakY = max2(topConsidY)
-    # max2PeakX <- hetDen$x[which(hetDen$y==max2PeakY)]
-
-    # define test score
-    if (observ >= minObserv) {
-      # Enough for density
-      # the right most mode of the top peaks
-      testScore <- max(topConsidX);
-      numHetClusters <- length(validPits) + 1 ; # is length(validPits) + 1    better than    numHetClusters = length(topCountX)
-      plotCol <- 'red'
-    }else{
-      # first Max less than 1 must suffice
-      testScore <- max( data[which(data < 1)] );
-      loginfo('%i observations for %s, too few for density, returning the first max<1: %.3f',observ,plotTextPrefix,testScore)
-      numHetClusters <- NA_integer_; plotCol <- 'orange'
-    }
-
-
-
-    #plot density, modes
-    if(!skipPlot){
-      plot(hetDen,xlim=xlimits, main=paste(plotTextPrefix,'het score density via', bwMethod),type='l')
-      # points(hetDen$x[tp$tppos],hetDen$y[tp$tppos],pch='*', col=ifelse(hetDen$x[tp$tppos] %in% pitScoresX, 'red','blue') )
-      # polygon(hetDen$x, hetDen$y, col='gray92',border='gray92')
-      rug(dataIn)
-      abline(v=heterozygosityScoreThreshold, col='gray', lwd=0.5)
-
-      if(!is.null(sampleId)){mtext(text=sampleId,3, adj=0)};
-      if(!is.null(folderId)){mtext(text=folderId,3, adj=1)}
-
-      abline(h=considerPeakCutoff*maxPeakY, col='gray')
-      mtext(text = paste0(considerPeakCutoff*100,'%'), side=2, line=-2, at = considerPeakCutoff*maxPeakY, cex=.75, col='gray', las=2,padj = -1 )
-      abline(h=countPeakCutoff*maxPeakY, col='gray')
-      mtext(text = paste0(countPeakCutoff*100,'%'), side=2, line=-2, at = countPeakCutoff*maxPeakY, cex=.75, col='gray', las=2,padj = -1 )
-
-      abline(v=topConsidX, lty='dotted')                # top peaks (modes)
-      abline(v=testScore, lty='dotted',  col=plotCol)   # testScore to use/output
-      if(!is.null(validPits))mtext('*', side=3, at=validPits, line=-1, col='green3')         # mark valid pits
-      mtext(round(topConsidX,3), side=3, at=topConsidX, line=-.75, cex=.7)
-      mtext(text=round(testScore,3), side=1, at=testScore, cex=.75, col=plotCol, line=-0.2)
-    }
-  }else{
-    testScore <- default;
-    numHetClusters <- NA_integer_;
+    axis(side=4, at=cnAt, labels=paste0(iCN,'N'), tick=TRUE, las=1)
   }
 
-  # limit test score to 3 sig figs more is not relevant. See ME26301: peak2 vs peak3... 0.9907994 vs 0.9909797 these should be considered the same value
-  return(list(testScore=round(testScore, 3), numHetClusters=numHetClusters, observ=observ))
-
-}
-
-
-
-
-
-
-#' find tumor ratio as the ratio between two copy number peaks and their corresponding read depth
-#'
-#' @param rd1,rd2  read depth of two peaks
-#' @param cn1,cn2  copy number  of two peaks
-#' @examples calcTumorRatio(rd1=1.2,rd2=2,cn1=2,cn2=4)
-#' @examples calcTumorRatio(rd1=2, rd2=3.5, cn1=1,cn2=2) # 58163 = .155
-#' @family copyNumberCalcs
-#' @export
-calcTumorRatio=function(rd1,rd2,cn1,cn2){
-  D <- abs(rd1-rd2)/abs(cn1-cn2) # expected difference between two peaks  copy number, i.e. 1N and 2N
-  T <- 2*D/(rd1+D*(2-cn1))
-
-  loginfo('tumorRatio: %.2f', T)
-  return(T)
-}
-
-
-
-
-#' find copy number from read depth and tumor ratio
-#'
-#' @param NRD normalized read depth
-#' @param tau tumor ratio
-#' @export
-#' @examples calcCopyNumber(NRD=23,tau=0.85) # CCND1 PT140
-#' @examples calcCopyNumber(NRD=1.4,tau=0.33) # CDKN2A BL002
-#' @examples calcCopyNumber(NRD=4,tau=0.75)
-#' @examples calcCopyNumber(NRD=4,tau=0.5)
-#' @examples calcCopyNumber(NRD=1.745,tau=0.13)
-#' @family copyNumberCalcs
-#'
-calcCopyNumber <- function(NRD, tau){
-  #nrd=2+((iCN-2)*tau)
-  cn <- 2+ ((NRD-2)/tau)
-  return(cn)
-}
-
-#' find read depth from copy number and tumor ratio
-#'
-#' @param cn copy number
-#' @param NRD normalized read depth
-#' @export
-#' @examples calcNrd(cn=3,tau=.7)
-#' @family copyNumberCalcs
-#'
-calcNrd <- function(cn, tau){
-  nrd <- 2+((cn-2)*tau)
-  return(nrd)
-}
-
-#' find tumor ratio from copy number and normalized read depth
-#'
-#' @param cn copy number
-#' @param NRD normalized read depth
-#' @export
-#' @examples calcTau(NRD=2.9,cn=3)
-#' @family copyNumberCalcs
-#'
-calcTau <- function(cn, NRD){
-  tau  <-  (NRD-2)/ (cn-2)
-  return(tau)
-}
-
-
-#' interpolate read depth for a give copy number
-#'
-#' given read depth and copy number for two other positions
-#' @examples extrapRD(cn=2,cn1=4,cn2=5,rd1=2,rd2=2.376)
-#'
-#' @export
-extrapRD <- function(cn,cn1,cn2,rd1,rd2){
-  rd  <-  rd1 + ((cn - cn1) / (cn2 - cn1)) * (rd2 - rd1)
-  return(rd)
-}
-
-
-#' find the two best digital peaks for calculating tumor percentage or extrapolating other peaks
-#'
-#' Best peak will be the 2N peak if it exists and is suitable, otherwise use main peak
-#' Second best peak will be the taller of the two digital peaks adjacent to the best peak
-#' Don't rely on 2N and then the 1N/3N because they may be small and/or missing
-#' 2N peak is considered suitable if it is one of the top 3 biggest peaks
-#' Do not default to two biggest peaks, we want to use lower copy number peaks which will typically align to the digital grid better due to less (sub) clonal mixing
-#' @param peakCopyNum from peakInfo, copy number for the peak
-#' @param peakHeight from peakInfo, height of each peak normalized so max peak = 1
-#'
-getTwoBestPeakIndexes <- function(peakCopyNum, peakHeight){
-  # peakCopyNum = peakInfo$nCopy; peakHeight  = peakInfo$peakHeight;
-  # peakHeight=c(0.568, NA, 1.0, 0.501, 0.584, 0.086, 0.039); peakCopyNum=c(3, NA,  4,  5,  7,  8, 12)
-
-  twoNexists <- ifelse(any(peakCopyNum==2, na.rm = TRUE), TRUE, FALSE)
-  peakMagnitudes <- peakHeight[!is.na(peakCopyNum)]
-  peakMagRankings  <-  order(peakMagnitudes, decreasing = TRUE)
-
-  # is 2N suitable?
-  if(twoNexists){
-    twoNPeakCNIndex <- which(peakCopyNum[!is.na(peakCopyNum)]==2)
-    # use 2N peak if it is one of the top 3 biggest peaks
-    twoNSuitable <- ifelse(which(peakMagRankings==twoNPeakCNIndex) <= 5, TRUE, FALSE) # use 2N peak as much as possible! i.e. 74002
-
-  }else{
-    twoNSuitable <- FALSE
+  mtext(paste0('tumor: ', round(percentTumor,0), '%'),side = 1, adj=1, line=1.9)
+  if(forceFirstDigPeakCopyNum >=0){
+    mtext(1, text=paste0('manual 1st digital Peak: ', forceFirstDigPeakCopyNum, 'N'),adj=1, line=2.5, cex=.7, col=2)
+  }
+  if(origMaxPercentCutoffManual > 0){
+    mtext(1, text=paste0('manual peak height % cutoff: ', origMaxPercentCutoffManual),adj=1, line=3.0, cex=.7, col=2)
+  }
+  if(grabDataPercentManual > 0){
+    mtext(1, text=paste0('manual main peak width factor: ', grabDataPercentManual),        adj=1, line=3.5, cex=.7, col=2)
+  }
+  if(minPeriodManual > 0){
+    mtext(1, text=paste0('manual minPeriod: ', minPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
+  }
+  if(maxPeriodManual > 0){
+    mtext(1, text=paste0('manual maxPeriod: ', maxPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
   }
 
-  # get best peak index for peakMagnitudes and its two neighbor peak indexes
-  # use 2N peak (if suitable) otherwise the tallest peak
-  # BEWARE peakMagnitudes and peakMagRankings do not include the NAs while peakHeight does! so indexes into the two arrays may differ
-  if(twoNSuitable){
-    twoNPeakIndex  <- which(peakCopyNum[!is.na(peakCopyNum)]==2)
-    twoNpeak       <-  peakMagnitudes[twoNPeakIndex]
-    bestPeakIndex  <-  which(peakHeight==twoNpeak)
-
-    nextPeakIndex  <-  twoNPeakIndex+1 # these are digital peaks
-    prevPeakIndex  <-  twoNPeakIndex-1
-  }else{
-    # NO- use tallest peak and second tallest peak - one of these peaks could be a really high copy number and the bigger the copy number the more likely it is a mixture and not reliable
-    # YES-use tallest peak and its tallest of the two neighbor peak as these peaks will probably give you the most reliable value
-
-    # BEWARE peakMagnitudes and peakMagRankings do not include the NAs while peakHeight does! so indexes into the two arrays may differ
-    tallestPeak       <- peakMagnitudes[peakMagRankings[1]]  # max(peakMagnitudes)
-    #secondTallestPeak <- peakMagnitudes[peakMagRankings[2]]  # max(peakMagnitudes[peakMagnitudes!=max(peakMagnitudes)])
-
-    tallestPeakIndex       <- which(peakMagnitudes==tallestPeak)
-    bestPeakIndex        <-   which(peakHeight==tallestPeak)
-
-    nextPeakIndex  <-  tallestPeakIndex+1 # these are digital peaks
-    prevPeakIndex  <-  tallestPeakIndex-1
-  }
-
-  if(FALSE){
-    # use the left peak unless it is too small ( less than 10% of the bestPeak)
-    # this mimics the choice of peaks pre-ploidy in tumorEstFunc() but has not been tested for use in ploidy
-    if(!is.na(prevPeakIndex)){
-      if(  peakMagnitudes[prevPeakIndex]/ peakMagnitudes[bestPeakIndex]>.1){
-        secondBestPeakIndex <- prevPeakIndex
-      }else{
-        secondBestPeakIndex <- nextPeakIndex
-      }
-    }else{
-      secondBestPeakIndex <- nextPeakIndex
-    }
-
-  }else{
-    # a slight preference is given to the lower CN of the two peaks
-    # for example, 1N vs 3N, if the 1N peak is less than 30% smaller, use it to find the tumor % as higher peaks are not as accurate (mixing, subclones etc.)
-    tallestNeighborPeakIndex  <- which.max(c(peakMagnitudes[prevPeakIndex]*1.3, peakMagnitudes[nextPeakIndex ]))
-    tallestNeighborPeak <-                 c(peakMagnitudes[prevPeakIndex],     peakMagnitudes[nextPeakIndex ])[tallestNeighborPeakIndex]
-    secondBestPeakIndex <- which(peakHeight==tallestNeighborPeak)
-  }
-
-  loginfo(' bestPeakIndex = %i; secondBestPeakIndex = %i',bestPeakIndex,secondBestPeakIndex)
-
-  if(bestPeakIndex==secondBestPeakIndex){
-    logerror('something is wrong, bestPeakIndex = secondBestPeakIndex %i = %i, this should not happen', bestPeakIndex,secondBestPeakIndex)
-    return(NA)
-  }
-  if(is.na( peakCopyNum[bestPeakIndex]) | is.na( peakCopyNum[secondBestPeakIndex])){
-    logerror('something is wrong, nCopy for one of the peak indexes is NA, this should not happen')
-    return(NA)
-  }
-  return(list(bestPeakIndex=bestPeakIndex, secondBestPeakIndex=secondBestPeakIndex))
-
-}
-
-
-
-#' calculate tumor from ploidy read depth and copy number calls (peak positions)
-#'
-#' use \code{getTwoBestPeakIndexes} to find best peak and the biggest of its neighbor peaks.
-#'
-#' @param peakCopyNum from peakInfo, copy number for the peak
-#' @param peakHeight from peakInfo, height of each peak normalized so max peak = 1, to determine two best peaks
-#' @param peakReadDepth_1bp from peakInfo, read depth per peak normalized to 1bp window
-#'
-calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,dPeaks){
-  # peakInfo=result$peakInfo
-  # peakCopyNum = peakInfo$nCopy; peakHeight  = peakInfo$peakHeight; peakReadDepth_1bp=peakInfo$peakReadDepth_1bp; dPeaks=peakInfo$dPeaks
-
-  bestPeaksResult <- getTwoBestPeakIndexes(peakCopyNum, peakHeight)
-  rd1a <- peakReadDepth_1bp[bestPeaksResult$bestPeakIndex]
-  rd1b <- dPeaks[bestPeaksResult$bestPeakIndex]
-  rd2a <- peakReadDepth_1bp[bestPeaksResult$secondBestPeakIndex]
-  rd2b <- dPeaks[bestPeaksResult$secondBestPeakIndex]
-  cn1 <- peakCopyNum[bestPeaksResult$bestPeakIndex]
-  cn2 <- peakCopyNum[bestPeaksResult$secondBestPeakIndex]
-
-
-  percentTumor_a <- calcTumorRatio(rd1a,rd2a,cn1,cn2)*100 # using the readDepth at the max y position of each peak - will depend on which peaks you use, not spaced equal distances apart
-  percentTumor_b <- calcTumorRatio(rd1b,rd2b,cn1,cn2)*100 # using the readDepth at the digital peak position each peak - does not depend on which peaks you use, all spaced equal distance apart
-
-  percentTumorMean <- mean(c(percentTumor_a, percentTumor_b))
-  loginfo('mean percent tumor calc: %.1f',percentTumorMean)
-  return(percentTumor=percentTumor_a)
-}
-
-
-
-#' add vertical lines to linear genome plot
-#'
-#' @param chromStarts must be same window size scale as the plotted frequency data
-#' @param maxcn max chromosome number
-markChromEdges <- function(chromStarts,maxcn,rgdObject,vCol='gray90'){
-  chroms <- convertChromToCharacter(1:maxcn, rgdObject = rgdObject)
-  abline(v=chromStarts[1:maxcn], col=vCol)
-  for(ic in 1:maxcn) {
-    mtext(side = 1, text = chroms[ic], line=-1, at = (chromStarts[ic]+chromStarts[ic+1])/2, cex=0.7)
-    mtext(side = 3, text = chroms[ic], line=-1, at = (chromStarts[ic]+chromStarts[ic+1])/2, cex=0.7)
-  }
-}
-
-
-
-
-
-
-
-getCNcolors <- function(){
-  # cnColors <- c(palette()[-1], "orange", 'white', palette()[-1]) # remove black, add orange, white, and repeat to make sure we have enough colors
-
-  # R 4.0 changed palette() to different shades of the original colors, use palette_R3.0 to get back to those original shades, which had standard names, back
-  palette_R3.0 <- c("black","red","green3","blue","cyan","magenta","yellow","gray")
-  cnColors <- c(palette_R3.0[-1], "#E69F00", palette_R3.0[1], palette_R3.0[-1]) # add orange, put black last, and repeat to make sure we have enough colors
-  return(cnColors)
-}
-
-
-
-
-
-
-
-
-#' create the starLookUp table
-#' @export
-makeStarLookUpTable <- function(starInfo,percentTumor){
-  # percentTumor= ploidyOutput$percentTumor
-
-  # create the starLookUp table
-  hetScore <- starInfo$starVals / starInfo$medStarVals
-  nrd <- starInfo$plotStarRange
-  cn <- round(calcCopyNumber(NRD=nrd, tau=percentTumor/100))
-  starLookUp <- data.frame(hetScore,
-                           nrd=round(nrd,3),
-                           cn,
-                           major=0,    # initialize to 0
-                           minor=0 )   # initialize to 0
-
-  # assign major and minor allele columns for each CN and het score
-  # the cnLOH level will be the first row, the heterozygous level the last row, within the rows for a given copy number level.
-  for(icn in 1:max(cn)){
-    # icn=6
-    minor <- seq(from=0, to=icn/2)
-    major <-  icn-minor
-    starLookUp[which(starLookUp[,'cn']==icn),'major'] <- major
-    starLookUp[which(starLookUp[,'cn']==icn),'minor'] <- minor
-  }
-  return(starLookUp)
-}
-
-
-
-
-#' allele specific cnv
-#' 1) find CN for the segment by rounding the cnLevel to an integer
-#' 2) find which closest star, within that CN, is closest to the hetScore of the segment
-#' 3) the closest star is then the segment's major:minor allele
-#'
-allelicCNV <- function(starLookUp, segmentDataIn){
-  # see alleleCNVtesting() for testing different strategies
-
-  dfColumns <-  c('Chr','Start','End','Size', 'Copy_Number', 'Major_Copy_Number', 'Minor_Copy_Number')
-
-
-  # segmentDataIn=result$segmentData
-
-  # get rid of some of those columns that are annoying me
-  segmentDataOut <- segmentDataIn[,c('chr','start','end','size','rd', 'nrd','lohScoreMedian','valid','cnLevel')]
-
-  # round the copy number level to get an integer value
-  segmentDataOut[['copy_number']] <- round(segmentDataOut$cnLevel)     # integer
-
-
-  # for each segment, based on the CN and hetScore, list the major and minor allele as integers
-  for(i in 1:nrow(segmentDataOut)){
-    # i <- 56; segmentDataOut[i,]
-
-    if(!is.na(segmentDataOut[i, 'valid']) &&
-       segmentDataOut[i, 'valid'] == 1){ # hetScore mean and median are both not zero
-      iHetScore <- segmentDataOut[i, 'lohScoreMedian']
-
-      # find which hetScore in the starLookUp table is the closest to the segment hetScore
-      iCN <- segmentDataOut[i,'copy_number']
-      key <- which(starLookUp[,'cn']==iCN)
-      keyInd <- which.min(abs(iHetScore-starLookUp[key,'hetScore']))
-      #assign the major and minor values from the starLookUp table to the segment
-      if(length(keyInd)==1){
-        segmentDataOut[i,'major_copy_number'] <- starLookUp[key[keyInd],'major']
-        segmentDataOut[i,'minor_copy_number'] <- starLookUp[key[keyInd],'minor']
-      }
-    }
-  }
-  # clean up columns
-  # names(df)[names(df) == 'old.var.name'] <- 'new.var.name'
-  names(segmentDataOut)[names(segmentDataOut) == "lohScoreMedian"] <- "heterozygosity_score"
-  names(segmentDataOut)[names(segmentDataOut) == "cnLevel"] <- "copy_clonality"
-  names(segmentDataOut)[names(segmentDataOut) == "nrd"] <- "normalized_read_depth"
-  names(segmentDataOut)[names(segmentDataOut) == "rd"] <- "read_depth"
-
-
-  zero=which(segmentDataOut$minor_copy_number==0)
-  segmentDataOut[zero,]
-
-
-
-  return(segmentData=segmentDataOut)
-}
-
-#' get LOH content metrics used to identify high-ploidy or WGD
-#' @param allelicSegData
-#' @return a list with the three metrics used by us (A) and other authors (B and C)
-#' lohContentA_maj2_min0
-#' lohContentB_maj1_min0
-#' lohContentC_maj2
-#'
-getLohContent <- function(allelicSegData){
-  numTotalSegments <- nrow(allelicSegData)
-  hemiDel_keys  <-  which(allelicSegData$minor==0 & allelicSegData$copy_number == 1)
-  cnLOH_keys <- which(allelicSegData$minor==0 & allelicSegData$copy_number == 2)
-  gainLOH_keys <- which(allelicSegData$minor==0 & (allelicSegData$copy_number ==3 | allelicSegData$copy_number ==4))
-  ampLOH_keys <- which(allelicSegData$minor==0 & allelicSegData$copy_number >=5)
-  allLOH_keys <- c(cnLOH_keys, gainLOH_keys,ampLOH_keys)
-
-  sum(allelicSegData[hemiDel_keys,'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[cnLOH_keys,  'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[gainLOH_keys,'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[ampLOH_keys, 'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[allLOH_keys, 'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-
-  sum(allelicSegData[cnLOH_keys,'size'] )/sum(allelicSegData[,'size'])
-  sum(allelicSegData[cnLOH_keys,'size'] * allelicSegData[cnLOH_keys,'copy_number']  )/sum(allelicSegData[,'size']) # also weighted by copy_number
-
-  # cnLohRatioA = lohContentA_maj2_min0
-  # cnLohRatioB = lohContentB_maj1_min0
-  # mcnGtEq2Ratio = lohContentC_maj2
-
-  #svatools methodA: minor allele = 0 and major  >=2 aka 2N+LOH
-  minorEq0_cnGtEq2_keys <- which(allelicSegData$minor==0 & allelicSegData$copy_number >= 2)
-  lohContentA_maj2_min0_NW        <- length(minorEq0_cnGtEq2_keys)/ numTotalSegments  # not weighted, WRONG
-  lohContentA_maj2_min0_pW        <- sum(allelicSegData[minorEq0_cnGtEq2_keys,'size']* allelicSegData[minorEq0_cnGtEq2_keys,'copy_number'] )/sum(allelicSegData[,'size']) # weighted by length of segment and copy number
-  lohContentA_maj2_min0           <- sum(allelicSegData[minorEq0_cnGtEq2_keys,'size'] )/sum(allelicSegData[,'size'])                                                   # weighted by length of segment
-
-  #svatools methodB: minor allele = 0 (will include CN=1) aka all LOH including haploid LOH
-  minorEq0_keys  <- which(allelicSegData$minor==0 )
-  lohContentB_maj1_min0_NW <- length(minorEq0_keys)/numTotalSegments  # not weighted
-  lohContentB_maj1_min0    <- sum(allelicSegData[minorEq0_keys,'size'])/sum(allelicSegData[,'size']) # weighted by length of segment
-
-
-  #bielski method: major allele, copy number (MCN) >=2
-  majorGtEq2_keys <- which(allelicSegData$major>=2)
-  lohContentC_maj2_NW  <- length(majorGtEq2_keys)/numTotalSegments  # not weighted
-  lohContentC_maj2    <- sum(allelicSegData[majorGtEq2_keys,'size'])/sum(allelicSegData[,'size']) # weighted by length of segment
-  return(list(lohContentA_maj2_min0=lohContentA_maj2_min0,
-              lohContentB_maj1_min0=lohContentB_maj1_min0,
-              lohContentC_maj2=lohContentC_maj2)
-  )
-}
-
-
-
-
-#' calculate the error in hetScore between the loh segments and the corresponding theoretical value
-#'
-#' if the error is bigger than a set negative value, ploidy passes.
-#' Any positive value is good, means the clouds are all right of the loh (purple) line
-#' RMSD is not appropriate for this test because RMSD squares the data to get only positive values,
-#' we want to check for too large of a negative difference, large positive differences may occur especially at high tumor
-#' when the clouds shift right of the loh line but this does not signal an error in the ploidy determination
-#' @param starInfo
-#' @param segmentData segments used in calculatePloidy which has meanLOH per segment
-#' @param percentTumor as output from calculateploidy
-ploidyCheck <- function(starInfo, segmentData, percentTumor){
-  #  segmentData <- allelicSegData; percentTumor=result$percentTumor
-
-  starLookUp <- makeStarLookUpTable(starInfo,percentTumor)
-
-  lohIndexes <- which(segmentData$minor==0) # & segmentData$copy_number>0)
-  lohSegments <- segmentData[lohIndexes,]  # lohSegments[lohSegments$chr==8,]; segmentData[segmentData$chr==8,]
-  if(length(lohIndexes)<=10){
-    logwarn('%i loh Indexes, not enough to check ploidy',length(lohIndexes))
-    return(ploidyPasses=NA)
-  }
-
-  # for each copy_number with copy neutral data, find the average and SD hetScore of the segments within each copy neutral cloud
-  # the cloud is valid if the median+SD*1.5 > theoretical hetScore
-  copyNumsToCheck <- unique(lohSegments$copy_number)
-  copyNumsToCheck <- copyNumsToCheck[order(copyNumsToCheck)]
-
-  if(length(copyNumsToCheck)==0){
-    logwarn('no copy neutral hetScore clouds to check')
-    return(ploidyPasses=NA)
-  }
-
-  #calculate errors --------------
-  sumDiffSquared <- 0
-  sumDiff <- 0
-  n <- 0
-  for(i in 1:length(copyNumsToCheck)){
-    iCN <- copyNumsToCheck[i]
-    iKeys <- which(abs(lohSegments[,'copy_number']-iCN) ==0 )
-    iLohMean <- (lohSegments[iKeys,'lohScoreMean'])
-    iLohMedianMedian <- (lohSegments[iKeys,'lohScoreMedian'])
-    experHetScores <- iLohMedianMedian
-    theorHetScore <- starLookUp[which(starLookUp$cn==iCN & starLookUp$minor==0),'hetScore']
-
-    iSumDiffSquared <- sum(experHetScores-theorHetScore)^2
-    sumDiffSquared <- sumDiffSquared+iSumDiffSquared
-
-    # only take the negative values - if the ploidy is wrong there will be lots of positive (many wrong) values to offset the negative values
-    # the negative values should be those left of the purple line
-    negKeys <- which(experHetScores-theorHetScore<0)
-    iSumDiff <- sum(experHetScores[negKeys]-theorHetScore)
-    sumDiff <- sumDiff+iSumDiff
-    iN <- length(negKeys)
-    n <-  n + iN
-  }
-  if(n <=10){
-    logwarn('%i negKeys, not enough to check ploidy',n)
-    return(ploidyPasses=NA)
-  }
-
-  rmds <- sqrt(sumDiffSquared)/n # just for fun but not relevant here
-  normDiff <- sumDiff/n
-
-  diffMax <- -0.05   #TODO: this is a heuristic, need to experimentally determine the correct cutoff, -0.05 was too restrictive when using all the segments rather than just the negKeys?
-  if(normDiff >= diffMax){
-    ploidyPasses <- TRUE
-  }else{
-    ploidyPasses <- FALSE
-  }
-  loginfo('n=%i  normDiff = %.3f (min:%.2f)  ploidyPasses = %s',n, normDiff,diffMax, ploidyPasses)
-
-  return(ploidyPasses)
-
-}
-
-
-#' parameters available for non-default config inputs to calculatePloidy() as determined through testing
-#' returns the columns included in the ploidySampleConfig.csv file
-#' @export
-getAdjustablePloidyConfigParams <- function(){
-  columns <- c( "origMaxPercentCutoffManual","grabDataPercentManual","forceFirstDigPeakCopyNum","minPeriodManual","allowedTumorPercent","heterozygosityScoreThreshold",
-                "continueOnPloidyFail", "maxPeriodManual","minReasonableSegmentSize")
-  return(columns)
-}
-
-
-#' retrieve recommended non-default config inputs to calculatePloidy() for a given folder
-#' @param numfolder 5-digit folder number for a sample as provided in samplenames.csv loaded by \code{getSampleDatabase()}
-#' @return dataframe with param and value, row name will be the folder
-#'
-#' @export
-getPloidyParamsForSample <- function(numfolder){
-  # numfolder <- 82034
-
-  # TODO make a couple tests
-
-  manualSettings <- data.frame()
-  ploidySampleConfigFile <- bmd.system.file('extdata', 'ploidySampleConfig.csv', package = "bmdSvPipeline")
-  ploidySampleParams <- bmd.read.csv(file = ploidySampleConfigFile,
-                                     row.names = NULL, # If someone adds extra comma, they can break everything without this
-                                     fileLabel = "non-default config setting for ploidy",
-                                     stringsAsFactors=FALSE
-  )
-
-  row.names(ploidySampleParams) <- ploidySampleParams$folder
-  ploidySampleParams <- ploidySampleParams[,-which(names(ploidySampleParams)=='folder')]
-
-  columns <- getAdjustablePloidyConfigParams()
-  checkColumns(ploidySampleParams, file=file, columns = columns )
-  if(ncol(ploidySampleParams)!=length(columns)) {
-    stop("The ploidySampleConfig.csv table has unexpected columns: ", paste(sQuote(colnames(ploidySampleParams)), collapse=", "))
-  }
-
-  if(numfolder %in% row.names(ploidySampleParams)){
-    manualSettings <- ploidySampleParams[row.names(ploidySampleParams)==numfolder,]
-  }
-
-  returnResult <- manualSettings[which(!is.na(manualSettings))]
-
-  if(ncol(returnResult)>0){
-    loginfo("returning %i input parameters for calculatePloidy %s", ncol(returnResult), strToString(returnResult));
-  }
-
-  return(returnResult)
-}
-
-#' determine if ploidy was run or not
-#' @return TRUE if ploidy was run FALSE if ploidy was not run
-#' @export
-getPloidyExistsStatus <- function(postProcessingDir_SV,sampleId_SV){
-  # just because the file is there, doesn't mean ploidy was run, ploidyCN may be NA
-  # also, if the
-  hetScores_StarCloudDataInfo <- getTypedFile("hetScores_StarCloudData", dir = postProcessingDir_SV, values = list(sampleId = sampleId_SV), legacy = TRUE)
-  if(file.exists(hetScores_StarCloudDataInfo@path)){
-    starCloudData <- loadRdata(file=hetScores_StarCloudDataInfo)
-    hetScorePloidyCN <- starCloudData$ploidyCN
-  }else{
-    hetScorePloidyCN <- NA_real_
-  }
-
-  # could consider using 'statisticsCnvDetect' instead or in combination, but going forward, the hetScores_StarCloudData file should be rewritten each time cnvDetect is run,
-  # and NA should be entered if there is no ploidy
-  # statisticsCnvDetectFile <- getTypedFile("statisticsCnvDetect", dir = postProcessingDir_SV, values = list(folderId = getFolderId(sampleId_SV)), legacy = TRUE )
-  # statisticsCnv <- loadRdata(statisticsCnvDetectFile@path)
-  # statPloidyCN = statisticsCnv$ploidyCN
-
-  if(is.na(hetScorePloidyCN)){
-    ploidyExists <- FALSE
-  }else{
-    ploidyExists <- TRUE
-  }
-
-  return(ploidyExists)
-}
-
-
-
-
-
+  par(op)
+} # CLOSE: plotHetScoreVsPeakMode()
