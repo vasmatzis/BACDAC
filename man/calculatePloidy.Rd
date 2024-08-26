@@ -50,6 +50,10 @@ calculatePloidy(
 
 \item{centroArray}{array with the positions of the centromeres for each chromosome}
 
+\item{dPeaksCutoff}{dPeaksCutoff min grid height for a peak to be considered a digital peak}
+
+\item{penaltyCoefForAddingGrids}{penalty for adding additional peaks to the digital peak alignment}
+
 \item{minGridHeight}{minimum value that can be assigned to the gridHeights}
 
 \item{minPeriodManual}{manually set \code{minPeriod} within \code{calculatePloidy}}
@@ -67,6 +71,8 @@ calculatePloidy(
 \item{forceFirstDigPeakCopyNum}{value to force copy number of first digital peak, use only when ploidy calculation is wrong}
 
 \item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found}
+
+\item{hsNormMat}{}
 }
 \value{
 expReadsIn2NPeak_1bp, percentTumor, peakInfo, hetScoreQuantiles
