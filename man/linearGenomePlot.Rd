@@ -9,10 +9,13 @@ linearGenomePlot(
   readDepthBinSize = 30000,
   yLimQuantile = 0.99,
   sampleId = NULL,
+  alternateId = NULL,
   segmentation = NULL,
+  allelicSegments = NULL,
   noDelAmpDetection = FALSE,
   gainColor = "blue",
   lossColor = "red",
+  zebraStrips = FALSE,
   ...
 )
 }
@@ -27,11 +30,15 @@ linearGenomePlot(
 
 \item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
 
+\item{allelicSegments}{segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number}
+
 \item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
 
 \item{gainColor}{color to use for gains in linear genome plot, default is blue}
 
 \item{lossColor}{color to use for losses in linear genome plot, default is red}
+
+\item{zebraStrips}{option to have alternating gray/white background for chromosome delineation}
 
 \item{...}{Parameters passed onto the actual plot command}
 }

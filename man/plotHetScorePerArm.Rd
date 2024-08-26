@@ -2,22 +2,20 @@
 % Please edit documentation in R/heterozygosityScore.R
 \name{plotHetScorePerArm}
 \alias{plotHetScorePerArm}
-\title{Plot the heterozygosity scores for evaluating LOH, summary values}
+\title{Plot the heterozygosity scores for evaluating LOH, arm level values}
 \usage{
 plotHetScorePerArm(
   hetScorePerArm,
-  chromsToPlot,
   sampleId = NULL,
   hetScoreMean = 0.9875,
   hetScoreStDev = 0.0125,
   yMap = function(y) {     2^(10 * y) },
-  ylab = "Heterozygosity Score"
+  ylab = "Heterozygosity Score",
+  zebraStrips = FALSE
 )
 }
 \arguments{
 \item{hetScorePerArm}{A matrix with chr, arm and hetScore columns}
-
-\item{chromsToPlot}{Vector of chromosome numbers to plot}
 
 \item{sampleId}{sample id, will be used as the prefix for all input and output file names}
 
@@ -28,9 +26,11 @@ plotHetScorePerArm(
 \item{yMap}{A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes}
 
 \item{ylab}{label for y axis}
+
+\item{zebraStrips}{option to have alternating gray/white background for chromosome delineation}
 }
 \description{
-Plot the heterozygosity scores for evaluating LOH, summary values
+Plot the heterozygosity scores for evaluating LOH, arm level values
 }
 \seealso{
 Other hetScore: 

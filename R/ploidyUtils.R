@@ -17,6 +17,8 @@ getMainPeakNRD=function(result){
 
 }
 
+#' NRD of the diploid peak from the binned read depth data
+#'
 getDiploidPeakNRD=function(result){
   mainPeakKey=which(result$peakInfo$rankByHeight==1)
   rdNormX_Mainpeak = result$peakInfo[mainPeakKey,'peakReadDepth_normX']
@@ -29,8 +31,12 @@ getDiploidPeakNRD=function(result){
   return(diploidPeakNRD)
 }
 
-
-#' @param N min number of clusters
+#' determine if the peak has a minimum number of clusters
+#'
+#' @param hetScoreDensityResult hetScore values returned from density function
+#' @param N minimum number of clusters
+#' @param heterozygosityScoreThreshold
+#' @param minObservations required number of input values to determine number of clusters present
 hasNorMoreClusters <- function(hetScoreDensityResult, N, heterozygosityScoreThreshold, minObservations=20){
   # hetScoreDensityResult=densityFirstDigPeak
   if(hetScoreDensityResult$observ > minObservations){
@@ -638,8 +644,9 @@ allelicCNV <- function(starLookUp, segmentDataIn){
   return(segmentData=segmentDataOut)
 }
 
-#' get LOH content metrics used to identify high-ploidy or WGD
-#' @param allelicSegData
+#' get LOH content metrics used to identify high-ploidy
+#'
+#' @param allelicSegData segment data returned from \code{calculatePloidy} and augmented with major and minor allele specific copy number
 #' @return a list with the three metrics used by us (A) and other authors (B and C)
 #' lohContentA_maj2_min0
 #' lohContentB_maj1_min0

@@ -78,6 +78,7 @@ Other coordinates:
 \code{\link{bimaToLinear}()},
 \code{\link{binnedPosEnd}()},
 \code{\link{binnedPosStart}()},
-\code{\link{getLinearCoordinates}()}
+\code{\link{getLinearCoordinates}()},
+\code{\link{linearToBima}()}
 }
 \concept{coordinates}

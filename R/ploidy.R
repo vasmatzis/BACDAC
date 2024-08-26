@@ -1,17 +1,17 @@
-#' Use density on copy number (read depth) to determine peaks
+#' Use density on 100 kb binned read depth to determine read depth distribution (peaks)
 #'
-#' peaks are returned in order of read depth with most common (highest frequency) read depth peak listed first
+#' peaks are returned in rank order of read depth with highest frequency read depth peak listed first
 #'
 #' @param sampleId sample Identifier
 #' @param alternateId secondary sample identifier
-#' @param rgdObject loaded rgd file as an object
-#' @param cnvBinnedData binned copy number variant (actually read depth) values, linear coordinates, with normal
+#' @param readDepthPer100kbBin  read depth for 100kb bins, with bin index in linear coordinates
 #' @param segmentation identified regions of the genome with constant read depth
 #' @param segmentationBinSize bin size used for the read depth in the segmentation data
 #' @param wszPeaks window size for peaks by density
 #' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location) set to -1 to use main Peak width
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
-#' @param qualityPostNorm used to determine grabDataPercentMax
+#' @param qualityPostNorm used to set max allowed value for grabDataPercent
+#'
 peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
                           addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,alternateId=NULL){
   # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
@@ -345,8 +345,9 @@ assignGridHeights <- function(peakInfo, n00, minGridHeight){
 
 #' fit a group of peaks to a digital grid
 #'
-#' @param peakInfo
-#' @param dPeaksCutoff
+#' @param peakInfo summary table of info for each peak found in \code{peaksByDensity}
+#' @param gridHeights
+#' @param dPeaksCutoff min grid height for a peak to be considered a digital peak
 #' @param penaltyCoefForAddingGrids
 #' @param minGridHeight
 #' @param n00
@@ -356,9 +357,10 @@ assignGridHeights <- function(peakInfo, n00, minGridHeight){
 #' @param minPeriodManual
 #' @param maxPeriodManual
 #' @param someNumber
+#' @param sampleId sample Identifier
+#' @param alternateId secondary sample identifier
 #'
 #' @return dPeaks-the coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
-#' @export
 digitalGrid <- function(peakInfo, gridHeights,
                         dPeaksCutoff, penaltyCoefForAddingGrids,
                         n00, someNumber=8, sampleId=NULL, alternateId=NULL,
@@ -915,14 +917,16 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
 #' Then find the expected number of reads in the 2N peak and normalize that value to one bp. Tumor percent is calcuated from the two biggest digital peaks.
 #'
+#' @param sampleId sample Identifier
+#' @param alternateId secondary sample identifier
 #' @param segmentation identified regions of the genome with constant read depth. Contains chromosome, start, end, expected CNV, actual CNV and other values we do not need.
 #' @param segmentationBinSize bin size used for the read depth in the segmentation data
-#' @param cnvBinnedData "binned copy number variant (actually read depth) values, linear coordinates, with normal (cnvBinned)"
+#' @param readDepthPer30kbBin  read depth for 30 kb bins, with bin index in linear coordinates
 #' @param centroArray array with the positions of the centromeres for each chromosome
 #' @param hetScoreData heterozygosity scores determined per 30 kb bin over a 1 Mb region
 #' @param numChroms number of chromosomes in the reference genome to consider
 #' @param dPeaksCutoff
-#' @param penaltyCoefForAddingGrids
+#' @param penaltyCoefForAddingGrids penalty for adding additional peaks to the digital peak alignment
 #' @param minGridHeight minimum value that can be assigned to the gridHeights
 #' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
@@ -933,13 +937,13 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @param maxPeriodManual manually set \code{maxPeriod} within \code{calculatePloidy}
 #' @param forceFirstDigPeakCopyNum value to force copy number of first digital peak, use only when ploidy calculation is wrong
 #' @param minReasonableSegmentSize initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found
+#'
 #' @inheritParams commonParameters
 #'
 #' @example inst/examples/calculatePloidyExample.R
 #'
-#' @return expReadsIn2NPeak_1bp, percentTumor,peakInfo, hetScoreQuantiles
+#' @return expReadsIn2NPeak_1bp, percentTumor, peakInfo, hetScoreQuantiles
 #'
-#' @export
 calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
                             readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
                             segmentation, segmentationBinSize=30000,

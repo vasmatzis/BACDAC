@@ -436,7 +436,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinWigFile,
 #' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
 #' @param ylab label for y axis default "Heterozygosity Score"
 #' @param allelicSegments segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number
-#' @zebraStrips option to have alternating gray/white background for chromosome delineation
+#' @param zebraStrips option to have alternating gray/white background for chromosome delineation
 #'
 #' @export
 #' @family hetScore
@@ -541,7 +541,7 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
 #' @param hetScoreStDev standard deviation of the hetScore values
 #' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
 #' @param ylab label for y axis
-#' @zebraStrips option to have alternating gray/white background for chromosome delineation
+#' @param zebraStrips option to have alternating gray/white background for chromosome delineation
 #'
 #' @export
 #' @family hetScore

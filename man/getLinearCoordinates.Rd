@@ -22,6 +22,7 @@ Other coordinates:
 \code{\link{bimaToLinear}()},
 \code{\link{binnedPosEnd}()},
 \code{\link{binnedPosStart}()},
-\code{\link{linearCoordinates}}
+\code{\link{linearCoordinates}},
+\code{\link{linearToBima}()}
 }
 \concept{coordinates}
