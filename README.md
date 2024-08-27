@@ -39,19 +39,15 @@ RStudio instructions:
 3)  Hit ‘create project’ and smile while RStudio does all the git clone
     stuff.
 
-4)  Build
-
-You can Build in Rstudio or on command line, see ‘Updating source code’.
-You will be directed to install any necessary package dependancies at
-this time.
+4)  Build. You can Build in Rstudio or on command line, see ‘Updating
+    source code’. You will be directed to install any necessary package
+    dependancies at this time.
 
 ## Updating source code
 
 need to pull updates and build regularly during development
 
-# on command line:
-
-cd <path/to/your>/Rprojects/bacdac git pull R CMD INSTALL –build .
+### on command line:
 
 ``` r
 # FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
@@ -60,14 +56,15 @@ git pull
 R CMD INSTALL --build .
 ```
 
-# in Rstudio:
+### in Rstudio:
 
-go to git tab, click on “git pull” go to Build tab, click on “Install”
+- go to “git” tab, click on “git pull”
+- go to “Build” tab, click on “Install”
 
 ## Example
 
 This is a basic example which makes sure you can load some example data
-and use one of the simple functions:
+and use one of the simple functions to make a linear genome plot:
 
 ``` r
 ## try to run this example:
