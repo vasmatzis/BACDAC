@@ -45,12 +45,12 @@ RStudio instructions:
 
 ## Updating source code
 
-need to pull updates and build regularly during development
+need to pull updates and build regularly during development, you can do
+this on the command line or in Rstudio
 
 ### on command line:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
 cd <path/to/your>/Rprojects/bacdac
 git pull
 R CMD INSTALL --build .
@@ -63,8 +63,9 @@ R CMD INSTALL --build .
 
 ## Example
 
-This is a basic example which makes sure you can load some example data
-and use one of the simple functions to make a linear genome plot:
+This is a basic example to make sure you can load some example data and
+use one of the simple functions. A successful attempt will generate a
+linear genome plot:
 
 ``` r
 ## try to run this example:
