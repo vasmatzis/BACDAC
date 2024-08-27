@@ -917,39 +917,42 @@ digitalGrid <- function(peakInfo, gridHeights,
 #'
 #' Fit the peaks from the read depth distributions to a digital grid.
 #' Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
-#' Then find the expected number of reads in the 2N peak and normalize that value to one bp. Tumor percent is calcuated from the two biggest digital peaks.
+#' Then find the expected number of reads in the 2N peak and normalize that value to one bp.
+#' Tumor percent is calculated from the two biggest digital peaks.
 #'
 #' @param hetScoreData heterozygosity scores determined per 30 kb bin over a 1 Mb region
 #' @param numChroms number of chromosomes in the reference genome to consider
 #' @param minGridHeight minimum value that can be assigned to the gridHeights
-#' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width
+#' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location),
+#'  set to -1 to base off of mainPeak width
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
 #' @param pause pause execution until user prompts to continue, available interactively only, useful during testing
 #' @param skipExtras logical to turn on/off plots used for testing and debugging
 #' @param minPeriodManual manually set \code{minPeriod} within \code{calculatePloidy}
 #' @param maxPeriodManual manually set \code{maxPeriod} within \code{calculatePloidy}
 #' @param forceFirstDigPeakCopyNum value to force copy number of first digital peak, use only when ploidy calculation is wrong
-#' @param minReasonableSegmentSize initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found
+#' @param minReasonableSegmentSize initial smallest segment size to include in ploidy test segments; want to keep as large as possible
+#'  to avoid 0N segments, but will decrease size if not enough segments are found
 #'
 #' @inheritParams commonParameters
 #'
 #' @example inst/examples/calculatePloidyExample.R
 #'
-#' @return expReadsIn2NPeak_1bp, percentTumor, peakInfo, hetScoreQuantiles
-#'
-calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
-                            readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
-                            segmentation, segmentationBinSize=30000,
-                            hetScoreData,
-                            numChroms=24,
-                            dPeaksCutoff=0.01,    penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1,    # digital peaks
-                            grabDataPercentManual= -1,  origMaxPercentCutoffManual=-1,  #  peaksByDensity
-                            pause=FALSE, noPdf=FALSE,skipExtras=FALSE,forceFirstDigPeakCopyNum=-1,
-                            minReasonableSegmentSize=5.5e6,
-                            omitAnnotations = FALSE,
-                            heterozygosityScoreThreshold=0.98,  # If segment hetScore is more than this, the segment is heterozygous
-                            allowedTumorPercent = 106,
-                            hsNormMat=NULL
+#' @export
+calculatePloidy <- function(
+    sampleId, outputDir,alternateId=NULL,
+    readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
+    segmentation, segmentationBinSize=30000,
+    hetScoreData,
+    numChroms=24,
+    dPeaksCutoff=0.01,    penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1,    # digital peaks
+    grabDataPercentManual= -1,  origMaxPercentCutoffManual=-1,  #  peaksByDensity
+    pause=FALSE, noPdf=FALSE,skipExtras=FALSE,forceFirstDigPeakCopyNum=-1,
+    minReasonableSegmentSize=5.5e6,
+    omitAnnotations = FALSE,
+    heterozygosityScoreThreshold=0.98,  # If segment hetScore is more than this, the segment is heterozygous
+    allowedTumorPercent = 106,
+    hsNormMat=NULL
 ){
   ### defaults
   # dPeaksCutoff=0.01; penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1; pause=FALSE; skipExtras=FALSE; heterozygosityScoreThreshold=0.98
@@ -1168,8 +1171,8 @@ calculatePloidy <- function(sampleId, outputDir,alternateId=NULL,
   }
 
 
-  #' wrap steps to repeat into a function:
-  #' add 'nCopy' to peaksInfo, construct hetScoreQuantiles, calculate Tumor
+  # wrap steps to repeat into a function:
+  # add 'nCopy' to peaksInfo, construct hetScoreQuantiles, calculate Tumor
   repeatSteps <- function(peakInfo,keyHetScoresPerPeak,nCopyPeaks_step, allowed=allowedTumorPercent){
 
     ## 1 ## which peakRD_1bp (normPeak) is which of the dPeaks?

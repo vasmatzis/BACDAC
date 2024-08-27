@@ -61,7 +61,8 @@ calculatePloidy(
 
 \item{maxPeriodManual}{manually set \code{maxPeriod} within \code{calculatePloidy}}
 
-\item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width}
+\item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location),
+set to -1 to base off of mainPeak width}
 
 \item{origMaxPercentCutoffManual}{peaks smaller than this portion of the max peak are not considered; set to -1 to use default value}
 
@@ -73,22 +74,18 @@ calculatePloidy(
 
 \item{forceFirstDigPeakCopyNum}{value to force copy number of first digital peak, use only when ploidy calculation is wrong}
 
-\item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found}
+\item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments; want to keep as large as possible
+to avoid 0N segments, but will decrease size if not enough segments are found}
 
 \item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation}
 
 \item{hsNormMat}{hetScores from  a database of 23 Normals,  101046 x 23 rows, one row for each 30 kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment}
 }
-\value{
-expReadsIn2NPeak_1bp, percentTumor, peakInfo, hetScoreQuantiles
-
-wrap steps to repeat into a function:
-add 'nCopy' to peaksInfo, construct hetScoreQuantiles, calculate Tumor
-}
 \description{
 Fit the peaks from the read depth distributions to a digital grid.
 Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
-Then find the expected number of reads in the 2N peak and normalize that value to one bp. Tumor percent is calcuated from the two biggest digital peaks.
+Then find the expected number of reads in the 2N peak and normalize that value to one bp.
+Tumor percent is calculated from the two biggest digital peaks.
 }
 \examples{
 \dontrun{

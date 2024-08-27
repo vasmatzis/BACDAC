@@ -3,6 +3,8 @@
 #'
 #' @param segmentationFile full path to file to load
 #'
+#' @export
+#'
 loadSegmentationFile=function(segmentationFile){
   if(file.exists(segmentationFile)){
     segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE)

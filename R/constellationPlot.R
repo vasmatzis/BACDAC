@@ -300,7 +300,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
 
   if(!is.null(segmentData)){
     starInfoTemp <- list(starVals=starVals,medStarVals=medStarVals,plotStarRange=plotStarRange)
-    starLookUp <- makeStarLookUpTable(starInfo=starInfoTemp,percentTumor=tau*100)
+    starLookUp <- makeStarLookUpTable(starCloudResult=starInfoTemp,percentTumor=tau*100)
     allelicSegments <- allelicCNV(starLookUp, segmentDataIn=segmentData)
     lohContent <- getLohContent(allelicSegments)  ## getLohContent() is in ploidy.R
     lohContentA_maj2_min0 <- lohContent$lohContentA_maj2_min0

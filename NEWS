@@ -4,3 +4,5 @@ Changes in BACDAC 0.0.2
   o added more functions, examples, documentation
 Changes in BACDAC 0.0.3
   o bug fixes (hopefully) with sysdata.rda
+Changes in BACDAC 0.0.4
+  o bug fixes with export
