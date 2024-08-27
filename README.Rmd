@@ -99,7 +99,7 @@ This is a basic example which makes sure you can load some example data and use 
  # default cnv color coding and annotations
  linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)
 
-  
+
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
@@ -113,7 +113,7 @@ You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-da
 You can also embed plots, for example:
 
 ```{r pressure, echo = FALSE}
-plot(pressure)
+# plot(pressure)  # TODO: sarah commented this...
 ```
 
 In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
