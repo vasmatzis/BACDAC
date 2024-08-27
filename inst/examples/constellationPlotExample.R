@@ -1,6 +1,7 @@
 \dontrun{
 
   library(BACDAC)
+  library(logging)
 
   # intialize
   starCloudResult=NULL;

@@ -1,5 +1,6 @@
 \dontrun{
   library(BACDAC)
+  library(logging)
   # calculateHetScoreExample.R
   basicConfig("DEBUG")
   noPdf=TRUE                          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
