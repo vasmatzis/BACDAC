@@ -13,12 +13,17 @@
   inputDir <- system.file('extdata', package = "BACDAC")
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
   segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
+  thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+  readDepthBinnedData = readRDS(file=thirtyKbFile )
 
   calculateHetScore(
     sampleId=sampleId,
     inputDir=inputDir,
     outputDir=outputDir,
     segmentation=segmentation,
-    noPdf = TRUE)
-
+    noPdf = TRUE,
+    #optional
+    readDepthBinnedData=readDepthBinnedData,
+    readDepthBinSize=readDepthBinnedData$windowSize
+   )
 }
