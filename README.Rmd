@@ -18,11 +18,53 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of BACDAC is to ...
+BACDAC is an R package for "Ploidy Analysis using the Binomial Allelic Content with Discretization Algorithm and Constellation plot"
+
+Reports tumor ploidy and purity from whole-genome sequencing data including low-pass low-tumor NGS.
+    Inputs include read-depth and segmentation data, and ref/alt counts for common single nucleutide polymorphisms (SNPs). Calculates 
+    the "Heterozygosity Score" and produces the Constellation plot to visualize allele-specific copy-number as shown in publication xyz.
+
 
 ## Installation
 
-You can install the development version of BACDAC like so:
+You can install the development version of BACDAC by cloning the respository from the Mayo Clinic dev.azure.com (will be moved to github eventually):
+
+https://dev.azure.com/mclm/GBS%20GSU/_git/bmd-bacdac
+
+look at the clone button and copy the SSH url.
+
+RStudio instructions:
+
+1)	Open  RStudio:
+File -> New Project -> New repository  -> git
+
+2)	Fill in the pop up window as follows:
+
+- Repository URL: git@ssh.dev.azure.com:v3/mclm/GBS%20GSU/bmd-bacdac
+- Project directory name:	bacdac
+- Create project as subdirectory of:    <path/to/your>/Rprojects/
+
+3)	Hit ‘create project’ and smile while RStudio does all the git clone stuff.
+
+4) Build
+
+You can Build in Rstudio or on command line, see 'Updating source code'.
+You will be directed to install any necessary package dependancies at this time.
+
+
+## Updating source code
+
+need to pull updates and build regularly during development
+
+# on command line:
+cd <path/to/your>/Rprojects/bacdac
+git pull
+R CMD INSTALL --build .
+
+# in Rstudio:
+go to git tab, click on "git pull"
+go to Build tab, click on "Install"
+
 
 ``` r
 # FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
@@ -33,8 +75,35 @@ You can install the development version of BACDAC like so:
 This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
-library(BACDAC)
-## basic example code
+## try to run this example:
+  library(BACDAC)
+  library(logging)
+  # calculateHetScoreExample.R
+  # generate heterozygosity score by bin and by arm
+  # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm
+
+  basicConfig("DEBUG")
+  sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
+  outputDir <- tempdir()
+
+  # inputDir is the path to the load package data
+  inputDir <- system.file('extdata', package = "BACDAC")
+  segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+  segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
+  thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+  readDepthBinnedData = readRDS(file=thirtyKbFile )
+
+  calculateHetScore(
+    sampleId=sampleId,
+    inputDir=inputDir,
+    outputDir=outputDir,
+    segmentation=segmentation,
+    noPdf = TRUE,
+    #optional
+    readDepthBinnedData=readDepthBinnedData,
+    readDepthBinSize=readDepthBinnedData$windowSize
+   )
+
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
