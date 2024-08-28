@@ -328,15 +328,13 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
 
 
 
-
-#' find tumor ratio as the ratio between two copy number peaks and their corresponding read depth
+#' find tumor fraction from the ratio between two copy number peaks and their corresponding read depth
 #'
 #' @param rd1,rd2  read depth of two peaks
 #' @param cn1,cn2  copy number  of two peaks
 #' @examples calcTumorRatio(rd1=1.2,rd2=2,cn1=2,cn2=4)
 #' @examples calcTumorRatio(rd1=2, rd2=3.5, cn1=1,cn2=2) # 58163 = .155
 #' @family copyNumberCalcs
-#' @export
 calcTumorRatio=function(rd1,rd2,cn1,cn2){
   D <- abs(rd1-rd2)/abs(cn1-cn2) # expected difference between two peaks  copy number, i.e. 1N and 2N
   T <- 2*D/(rd1+D*(2-cn1))
@@ -346,44 +344,10 @@ calcTumorRatio=function(rd1,rd2,cn1,cn2){
 }
 
 
-
-
-#' find copy number from read depth and tumor ratio
-#'
-#' @param NRD normalized read depth
-#' @param tau tumor ratio
-#' @export
-#' @examples calcCopyNumber(NRD=23,tau=0.85) # CCND1 PT140
-#' @examples calcCopyNumber(NRD=1.4,tau=0.33) # CDKN2A BL002
-#' @examples calcCopyNumber(NRD=4,tau=0.75)
-#' @examples calcCopyNumber(NRD=4,tau=0.5)
-#' @examples calcCopyNumber(NRD=1.745,tau=0.13)
-#' @family copyNumberCalcs
-#'
-calcCopyNumber <- function(NRD, tau){
-  #nrd=2+((iCN-2)*tau)
-  cn <- 2+ ((NRD-2)/tau)
-  return(cn)
-}
-
-#' find read depth from copy number and tumor ratio
+#' find tumor fraction from copy number and normalized read depth
 #'
 #' @param cn copy number
 #' @param NRD normalized read depth
-#' @export
-#' @examples calcNrd(cn=3,tau=.7)
-#' @family copyNumberCalcs
-#'
-calcNrd <- function(cn, tau){
-  nrd <- 2+((cn-2)*tau)
-  return(nrd)
-}
-
-#' find tumor ratio from copy number and normalized read depth
-#'
-#' @param cn copy number
-#' @param NRD normalized read depth
-#' @export
 #' @examples calcTau(NRD=2.9,cn=3)
 #' @family copyNumberCalcs
 #'
@@ -393,17 +357,65 @@ calcTau <- function(cn, NRD){
 }
 
 
+#' find copy number from read depth and tumor fraction
+#'
+#' @param NRD normalized read depth
+#' @param tau tumor fraction
+#' @examples calcCopyNumber(NRD=23,tau=0.85)
+#' @examples calcCopyNumber(NRD=1.4,tau=0.33)
+#' @examples calcCopyNumber(NRD=4,tau=0.75)
+#' @family copyNumberCalcs
+#'
+calcCopyNumber <- function(NRD, tau){
+  #nrd=2+((iCN-2)*tau)
+  cn <- 2+ ((NRD-2)/tau)
+  return(cn)
+}
+
+
+#' find normalized read depth from copy number and tumor ratio
+#'
+#' @param cn copy number
+#' @param tau tumor fraction
+#' @examples calcNrd(cn=3,tau=.7)
+#' @family copyNumberCalcs
+#'
+calcNrd <- function(cn, tau){
+  nrd <- 2+((cn-2)*tau)
+  return(nrd)
+}
+
+#' find read depth per window size from NRD
+#' @param NRD normalized read depth
+#' @param wsz window size
+#' @param expReadsIn2NPeak_1bp expected number of reads in a 1 bp bin for the diploid peak
+calcRD=function(nrd, wsz, expReadsIn2NPeak_1bp){
+  rd=(nrd/2)*wsz*expReadsIn2NPeak_1bp
+}
+
+#' converts pkmod rather than rd to nrd, normalized read depth
+#' @param rdNormX_2Npeak read depth of the diploid peak normalized by the x axis
+#' @inheritParams commonParameters
+#'
+pkmodToNRD <- function(segmentData, peakInfo, rdNormX_2Npeak){
+  firstDigPeakIndex <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
+  rdNormX_firstDigPeak <- peakInfo[firstDigPeakIndex, 'peakReadDepth_normX']   #
+  nrdNormCoef <- 2/rdNormX_2Npeak*rdNormX_firstDigPeak   # will be 2 if the first digital peak is the 2N peak
+  nrd <-  segmentData[,'pkmod'] * nrdNormCoef
+  return(nrd)
+
+}
+
+
 #' interpolate read depth for a give copy number
 #'
 #' given read depth and copy number for two other positions
 #' @examples extrapRD(cn=2,cn1=4,cn2=5,rd1=2,rd2=2.376)
 #'
-#' @export
 extrapRD <- function(cn,cn1,cn2,rd1,rd2){
   rd  <-  rd1 + ((cn - cn1) / (cn2 - cn1)) * (rd2 - rd1)
   return(rd)
 }
-
 
 #' find the two best digital peaks for calculating tumor percentage or extrapolating other peaks
 #'
@@ -699,83 +711,6 @@ getLohContent <- function(allelicSegData){
 
 
 
-
-#' calculate the error in hetScore between the loh segments and the corresponding theoretical value
-#'
-#' if the error is bigger than a set negative value, ploidy passes.
-#' Any positive value is good, means the clouds are all right of the loh (purple) line
-#' RMSD is not appropriate for this test because RMSD squares the data to get only positive values,
-#' we want to check for too large of a negative difference, large positive differences may occur especially at high tumor
-#' when the clouds shift right of the loh line but this does not signal an error in the ploidy determination
-#' @param starCloudResult result output from \code{plotStarsInTheClouds}
-#' @param segmentData segments used in calculatePloidy which has meanLOH per segment
-#' @param percentTumor as output from calculateploidy
-ploidyCheck <- function(starCloudResult, segmentData, percentTumor){
-  #  segmentData <- allelicSegData; percentTumor=result$percentTumor
-
-  starLookUp <- makeStarLookUpTable(starCloudResult,percentTumor)
-
-  lohIndexes <- which(segmentData$minor==0) # & segmentData$copy_number>0)
-  lohSegments <- segmentData[lohIndexes,]  # lohSegments[lohSegments$chr==8,]; segmentData[segmentData$chr==8,]
-  if(length(lohIndexes)<=10){
-    logwarn('%i loh Indexes, not enough to check ploidy',length(lohIndexes))
-    return(ploidyPasses=NA)
-  }
-
-  # for each copy_number with copy neutral data, find the average and SD hetScore of the segments within each copy neutral cloud
-  # the cloud is valid if the median+SD*1.5 > theoretical hetScore
-  copyNumsToCheck <- unique(lohSegments$copy_number)
-  copyNumsToCheck <- copyNumsToCheck[order(copyNumsToCheck)]
-
-  if(length(copyNumsToCheck)==0){
-    logwarn('no copy neutral hetScore clouds to check')
-    return(ploidyPasses=NA)
-  }
-
-  #calculate errors --------------
-  sumDiffSquared <- 0
-  sumDiff <- 0
-  n <- 0
-  for(i in 1:length(copyNumsToCheck)){
-    iCN <- copyNumsToCheck[i]
-    iKeys <- which(abs(lohSegments[,'copy_number']-iCN) ==0 )
-    iLohMean <- (lohSegments[iKeys,'lohScoreMean'])
-    iLohMedianMedian <- (lohSegments[iKeys,'lohScoreMedian'])
-    experHetScores <- iLohMedianMedian
-    theorHetScore <- starLookUp[which(starLookUp$cn==iCN & starLookUp$minor==0),'hetScore']
-
-    iSumDiffSquared <- sum(experHetScores-theorHetScore)^2
-    sumDiffSquared <- sumDiffSquared+iSumDiffSquared
-
-    # only take the negative values - if the ploidy is wrong there will be lots of positive (many wrong) values to offset the negative values
-    # the negative values should be those left of the purple line
-    negKeys <- which(experHetScores-theorHetScore<0)
-    iSumDiff <- sum(experHetScores[negKeys]-theorHetScore)
-    sumDiff <- sumDiff+iSumDiff
-    iN <- length(negKeys)
-    n <-  n + iN
-  }
-  if(n <=10){
-    logwarn('%i negKeys, not enough to check ploidy',n)
-    return(ploidyPasses=NA)
-  }
-
-  rmds <- sqrt(sumDiffSquared)/n # just for fun but not relevant here
-  normDiff <- sumDiff/n
-
-  diffMax <- -0.05   #TODO: this is a heuristic, need to experimentally determine the correct cutoff, -0.05 was too restrictive when using all the segments rather than just the negKeys?
-  if(normDiff >= diffMax){
-    ploidyPasses <- TRUE
-  }else{
-    ploidyPasses <- FALSE
-  }
-  loginfo('n=%i  normDiff = %.3f (min:%.2f)  ploidyPasses = %s',n, normDiff,diffMax, ploidyPasses)
-
-  return(ploidyPasses)
-
-}
-
-
 #' parameters available for non-default config inputs to calculatePloidy() as determined through testing
 #' returns the columns included in the ploidySampleConfig.csv file
 #' @export
@@ -784,89 +719,4 @@ getAdjustablePloidyConfigParams <- function(){
                 "continueOnPloidyFail", "maxPeriodManual","minReasonableSegmentSize")
   return(columns)
 }
-
-# TODO - remove
-#' retrieve recommended non-default config inputs to calculatePloidy() for a given folder
-#' @param numfolder 5-digit folder number for a sample as provided in samplenames.csv loaded by \code{getSampleDatabase()}
-#' @return dataframe with param and value, row name will be the folder
-#'
-#' @export
-getPloidyParamsForSample <- function(numfolder){
-  # numfolder <- 82034
-
-  # TODO make a couple tests
-
-  manualSettings <- data.frame()
-  ploidySampleConfigFile <- bmd.system.file('extdata', 'ploidySampleConfig.csv', package = "bmdSvPipeline")
-  ploidySampleParams <- bmd.read.csv(file = ploidySampleConfigFile,
-                                     row.names = NULL, # If someone adds extra comma, they can break everything without this
-                                     fileLabel = "non-default config setting for ploidy",
-                                     stringsAsFactors=FALSE
-  )
-
-  row.names(ploidySampleParams) <- ploidySampleParams$folder
-  ploidySampleParams <- ploidySampleParams[,-which(names(ploidySampleParams)=='folder')]
-
-  columns <- getAdjustablePloidyConfigParams()
-  checkColumns(ploidySampleParams, file=file, columns = columns )
-  if(ncol(ploidySampleParams)!=length(columns)) {
-    stop("The ploidySampleConfig.csv table has unexpected columns: ", paste(sQuote(colnames(ploidySampleParams)), collapse=", "))
-  }
-
-  if(numfolder %in% row.names(ploidySampleParams)){
-    manualSettings <- ploidySampleParams[row.names(ploidySampleParams)==numfolder,]
-  }
-
-  returnResult <- manualSettings[which(!is.na(manualSettings))]
-
-  if(ncol(returnResult)>0){
-    loginfo("returning %i input parameters for calculatePloidy %s", ncol(returnResult), strToString(returnResult));
-  }
-
-  return(returnResult)
-}
-
-#' determine if ploidy was run or not
-#' @return TRUE if ploidy was run FALSE if ploidy was not run
-#' @export
-getPloidyExistsStatus <- function(postProcessingDir_SV,sampleId_SV){
-  # just because the file is there, doesn't mean ploidy was run, ploidyCN may be NA
-  # also, if the
-  hetScores_StarCloudDataInfo <- getTypedFile("hetScores_StarCloudData", dir = postProcessingDir_SV, values = list(sampleId = sampleId_SV), legacy = TRUE)
-  if(file.exists(hetScores_StarCloudDataInfo@path)){
-    starCloudData <- loadRdata(file=hetScores_StarCloudDataInfo)
-    hetScorePloidyCN <- starCloudData$ploidyCN
-  }else{
-    hetScorePloidyCN <- NA_real_
-  }
-
-  # could consider using 'statisticsCnvDetect' instead or in combination, but going forward, the hetScores_StarCloudData file should be rewritten each time cnvDetect is run,
-  # and NA should be entered if there is no ploidy
-  # statisticsCnvDetectFile <- getTypedFile("statisticsCnvDetect", dir = postProcessingDir_SV, values = list(folderId = getFolderId(sampleId_SV)), legacy = TRUE )
-  # statisticsCnv <- loadRdata(statisticsCnvDetectFile@path)
-  # statPloidyCN = statisticsCnv$ploidyCN
-
-  if(is.na(hetScorePloidyCN)){
-    ploidyExists <- FALSE
-  }else{
-    ploidyExists <- TRUE
-  }
-
-  return(ploidyExists)
-}
-
-
-#' as calculated in constellation plot
-#' converts pkmod rather than rd to nrd, normalized read depth
-pkmodToNRD <- function(segmentData, peakInfo, rdNormX_2Npeak){
-  firstDigPeakIndex <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
-  rdNormX_firstDigPeak <- peakInfo[firstDigPeakIndex, 'peakReadDepth_normX']   #
-  nrdNormCoef <- 2/rdNormX_2Npeak*rdNormX_firstDigPeak   # will be 2 if the first digital peak is the 2N peak
-  nrd <-  segmentData[,'pkmod'] * nrdNormCoef
-  return(nrd)
-
-}
-
-
-
 
