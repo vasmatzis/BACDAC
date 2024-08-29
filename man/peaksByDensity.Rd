@@ -14,7 +14,6 @@ peaksByDensity(
   origMaxPercentCutoffManual = -1,
   addAreaLinesToPlot = FALSE,
   qualityPostNorm = NULL,
-  pause = FALSE,
   omitAnnotations = FALSE,
   alternateId = NULL
 )
@@ -36,10 +35,9 @@ peaksByDensity(
 
 \item{qualityPostNorm}{used to set max allowed value for grabDataPercent}
 
-\item{pause}{pause execution until user prompts to continue, available interactively only, useful during testing}
-
 \item{alternateId}{secondary sample identifier}
 }
 \description{
 peaks are returned in rank order of read depth with highest frequency read depth peak listed first
 }
+\keyword{internal}

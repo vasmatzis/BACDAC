@@ -11,3 +11,4 @@ getSegmentColors()
 chromosome segment colors
 one color for each chromosome 1-22
 }
+\keyword{internal}

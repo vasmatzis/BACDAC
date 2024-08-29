@@ -21,3 +21,4 @@ a vector of color codes to reflect the CNV calls: 2=red/loss, 4=blue/gains, 8=gr
 \description{
 Provide the color coding for display on the genome plot
 }
+\keyword{internal}

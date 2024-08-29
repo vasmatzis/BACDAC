@@ -24,12 +24,13 @@
 #' @param outputDir                  output directory
 #' @param heterozygosityScoreThreshold peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation
 #' @param hsNormMat                  hetScores from  a database of 23 Normals,  101046 x 23 rows, one row for each 30 kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment
-
+#' @param segmentData                segments from segmentation that are longer than minReasonableSegmentSize and then broken up into segments no smaller than 3 Mbs
+#' @param allelicSegments            segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number
 #' @param peakInfo summary table of info for each peak found in \code{peaksByDensity}
 #' @param n00                       Precision for creating initial grid
 
 #' @param ideogram             The \link{ideogram} object. If not present, we attempt to use referenceGenomeDescriptor
-#'
+
 commonParameters <- function(
  sampleId,
  alternateId,

@@ -270,11 +270,9 @@ binnedPosEnd <- function(pos, binSize=1000) {
 #'
 #' @param from first sequence item
 #' @param to last sequence item
-#'
 #' @return Just like \code{from:to} except if \code{to < from}, the returned
 #' sequence is empty.
-#'
-#' @export
+#' @keywords internal
 seqFwd <- function(from=1, to=1) {
   if(from<=to) {
     return(from:to)

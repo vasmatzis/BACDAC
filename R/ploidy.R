@@ -13,13 +13,15 @@
 #' @param qualityPostNorm used to set max allowed value for grabDataPercent
 #'
 #' @inheritParams commonParameters
+#' @keywords internal
 #'
 peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
-                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL,pause=FALSE, omitAnnotations=FALSE,alternateId=NULL){
+                          addAreaLinesToPlot=FALSE,qualityPostNorm=NULL, omitAnnotations=FALSE,alternateId=NULL){
   # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
-  # peaksByDensity(sampleId,  cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08,pause=F);
-  #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; pause=F;origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
+  # peaksByDensity(sampleId,  cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08);
+  #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
 
+  numChroms=24
   coords <- getLinearCoordinates(chromosomes = 1:numChroms)
 
   ### get frequency array ---------------
@@ -252,17 +254,13 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
       break
     }
 
-    if(interactive() & pause){BBmisc::pause()}
   }
 
   # annotate plot with the approx number of fragments
-  # if(!skipExtras){
-  if(!omitAnnotations){
-    mtext(1, text='~fragments',adj=1, line=-3)
-    mtext(1, text='chr1-22 ',adj=1, line=-2)
-    mtext(1, text=paste(round(sum(frqToUse)/1000000,1), 'mil') ,adj=1, line=-1)
-  }
-  # }
+  mtext(1, text='~fragments',adj=1, line=-3)
+  mtext(1, text='chr1-22 ',adj=1, line=-2)
+  mtext(1, text=paste(round(sum(frqToUse)/1000000,1), 'mil') ,adj=1, line=-1)
+
 
 
   # peakReadDepthList_per1bp = X positions of peaks (normalized as if window size was 1), this is so the output is consistent no matter what wsz was used, don't need to know what wsz was used later to use the values
@@ -275,7 +273,7 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
 #' each peak gets a group of grid heights based on the mode of the peak
 #'
 #' @inheritParams commonParameters
-#'
+#' @keywords internal
 assignGridHeights <- function(peakInfo, n00, minGridHeight){
   gridModes <- round(peakInfo$peakReadDepth_normX*n00)
   gridHeights <- array(0,c(10*n00))
@@ -360,7 +358,7 @@ assignGridHeights <- function(peakInfo, n00, minGridHeight){
 #' @param omitAnnotations should extra annotation be included in digital grid plot
 #'
 #' @inheritParams commonParameters
-#'
+#' @keywords internal
 #' @return dPeaks grid coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
 digitalGrid <- function(peakInfo, gridHeights,
                         dPeaksCutoff, penaltyCoefForAddingGrids,
@@ -484,7 +482,6 @@ digitalGrid <- function(peakInfo, gridHeights,
             abline(v=bins0, col=iCol, lwd=iCol*.5)
             points(x=which(gridHeights>0), y=yMin + gridHeights[gridHeights>0] * 0.1, cex=0.3, pch=19, col='red')
 
-            BBmisc::pause()
           }
 
         }
@@ -524,11 +521,10 @@ digitalGrid <- function(peakInfo, gridHeights,
            ylim=c(yMin, 1), cex=0.65, xlab='grid coordinate',
            yaxt="n",
            pch=19)
-      if(!omitAnnotations){
-        title(main=paste('Digital grid iteration:',gridIteration) )
-        if(!is.null(sampleId)){mtext(3, text=sampleId,adj=0)}
-        if(!is.null(alternateId)){mtext(3, text=alternateId,adj=1)}
-      }
+      title(main=paste('Digital grid iteration:',gridIteration) )
+      if(!is.null(sampleId)){mtext(3, text=sampleId,adj=0)}
+      if(!is.null(alternateId)){mtext(3, text=alternateId,adj=1)}
+
       axis(2, at=c(0,.5, 1), labels= c(0,.5, 1))
       abline(h=0.01,col="black")
 
@@ -552,9 +548,9 @@ digitalGrid <- function(peakInfo, gridHeights,
         mtext(3, text=paste0('numOfGridCoordsToTest: ',numOfGridCoordsToTest),adj=0, line=-2)
         mtext(3, text=paste('minPeriod:',minPeriod),adj=0, line=-3)
         mtext(3, text=paste('period:',maxPeriod),adj=0, line=-4)
-
-        legend('topright', legend=c('gridHeights>0', 'Peaks'), col=c('red', 'black'), pch = 19, pt.cex=c(0.3, 0.5))
       }
+      legend('topright', legend=c('gridHeights>0', 'Peaks'), col=c('red', 'black'), pch = 19, pt.cex=c(0.3, 0.5))
+
     }
   }
 
@@ -919,15 +915,13 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
 #' Then find the expected number of reads in the 2N peak and normalize that value to one bp.
 #' Tumor percent is calculated from the two biggest digital peaks.
+#' If outputDir is provided and noPdf=FALSE, figures will saved to
 #'
 #' @param hetScoreData heterozygosity scores determined per 30 kb bin over a 1 Mb region
-#' @param numChroms number of chromosomes in the reference genome to consider
 #' @param minGridHeight minimum value that can be assigned to the gridHeights
 #' @param grabDataPercentManual portion of main peak data to grab, other peaks will be scaled based on read depth (x location),
 #'  set to -1 to base off of mainPeak width
 #' @param origMaxPercentCutoffManual peaks smaller than this portion of the max peak are not considered; set to -1 to use default value
-#' @param pause pause execution until user prompts to continue, available interactively only, useful during testing
-#' @param skipExtras logical to turn on/off plots used for testing and debugging
 #' @param minPeriodManual manually set \code{minPeriod} within \code{calculatePloidy}
 #' @param maxPeriodManual manually set \code{maxPeriod} within \code{calculatePloidy}
 #' @param forceFirstDigPeakCopyNum value to force copy number of first digital peak, use only when ploidy calculation is wrong
@@ -944,38 +938,44 @@ calculatePloidy <- function(
     readDepthPer30kbBin=NULL, readDepthPer100kbBin=NULL,
     segmentation, segmentationBinSize=30000,
     hetScoreData,
-    numChroms=24,
     dPeaksCutoff=0.01,    penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1,    # digital peaks
     grabDataPercentManual= -1,  origMaxPercentCutoffManual=-1,  #  peaksByDensity
-    pause=FALSE, noPdf=FALSE,skipExtras=FALSE,forceFirstDigPeakCopyNum=-1,
+    noPdf=FALSE,
+    forceFirstDigPeakCopyNum=-1,
     minReasonableSegmentSize=5.5e6,
-    omitAnnotations = FALSE,
+
     heterozygosityScoreThreshold=0.98,  # If segment hetScore is more than this, the segment is heterozygous
     allowedTumorPercent = 106,
     hsNormMat=NULL
 ){
   ### defaults
-  # dPeaksCutoff=0.01; penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1; pause=FALSE; skipExtras=FALSE; heterozygosityScoreThreshold=0.98
+  # dPeaksCutoff=0.01; penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1; skipExtras=FALSE; heterozygosityScoreThreshold=0.98
+
+
+  # debugging etc features
+  skipExtras=TRUE    # turn on/off plots used for testing and debugging
+  omitAnnotations = TRUE
+
+
+  numChroms=24  # number of chromosomes in the reference genome to consider
+  xind <-23     # index of chrX
+  coords <- getLinearCoordinates(chromosomes = 1:numChroms)
+  maxcn <- numChroms
+  #centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
+  #centroArray <- getCentromerePositions()
 
   # TODO: consider moving this out of function, as part of set up etc.
   if (!noPdf) {
-    ploidyPdfFile <- getTypedFile('ploidyReportPdf', dir=outputDir, values=list(sampleId=sampleId))
-    # TODO: check that this directory is created by the pipeline
+    ploidyPdfFile <-file.path(dir=outputDir, paste0(sampleId, 'calculatePloidyFigures.pdf'))
     if(!dir.exists(dirname(ploidyPdfFile@path))) {
-      loginfo("will create output directory: %s", dirname(ploidyPdfFile@path))
-      dir.create(path=file.path(dirname(ploidyPdfFile@path)),mode = "0775")
+      loginfo("creating output directory: %s", dirname(ploidyPdfFile))
+      dir.create(path=file.path(dirname(ploidyPdfFile)),mode = "0775")
     }
-    pdf(file = ploidyPdfFile@path, paper="a4r", width=8, height=10, title=paste0('Ploidy_',sampleId))
+    pdf(file = ploidyPdfFile, paper="a4r", width=8, height=10, title=paste0('calculatePloidy_',sampleId))
     on.exit(dev.off(),add = TRUE)
   }
 
 
-  xind <-23 # index of chrX
-  coords <- getLinearCoordinates(chromosomes = 1:numChroms)
-  maxcn <- numChroms
-
-  #centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
-  centroArray <- getCentromerePositions()
 
   ################################'
   ### peaks By density------
@@ -989,7 +989,7 @@ calculatePloidy <- function(
   resultPBD <- peaksByDensity(sampleId, readDepthPer100kbBin=readDepthPer100kbBin,
                               segmentation=segmentation, segmentationBinSize=segmentationBinSize,
                               grabDataPercentManual= grabDataPercentManual, origMaxPercentCutoffManual=origMaxPercentCutoffManual,
-                              addAreaLinesToPlot=!omitAnnotations,qualityPostNorm=qualityPostNorm,pause=FALSE, omitAnnotations=omitAnnotations,
+                              addAreaLinesToPlot=!omitAnnotations,qualityPostNorm=qualityPostNorm, omitAnnotations=omitAnnotations,
                               alternateId=alternateId)
 
   #
@@ -1073,15 +1073,8 @@ calculatePloidy <- function(
       # segmentsWeWant <- NULL; minReasonableSegmentSize <- 5.5e6
       minReasonableSegmentSizeStart <- minReasonableSegmentSize
 
-
-
       ### Get only segments that are longer than minReasonableSegmentSize
       segmentsWeWant <- getSegmentsWeWant(segmentation,minReasonableSegmentSize,xind)
-
-
-      # TODO V1: remove/skip the centromeres and genomeGaps (heterochromatin etc.), they have noisy cnv and loh...might be skipped in wdnsMSK00, but not in segmentation
-      # gapArray    <- getGenomeGapPositions(ideogram=exampleIdeogram() )
-      # centroArray <- getCentromerePositions(ideogram = ideogram )
 
       # TODO: what is an appropriate min number of segments?  just enough so it doesn't crash?
       #       ie. PT626 has only 48 segments (none of which are in the first digital peak) for minReasonableSegmentSize <- 5.5e6, but 65 at minReasonableSegmentSize <- 5.0e6
@@ -1226,7 +1219,6 @@ calculatePloidy <- function(
   iterationStatsAll <- list(iterationStats=data.frame(),
                             digitalPeakZone=NULL)
   gridIteration <- 1; period <- NULL; numOfGridCoordsToTest <- NULL
-  # pause <- FALSE
   while(gridIteration < numPeaks | gridIteration==1){  # if there is only one peak, need to run the while loop once
 
     loginfo('gridIteration: %.02f',gridIteration)
@@ -1754,7 +1746,7 @@ calculatePloidy <- function(
       if(!newTuPercentValid){
         stop("new tumor percent is STILL not valid")
       }else{
-        loginfo('lets roll with this new Tumer Percent: %.1f and see how it goes', newTuPercent)
+        loginfo('lets roll with this new Tumer Percent: %.1f', newTuPercent)
         percentTumor <- newTuPercent
         nCopyPeaks_while <- peakInfo[!is.na(peakInfo$nCopy),'nCopy']
       }
@@ -2421,15 +2413,15 @@ calculatePloidy <- function(
 
   ### 2D plot -------
   # do last, after all the density plots
-  plotHetScoreVsPeakMode(peakInfo,segmentData,sampleId, alternateId, percentTumor,
-                         segmentCountText,digitalPeakZone,keyHetScoresPerPeak,segmentDataSizes,
-                         heterozygosityScoreThreshold,
-                         origMaxPercentCutoffManual,grabDataPercentManual ,minPeriodManual,maxPeriodManual)
+
+  if(!skipExtras){
+    plotHetScoreVsPeakMode(peakInfo,segmentData,sampleId, alternateId, percentTumor,
+                           segmentCountText,digitalPeakZone,keyHetScoresPerPeak,segmentDataSizes,
+                           heterozygosityScoreThreshold,
+                           origMaxPercentCutoffManual,grabDataPercentManual ,minPeriodManual,maxPeriodManual)
+  }
 
 
-
-
-  if(interactive() & pause){BBmisc::pause()}
 
   if (!noPdf) {
     # dev.off() # now executed by on.exit()
@@ -2471,7 +2463,7 @@ calculatePloidy <- function(
   ploidyOutput <- list(expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp,
                        percentTumor=round(percentTumor,1),
                        peakInfo=peakInfo,
-                       segmentedData=segmentData,
+                       segmentData=segmentData,
                        # hetScoreQuantiles=hetScoreQuantiles,
                        iterationStatsAll=iterationStatsAll)
 

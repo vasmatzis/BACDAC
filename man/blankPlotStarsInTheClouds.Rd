@@ -4,13 +4,7 @@
 \alias{blankPlotStarsInTheClouds}
 \title{make a blank plot, no data, used as a stand in when combining lots of samples into one pdf}
 \usage{
-blankPlotStarsInTheClouds(
-  noPdf = FALSE,
-  heterozygosityScoreThreshold = 0.98,
-  tau = 0.8,
-  sampleId = "BLANK",
-  outputDir = "/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/ploidy"
-)
+blankPlotStarsInTheClouds(heterozygosityScoreThreshold = 0.98, tau = 0.8)
 }
 \description{
 make a blank plot, no data, used as a stand in when combining lots of samples into one pdf

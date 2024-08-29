@@ -2,7 +2,7 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{calcTau}
 \alias{calcTau}
-\title{find tumor ratio from copy number and normalized read depth}
+\title{find tumor fraction from copy number and normalized read depth}
 \usage{
 calcTau(cn, NRD)
 }
@@ -12,7 +12,7 @@ calcTau(cn, NRD)
 \item{NRD}{normalized read depth}
 }
 \description{
-find tumor ratio from copy number and normalized read depth
+find tumor fraction from copy number and normalized read depth
 }
 \examples{
 calcTau(NRD=2.9,cn=3)

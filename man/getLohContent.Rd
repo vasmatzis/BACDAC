@@ -18,3 +18,4 @@ lohContentC_maj2
 \description{
 get LOH content metrics used to identify high-ploidy
 }
+\keyword{internal}

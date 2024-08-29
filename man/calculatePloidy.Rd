@@ -13,7 +13,6 @@ calculatePloidy(
   segmentation,
   segmentationBinSize = 30000,
   hetScoreData,
-  numChroms = 24,
   dPeaksCutoff = 0.01,
   penaltyCoefForAddingGrids = 0.49,
   minGridHeight = 0.2,
@@ -21,12 +20,9 @@ calculatePloidy(
   maxPeriodManual = -1,
   grabDataPercentManual = -1,
   origMaxPercentCutoffManual = -1,
-  pause = FALSE,
   noPdf = FALSE,
-  skipExtras = FALSE,
   forceFirstDigPeakCopyNum = -1,
   minReasonableSegmentSize = 5500000,
-  omitAnnotations = FALSE,
   heterozygosityScoreThreshold = 0.98,
   allowedTumorPercent = 106,
   hsNormMat = NULL
@@ -49,8 +45,6 @@ calculatePloidy(
 
 \item{hetScoreData}{heterozygosity scores determined per 30 kb bin over a 1 Mb region}
 
-\item{numChroms}{number of chromosomes in the reference genome to consider}
-
 \item{dPeaksCutoff}{dPeaksCutoff min grid height for a peak to be considered a digital peak}
 
 \item{penaltyCoefForAddingGrids}{penalty for adding additional peaks to the digital peak alignment}
@@ -66,11 +60,7 @@ set to -1 to base off of mainPeak width}
 
 \item{origMaxPercentCutoffManual}{peaks smaller than this portion of the max peak are not considered; set to -1 to use default value}
 
-\item{pause}{pause execution until user prompts to continue, available interactively only, useful during testing}
-
 \item{noPdf}{if present, do not create pdfs}
-
-\item{skipExtras}{logical to turn on/off plots used for testing and debugging}
 
 \item{forceFirstDigPeakCopyNum}{value to force copy number of first digital peak, use only when ploidy calculation is wrong}
 
@@ -86,15 +76,18 @@ Fit the peaks from the read depth distributions to a digital grid.
 Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
 Then find the expected number of reads in the 2N peak and normalize that value to one bp.
 Tumor percent is calculated from the two biggest digital peaks.
+If outputDir is provided and noPdf=FALSE, figures will saved to
 }
 \examples{
 \dontrun{
   library(BACDAC)
-  # calculateHetScoreExample.R
+  library(logging)
+  # calculatePloidyExample.R
   basicConfig("DEBUG")
   noPdf=TRUE                          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
   # outputDir = tempdir();              # output folder for pdfs etc.
-  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  outputDir = '/tmp/RtmpITBnDE'
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   ### load data ###
@@ -110,6 +103,7 @@ Tumor percent is calculated from the two biggest digital peaks.
 
   # hetScore data - the output from calculateHetScore()
   hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
+  hetScoreDir = file.path(outputDir,'reports')
   hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScoreData <- as.data.frame(rtracklayer::import.wig(hetScorePerBinWigFile))
 
@@ -122,7 +116,7 @@ Tumor percent is calculated from the two biggest digital peaks.
 
   # defaults
   segmentationBinSize=30000; numChroms=24;
-  pause=FALSE; skipExtras=FALSE; omitAnnotations = FALSE;
+  omitAnnotations = FALSE;
   dPeaksCutoff=0.01;    penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1; maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;   # digital peaks
   grabDataPercentManual= -1; origMaxPercentCutoffManual=-1;  #  peaksByDensity
   minReasonableSegmentSize=5.5e6;
@@ -132,12 +126,10 @@ Tumor percent is calculated from the two biggest digital peaks.
 
   ### call calculatePloidy, the function to do all the ploidy work ---------
   loginfo('calculate ploidy for \%s ', sampleId)
-  result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
+  calcPloidyResult=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
                          readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
                          segmentation=segmentation, hetScoreData = hetScoreData,
-
-                         segmentationBinSize=segmentationBinSize, numChroms=numChroms,
-                         pause=pause, skipExtras=skipExtras, omitAnnotations = omitAnnotations,
+                         segmentationBinSize=segmentationBinSize,
 
                          dPeaksCutoff=dPeaksCutoff,    penaltyCoefForAddingGrids=penaltyCoefForAddingGrids, minGridHeight=minGridHeight, minPeriodManual=minPeriodManual, maxPeriodManual=maxPeriodManual, forceFirstDigPeakCopyNum=forceFirstDigPeakCopyNum,   # digital peaks
                          grabDataPercentManual= grabDataPercentManual,  origMaxPercentCutoffManual=origMaxPercentCutoffManual,  #  peaksByDensity
@@ -150,15 +142,11 @@ Tumor percent is calculated from the two biggest digital peaks.
 
   calcPloidyResultOutputFile=file.path(outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
   loginfo('saving result to: \%s',calcPloidyResultOutputFile)
-  saveRDS(result, file=calcPloidyResultOutputFile)
+  saveRDS(calcPloidyResult, file=calcPloidyResultOutputFile)
 
-  print(result)
-
-  mainPeakIndex = which(result$peakInfo$rankByHeight==1)
-  loginfo('Main peak is \%sN',result$peakInfo[mainPeakIndex,'nCopy'])
-  loginfo('tumor percentage: \%s ',round(result$percentTumor) )
-  loginfo('approximate ploidy: \%s ',round( mean(result$segmentData$cnLevel),1) ) # based on segment copy number and not adjusted for size
-
+  loginfo('tumor percentage: \%s ',round(calcPloidyResult$percentTumor) )
+  segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
+  loginfo('approximate ploidy: \%s ',round(segmentPloidy,1) )
 
 }
 }

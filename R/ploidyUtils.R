@@ -6,15 +6,9 @@ getMainPeakNRD=function(result){
   expReadsIn2NPeak_1bp= result$expReadsIn2NPeak_1bp
   mainPeakKey=which(result$peakInfo$rankByHeight==1)
   mainPeakReadDepth_1bp = result$peakInfo[mainPeakKey,'peakReadDepth_1bp']
-  mainPeakNRD = 2*(mainPeakReadDepth_1bp / expReadsIn2NPeak_1bp)  # TODO: can i use expReadsIn2NPeak_1bp like this? instead of cnvBinnedNormalBin=cnvBinnedData$expectedNormalBin? see notes
-  loginfo('mainPeakNRD = %.3f', mainPeakNRD) # mainPeakcnvBinnedNRD => mainPeakNRD
+  mainPeakNRD = 2*(mainPeakReadDepth_1bp / expReadsIn2NPeak_1bp)
+  # loginfo('mainPeakNRD = %.3f', mainPeakNRD)
   return(mainPeakNRD)
-
-  # Notes from bmdSvPipeline:: run_ploidy.R
-  # need mainPeakNRD for the cnvBinned Data, can't assume it is the same as the 2N peak;
-  #    pipeline ploidy output may not be the same as the ploidy output here.
-  # cnvBinned, if run in pipeline with other ploidy output may not be the same as the ploidy output here.
-
 }
 
 #' NRD of the diploid peak from the binned read depth data
@@ -27,7 +21,7 @@ getDiploidPeakNRD=function(result){
   rdNormX_2Npeak = result$peakInfo[diploidPeakKey,'peakReadDepth_normX']
 
   diploidPeakNRD <-round( mainPeakNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
-  loginfo('diploidPeakNRD: %.3f',diploidPeakNRD)  #dipVal => diploidPeakNRD
+  # loginfo('diploidPeakNRD: %.3f',diploidPeakNRD)  #dipVal => diploidPeakNRD
   return(diploidPeakNRD)
 }
 
@@ -542,6 +536,7 @@ calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,d
 #'
 #' @param chromStarts must be same window size scale as the plotted frequency data
 #' @param maxcn max chromosome number
+#' @keywords internal
 markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
   chroms <- convertChromToCharacter(1:maxcn)
   abline(v=chromStarts[1:maxcn], col=vCol)
@@ -556,7 +551,7 @@ markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
 
 
 
-
+#' @keywords internal
 getCNcolors <- function(){
   # cnColors <- c(palette()[-1], "orange", 'white', palette()[-1]) # remove black, add orange, white, and repeat to make sure we have enough colors
 
@@ -574,7 +569,7 @@ getCNcolors <- function(){
 
 
 #' create the starLookUp table
-#' @export
+#' @keywords internal
 makeStarLookUpTable <- function(starCloudResult,percentTumor){
   # percentTumor= ploidyOutput$percentTumor
 
@@ -665,7 +660,7 @@ allelicCNV <- function(starLookUp, segmentDataIn){
 #' lohContentA_maj2_min0
 #' lohContentB_maj1_min0
 #' lohContentC_maj2
-#'
+#' @keywords internal
 getLohContent <- function(allelicSegData){
   numTotalSegments <- nrow(allelicSegData)
   hemiDel_keys  <-  which(allelicSegData$minor==0 & allelicSegData$copy_number == 1)

@@ -18,3 +18,4 @@ sequence is empty.
 \description{
 Forward only \code{:} replacement
 }
+\keyword{internal}

@@ -22,15 +22,39 @@ plotStarsInTheClouds(
   minReasonableSegmentSize = 5500000,
   digitalPeakZone = 0.05,
   heterozygosityScoreThreshold = 0.98,
-  paperMode = FALSE
+  paperMode = FALSE,
+  plotCex = 1,
+  addAnnotations = FALSE
 )
 }
 \arguments{
+\item{sampleId}{sample Identifier}
+
+\item{alternateId}{optional secondary sample identifier}
+
 \item{diploidPeakNRD}{the NRD of the diploid peak in  ---cnvBinned data---, may not be 2 if you choose a different peak from the pipeline to normalize by}
 
 \item{tau}{tumor ratio}
 
 \item{mainPeakNRD}{the NRD of the main Peak in the ---cnvBinned data---, if mainPeak based, will be 2, but if ploidybased, may be different}
+
+\item{segmentData}{segments from segmentation that are longer than minReasonableSegmentSize and then broken up into segments no smaller than 3 Mbs}
+
+\item{peakInfo}{summary table of info for each peak found in \code{peaksByDensity}}
+
+\item{forceFirstDigPeakCopyNum}{value to force copy number of first digital peak, use only when ploidy calculation is wrong}
+
+\item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width}
+
+\item{origMaxPercentCutoffManual}{peaks smaller than this portion of the max peak are not considered; set to -1 to use default value}
+
+\item{minPeriodManual}{user provided \code{minPeriod} for digital grid, default is -1 to indicate no user input}
+
+\item{maxPeriodManual}{user provided \code{maxPeriod} for digital grid, default is -1 to indicate no user input}
+
+\item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found}
+
+\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation}
 }
 \description{
 plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
@@ -38,7 +62,7 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 \examples{
 sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 tau=min(1,calcPloidyResult$percentTumor/100); segmentData=calcPloidyResult$segmentData; peakInfo=calcPloidyResult$peakInfo
-mainPeakNRD= getMainPeakNRD(calcPloidyResult); diploidPeakNRD=NULL; #getDiploidPeakNRD(result)
+mainPeakNRD= getMainPeakNRD(calcPloidyResult); diploidPeakNRD=NULL; #getDiploidPeakNRD(calcPloidyResult)
 digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']]
 op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
 plotStarsInTheClouds(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=TRUE, mainPeakNRD,segmentData=segmentData, peakInfo=peakInfo)

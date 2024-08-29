@@ -79,6 +79,10 @@ commonParameters(
 
 \item{hsNormMat}{hetScores from  a database of 23 Normals,  101046 x 23 rows, one row for each 30 kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment}
 
+\item{segmentData}{segments from segmentation that are longer than minReasonableSegmentSize and then broken up into segments no smaller than 3 Mbs}
+
+\item{allelicSegments}{segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number}
+
 \item{peakInfo}{summary table of info for each peak found in \code{peaksByDensity}}
 
 \item{n00}{Precision for creating initial grid}

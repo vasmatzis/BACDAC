@@ -22,7 +22,7 @@ plotHetScorePerBin(
 
 \item{ylab}{label for y axis default "Heterozygosity Score"}
 
-\item{allelicSegments}{segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number}
+\item{allelicSegments}{segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number}
 
 \item{zebraStrips}{option to have alternating gray/white background for chromosome delineation}
 }

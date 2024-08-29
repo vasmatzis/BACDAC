@@ -78,6 +78,7 @@ readDepthBinnedData=NULL; readDepthBinSize=30000; gainColor='blue'; lossColor='r
 \dontrun{
 
   library(BACDAC)
+  library(logging)
   # calculateHetScoreExample.R
   # generate heterozygosity score by bin and by arm
   # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm

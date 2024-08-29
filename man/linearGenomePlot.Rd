@@ -7,7 +7,6 @@
 linearGenomePlot(
   readDepthBinnedData,
   readDepthBinSize = 30000,
-  yLimQuantile = 0.99,
   sampleId = NULL,
   alternateId = NULL,
   segmentation = NULL,
@@ -16,6 +15,7 @@ linearGenomePlot(
   gainColor = "blue",
   lossColor = "red",
   zebraStrips = FALSE,
+  yAxisLimits = NULL,
   ...
 )
 }
@@ -24,13 +24,13 @@ linearGenomePlot(
 
 \item{readDepthBinSize}{size of each window}
 
-\item{yLimQuantile}{To prevent an outlier from dominating the plot, we set the max y axis to this quantile (number 0-1, 1=100\%, 0.5=median)}
+\item{sampleId}{sample Identifier}
 
-\item{sampleId}{plot y axis with normalize read depth to 2 for the median frequency}
+\item{alternateId}{optional secondary sample identifier}
 
 \item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
 
-\item{allelicSegments}{segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number}
+\item{allelicSegments}{segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number}
 
 \item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
 
@@ -48,13 +48,13 @@ If sampleId is provided, title annotations will be added.
 }
 \examples{
 sampleId='TCGA-14-1402-02A_ds'
-inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
-outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+inputDir <- system.file('extdata', package = "BACDAC")
+outputDir=tempDir()
 segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
+segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 readDepthBinnedData = readRDS(file=thirtyKbFile )
-
+  yAxisLimits = starCloudResult$plotAxisLimits$nrdAxisLims
 op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 # default cnv color coding and annotations
 linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)

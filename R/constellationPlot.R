@@ -4,25 +4,27 @@
 
 
 
-#' load all the data necessary to make the plot
+#' load all the data necessary to make the constellation plot
 #' @param mainPeakNRD the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak
-#'
+#' @param hsNormMat heterozygosity score mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
+#' @param testVals used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
+#' @param expReadsIn2NPeak_1bp expected number of reads in a 1 bp bin for the diploid peak
+#' @inheritParams commonParameters
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
 #' inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
 #' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 #'   ## load two reference files  ---------------
-#' # hsMat/lohMat: LOH analysis mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
-#' # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
-#' hsMat   <- bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
+#' hsNormMat   <- bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
 #' testVals <-  bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
-#' hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
+#' hetScorePerBinFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
 #' readDepthPer30kbBin=  readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
-#' mainPeakNRD=getMainPeakNRD(result)
-#' expReadsIn2NPeak_1bp=result$expReadsIn2NPeak_1bp
-#' starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, mainPeakNRD=mainPeakNRD)
+#' mainPeakNRD=getMainPeakNRD(calcPloidyResult)
+#' expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
+#' starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile,hsNormMat, testVals, mainPeakNRD=mainPeakNRD)
 
-loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, wsz=30000, mainPeakNRD, expReadsIn2NPeak_1bp){
+loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile, hsNormMat, testVals, wsz=30000,
+                                 mainPeakNRD, expReadsIn2NPeak_1bp){
   # TODO: testVals - not used, just passed out with the other data needed for the plot
 
   yind=23
@@ -30,6 +32,10 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   mainChroms <- 1:24
   autosomes= 1:22
   coords <- getLinearCoordinates(chromosomes = mainChroms)
+
+
+  ## load LOH wig file  ---------------
+  lohIn <- rtracklayer::import.wig(hetScorePerBinFile)
 
   # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
   inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
@@ -40,31 +46,29 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   snpTot <- list()
   ## load LOH Count and LOH SNP data  ---------------
   for (chrNum in mainChromsNoY) {
-    loginfo('chrom %i',chrNum)
     ichrChar=convertChromToCharacter(chrNum)
+    loginfo('chrom %s',ichrChar)
 
     # snpData/snpFull/snpVals: SNP information for the matching lohCountBpFull for sva
     # lohData/countBPFull/countBP: Counts of ref/alt occurrences for SNP position for each sva
     if(inputDirIsNextGenProjects){
       # loading .Rdata output from bmdSvPipeline using bmdSvPipeline functions
-      snpFull= bmdTools::loadRdata(file.path(inputDir,    paste0(sampleId, '_snpVals_',chrNum,'.Rdata')), verbose = TRUE) # snpFull
+      snpFull= bmdTools::loadRdata(file.path(inputDir,'loh',    paste0(sampleId, '_snpVals_',chrNum,'.Rdata'))) # snpFull
       #snpData <- loadRdata(getTypedFile("lohSnpFull",    postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path)
 
-      countBPFull = bmdTools::loadRdata(file.path(inputDir,paste0(sampleId, '_countBP_',chrNum,'.Rdata')), verbose = TRUE) # countBPFull
+      countBPFull = bmdTools::loadRdata(file.path(inputDir,'loh',paste0(sampleId, '_countBP_',chrNum,'.Rdata'))) # countBPFull
       # lohData <- loadRdata(getTypedFile("lohCountBpFull",postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path)
 
       iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
     }else{
       # loading BACDAC .Rds inputs
       iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
-      loginfo('loading %s',iFile)
+      # logdebug('loading %s',iFile)
 
       iRefAltCount = readRDS(file=iFile )
       countBPFull=iRefAltCount[,c('ref', 'alt')]
       snpFull=iRefAltCount[,'pos']
     }
-
-
 
     lohTot[[chrNum]] <- countBPFull #lohData
     covTot[[chrNum]] <- apply(countBPFull,1,sum) # coverage of all the SNPS, in each chrom
@@ -72,15 +76,10 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   }
 
 
-  ## load LOH wig file  ---------------
-  lohIn <- rtracklayer::import.wig(hetScorePerBinWigFile)
-
-
-  # load copy number data:   ---------------
+  ### get frequency array ---------------
   # need two arrays - count(freq count) and array indexes (after masking)
-  # variable name changes: temp1 => readDepthPer30kbBin;   wdnsMSK=>goodWindowArray; frq=>readDepthArray
 
-  ## make sure copy number chroms are the same as the loh chroms... remove Y from copy number data
+  ## make sure copy number chroms are the same as the hetScore chroms... remove Y from copy number data
   # otherwise you get errors in tabTemp when it gets to a Y chrom position; not likely to happen unless Y is gained as it is in SA43002
   chrYStartWsz <- binnedPosStart(coords@chromStart[yind], binSize = wsz)
   w23   <- which(readDepthPer30kbBin$goodWindowArray < chrYStartWsz)
@@ -95,7 +94,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 
 
 
-  ## processing of some sort??? --------------
+  ## masking and processing of some sort --------------
   # normalize cnv to NRD with normal peak = 2
   # LOH (hetScore) also on a 30K bin, masked.
   cnvListFull <- 2*frq23/(wsz*expReadsIn2NPeak_1bp) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
@@ -108,21 +107,20 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   chrEnd <- NULL
   # colList <- colors()[seq(1,length(colors()),length.out=24)[2:23]]
   for(chrNum in autosomes) {
-    logdebug('process chr %i',chrNum)
+    logdebug('process chrom %i',chrNum)
     lohSeqname <- convertChromToCharacter(chrNum, withChrPrefix=TRUE)
     lohChr <- lohIn$score[which(chrList==lohSeqname)]
     posListChr <- posListFull[which(posListFull%in%c(chrStart[chrNum]:(chrStart[chrNum+1]-1)))]
     cnvListChr <- cnvListFull[which(posListFull%in%c(chrStart[chrNum]:(chrStart[chrNum+1]-1)))]
     lohChrOut <- lohChr[posListChr-chrStart[chrNum]+1]
-    #This is where the mask is used. Looks for places where in the 23 TCGA normals more than half dropped below the 0.975 cutoff.
-    #Not optimized or anything.
-    lohMean <-0.9875 # as used in the pipeline
+    #Use the mask to look for places where the hetScore in more than half of the 23 TCGA normals dropped below the 0.975 cutoff.
+    lohMean <-0.9875 #
     oneSD <-0.0125
     cutoff <-lohMean-oneSD
 
-    lohChrMed <- apply(hsMat[which(chrList==lohSeqname),],1,
+    lohChrMed <- apply(hsNormMat[which(chrList==lohSeqname),],1,
                        function(x) length(which(x< cutoff))) # a value between 0-23 (0=none below, 23=all below)
-    numLohRefSamples<-ncol(hsMat) # currently 23, as in the 23 TCGA normals
+    numLohRefSamples<-ncol(hsNormMat) # currently 23, as in the 23 TCGA normals
     whichPlot <- which(lohChrMed[posListChr-chrStart[chrNum]+1] < numLohRefSamples/2) # keep the data where less than half the samples were below..
     lohChrOutFull <- c(lohChrOutFull,lohChrOut[whichPlot])
     cnvListChrFull <- c(cnvListChrFull,cnvListChr[whichPlot])
@@ -130,7 +128,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   }
   chrEnd <- c(0,chrEnd)
 
-  loginfo('calculating theoretical lambda, the poisson that best fits the coverage')
+  # logdebug('calculating theoretical lambda, the poisson that best fits the coverage')
   # crux of the algorithm, where it determines the theoretical lambda based on the assumption of a poisson for extrapolation to higher or lower copy number
   #
   # Sample data from the mainPeak (not the 2N peak) to be sure to get a good sampling, in case the 2N peak is small ie. 26273
@@ -144,7 +142,6 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   sampLoc <- sample(x =  posListFull[(which(cnvListFull>= (mainPeakNRD-0.025) & cnvListFull<(mainPeakNRD+0.025)))],
                     size = min(length(which(cnvListFull>= (mainPeakNRD-0.025) & cnvListFull<(mainPeakNRD+0.025))),1000)) # take 1000 unless there aren't 1000 data points available
   ## get the chrom number of the sampled positions
-  # replaces Jamie's... sapply(sampLoc,function(x) which(order(c(x,chrStart))==1)-1)
   chrNumList <-linearToBima(globalPos = sampLoc, binSize =wsz )$svaNumber
   posValTemp <- (sampLoc-chrStart[chrNumList]+1)*30000-15000
 
@@ -180,10 +177,11 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 #' @param diploidPeakNRD the NRD of the diploid peak in  ---cnvBinned data---, may not be 2 if you choose a different peak from the pipeline to normalize by
 #' @param mainPeakNRD the NRD of the main Peak in the ---cnvBinned data---, if mainPeak based, will be 2, but if ploidybased, may be different
 #' @param tau tumor ratio
+#' @inheritParams commonParameters
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 #' tau=min(1,calcPloidyResult$percentTumor/100); segmentData=calcPloidyResult$segmentData; peakInfo=calcPloidyResult$peakInfo
-#' mainPeakNRD= getMainPeakNRD(calcPloidyResult); diploidPeakNRD=NULL; #getDiploidPeakNRD(result)
+#' mainPeakNRD= getMainPeakNRD(calcPloidyResult); diploidPeakNRD=NULL; #getDiploidPeakNRD(calcPloidyResult)
 #' digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']]
 #' op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
 #' plotStarsInTheClouds(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=TRUE, mainPeakNRD,segmentData=segmentData, peakInfo=peakInfo)
@@ -192,7 +190,8 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
                                  segmentData=NULL, peakInfo=NULL, # add the ploidy inputs
                                  forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,minReasonableSegmentSize=5.5e6, # plot annotations
                                  digitalPeakZone = 0.05,heterozygosityScoreThreshold = 0.98,
-                                 paperMode=FALSE  # without all the extra fluff, crisp and clean for papers and presentations
+                                 paperMode=FALSE,  # without all the extra fluff, crisp and clean for papers and presentations
+                                 plotCex=1,addAnnotations=FALSE
 ){
 
 
@@ -229,7 +228,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
 
     if(is.null(diploidPeakNRD)){
       diploidPeakNRD <-round( mainPeakNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
-      logdebug('derived diploidPeakNRD: %.3f',diploidPeakNRD)
+      # logdebug('derived diploidPeakNRD: %.3f',diploidPeakNRD)
     }
 
   }else{
@@ -249,13 +248,13 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
   }else{
     if(!'nrd' %in% names(segmentData)){
       stop('nrd is missing from segmentData')
-      # NRD <- bmdSvPipeline:::pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
+      # NRD <- pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
       # segmentData[,'nrd'] <-  NRD
     }
 
     nearMaxNRD <- quantile(segmentData$nrd,probs = .99)
     nearMaxCN <- 2+(nearMaxNRD-2)/tau
-    plotMaxCN  <- round(min(12, nearMaxCN+2)) # add 2 to expand the plot just a bit but not too much
+    plotMaxCN  <- round(min(12, nearMaxCN+1.5)) # add 1.5 to expand the plot just a bit but not too much
     ylimMinTemp <- quantile(segmentData$nrd,probs = .01)
   }
 
@@ -295,7 +294,11 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
   ylimMinTemp <- min(ylimMinTemp, min(plotStarRange))
 
   ### one color for each chromosome 1-22
-  segColors = getSegmentColors()
+  if(addAnnotations){
+    segColors = getSegmentColors()
+  }else{
+    segColors = rep('gray30', length(autosomes) )
+  }
 
 
   if(!is.null(segmentData)){
@@ -309,7 +312,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
     lohContentA_maj2_min0 <- NA
   }
 
-  logdebug('poisson Cov Fit= %s\t diploidPeakNRD= %s\t mainPeakNRD=%s',lambdaMainOrig,diploidPeakNRD, round(mainPeakNRD,3))
+  # logdebug('poisson Cov Fit= %s\t diploidPeakNRD= %s\t mainPeakNRD=%s',lambdaMainOrig,diploidPeakNRD, round(mainPeakNRD,3))
 
   # plot once with all chromosome data -------
   if(TRUE){
@@ -321,7 +324,10 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
          xlim=xlimits,
          ylim=ylimits,
          xlab="Heterozygosity Score",
-         ylab="NRD")
+         ylab="NRD",
+         cex=plotCex,
+         cex.lab=plotCex,cex.axis=plotCex
+    )
 
     if(!paperMode){
       # annotate peak locations with boxes to show the zones around the peaks
@@ -339,7 +345,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
 
       ### vertical line to mark cutoff
       abline(v=heterozygosityScoreThreshold, col='red',lty='dashed')
-      mtext(text=heterozygosityScoreThreshold, side=1, at = heterozygosityScoreThreshold, cex=.75, col='red', line=-0.2)
+      mtext(text=heterozygosityScoreThreshold, side=1, at = heterozygosityScoreThreshold, cex=.8, col='red', line= -1)
     }
 
     # add -actual- hetScore data
@@ -361,9 +367,9 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
       if(!paperMode){
         ymax <- par('usr')[4]
         colorCodeRank <- ifelse(is.na(peakInfo$dPeaks),'gray80', 'gray50')
-        mtext(text=peakInfo$rankByHeight, side=4, at=peakInfo$peakReadDepth_normX*2/rdNormX_2Npeak, las=2, line=-.5, col=colorCodeRank, adj=1, cex=.8)
-        mtext(text='Peak', side=4, at=ymax*.98, col='gray50', las=1, line=-1.7, cex=.7)
-        mtext(text='Rank', side=4, at=ymax*.96, col='gray50', las=1, line=-1.7, cex=.7)
+        mtext(text=peakInfo$rankByHeight, side=4, at=peakInfo$peakReadDepth_normX*2/rdNormX_2Npeak, las=2, line=-.5, col=colorCodeRank, adj=1, cex=.7)
+        mtext(text='Peak', side=4, at=ymax*.98, col='gray50', las=1, line=-2, cex=.7)
+        mtext(text='Rank', side=4, at=ymax*.96, col='gray50', las=1, line=-2, cex=.7)
       }
     }
 
@@ -371,25 +377,29 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
     lines(shiftVals/medVals,plotRange,type='l',xlim=c(0,1),col='purple')
     # stars for each heterozygosity ratio for each cn level - make sure this layers on top the segment data
     points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
-    # points(starVals/medStarVals,plotStarRange,pch=1,cex=2,xlim=c(0,1),col='gray')
 
     # CN level annotations
     iCN <-0:plotMaxCN
     abline(h=2+((iCN-2)*tau), lty=2, col='gray85')
     # mtext(text='CN', side=4, col='black', las=1, line = 1.5)
-    axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1)
+    axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1, cex.axis=plotCex)
 
-    # legends
-    legend("topleft", legend=c(1:22), col=segColors, pch=1:22, cex=.95)
-    legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green', 'black'),lty=c(1,NA,NA), pch=c(NA, "*", "."),cex=.85,pt.cex=2)
+    legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green', 'black'),
+           lty=c(1,NA,NA), pch=c(NA, "*", "."), cex=.95*plotCex, pt.cex=2)
 
     # plot annotations
-    mtext(c(sampleId, alternateId), side=3, adj=c(0,1))
-    mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
-    mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
-    if(!is.na(lohContentA_maj2_min0)){
-      mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.5, cex=.9, col='gray40')
+    if(addAnnotations){
+      # chrom symbol legends
+      legend("topleft", legend=c(1:22), col=segColors, pch=1:22, cex=.95*plotCex)
+
+      mtext(c(sampleId, alternateId), side=3, adj=c(0,1))
+      mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
+      mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
+      if(!is.na(lohContentA_maj2_min0)){
+        mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.5, cex=.9, col='gray40')
+      }
     }
+
 
     if(!paperMode){
 
@@ -460,42 +470,69 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
   ))
 }
 
+convertYlimitsToNrd=function(starCloudResult, wsz, expReadsIn2NPeak_1bp){
+  minYplotNRD = starCloudResult$plotAxisLimits$nrdAxisLims[1]
+  maxYplotNRD = starCloudResult$plotAxisLimits$nrdAxisLims[2]
+  minYplotRD=  calcRD(nrd=minYplotNRD, wsz=readDepthPer30kbBin$windowSize, expReadsIn2NPeak_1bp)
+  maxYplotRD=  calcRD(nrd=maxYplotNRD, wsz=readDepthPer30kbBin$windowSize, expReadsIn2NPeak_1bp)
+  yAxisLimits=c(minYplotRD, maxYplotRD)
+  return(yAxisLimits)
+}
+
+#' draw the constellation plot and the linear genome plot side by side
+#' @export
+twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbBin,segmentation, sampleId=NULL, alternateId=NULL,  diploidPeakNRD=NULL,
+                        gainColor='blue', lossColor= 'red',leftFigLabel=NULL,rightFigLabel=NULL){
+
+  layout( matrix(c(1,2,2),nrow=1),
+          heights= c(1),
+          widths = c(1.5,2))   # Widths of the two columns
+  labelCex=1.5
+
+  # left figure
+  op <- par(mar=c(5,3,2,3),mgp=c(1.5, 0.5,0))
+  starCloudResult=plotStarsInTheClouds(sampleId=NULL, alternateId=NULL,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+                                       plotEachChrom=FALSE, mainPeakNRD=getMainPeakNRD(calcPloidyResult),
+                                       segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
+                                       digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
+                                       paperMode=FALSE,plotCex=1.3)
+  myAt=starCloudResult$plotAxisLimits$nrdAxisLims[2]
+  mtext(leftFigLabel, side=2, at=myAt,cex=labelCex,las=1,line=1.5)
+  par(op)
+
+  # right figure
+  op <- par(mar=c(5,3,2,1),mgp=c(1.5, 0.5,0))
+  yAxisLimits=convertYlimitsToNrd(starCloudResult, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
+  linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
+                    allelicSegments=starCloudResult$allelicSegments,
+                    gainColor = gainColor, lossColor= lossColor, yAxisLimits = yAxisLimits)
+  myAt=yAxisLimits[2]
+  mtext(rightFigLabel, side=2, cex=labelCex,at =myAt,las=1,line=1.5)
+  par(op)
+}
 
 
 
 #' make a blank plot, no data, used as a stand in when combining lots of samples into one pdf
 blankPlotStarsInTheClouds=function(
-    noPdf=FALSE,
     heterozygosityScoreThreshold=0.98,
-    tau=0.8,
-    sampleId = 'BLANK',
-    outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/ploidy'){
+    tau=0.8
+    ){
 
-
-  ### make the pdf
-  if (!noPdf) {
-    constellationPdfFile <- getTypedFile('constellationPlot',dir = outputDir, list(sampleId = sampleId))
-    pdf(file = constellationPdfFile@path, paper="a4r", width=8, height=10, title=paste0('hetScVsCN_BLANK'))
-    loginfo('writing pdf: %s', constellationPdfFile@path)
-  }
 
   # set up plot
   plot(x=1:10,y=1:10,type='n',
-       ylim=c(0, 5),
+       ylim=c(0, 5), yaxt='n',
        xlim=c(.4, 1.1),
        xlab="Heterozygosity Score",
-       ylab="read depth normalized to 2N peak (NRD)")
+       ylab="")
 
   ### vertical line to mark cutoff
   abline(v=heterozygosityScoreThreshold, col='red',lty='dashed')
   mtext(text=heterozygosityScoreThreshold, side=1, at = heterozygosityScoreThreshold, cex=.75, col='red', line=-0.2)
 
   ### one color for each chromosome 1-22
-  segColors <- c(RColorBrewer::brewer.pal(9, 'Set1')[-c(6,9)] ,                     # remove the yellow and gray
-                 'red', 'blue', 'cyan', 'gray45','magenta',                         # to get to 22
-                 RColorBrewer::brewer.pal(8, 'Set2')[-c(8)], 'gray75',              # replace the gray with a slightly lighter color
-                 'purple', "#00FF92FF"
-  )
+  segColors = getSegmentColors()
 
   # legend
   legend("topleft", legend=c(1:22), col=segColors, pch=1:22, cex=.95)
@@ -506,9 +543,5 @@ blankPlotStarsInTheClouds=function(
   abline(h=2+((iCN-2)*tau), lty=2, col='gray85')
   # mtext(text='CN', side=4, col='black', las=1, line = 1.5)
   axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1)
-
-  if (!noPdf) {
-    dev.off()
-  }
 
 }

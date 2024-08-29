@@ -9,3 +9,4 @@ makeStarLookUpTable(starCloudResult, percentTumor)
 \description{
 create the starLookUp table
 }
+\keyword{internal}

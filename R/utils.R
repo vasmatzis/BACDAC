@@ -25,6 +25,7 @@ loadSegmentationFile=function(segmentationFile){
 
 #' chromosome segment colors
 #' one color for each chromosome 1-22
+#' @keywords internal
 getSegmentColors=function(){
   ### one color for each chromosome 1-22
   segColors <- c(RColorBrewer::brewer.pal(9, 'Set1')[-c(6,9)] ,                     # remove the yellow and gray

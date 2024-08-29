@@ -1,11 +1,12 @@
 \dontrun{
   library(BACDAC)
   library(logging)
-  # calculateHetScoreExample.R
+  # calculatePloidyExample.R
   basicConfig("DEBUG")
   noPdf=TRUE                          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
   # outputDir = tempdir();              # output folder for pdfs etc.
-  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  outputDir = '/tmp/RtmpITBnDE'
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   ### load data ###
@@ -21,6 +22,7 @@
 
   # hetScore data - the output from calculateHetScore()
   hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
+  hetScoreDir = file.path(outputDir,'reports')
   hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScoreData <- as.data.frame(rtracklayer::import.wig(hetScorePerBinWigFile))
 
@@ -33,7 +35,7 @@
 
   # defaults
   segmentationBinSize=30000; numChroms=24;
-  pause=FALSE; skipExtras=FALSE; omitAnnotations = FALSE;
+  omitAnnotations = FALSE;
   dPeaksCutoff=0.01;    penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1; maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;   # digital peaks
   grabDataPercentManual= -1; origMaxPercentCutoffManual=-1;  #  peaksByDensity
   minReasonableSegmentSize=5.5e6;
@@ -43,12 +45,10 @@
 
   ### call calculatePloidy, the function to do all the ploidy work ---------
   loginfo('calculate ploidy for %s ', sampleId)
-  result=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
+  calcPloidyResult=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
                          readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
                          segmentation=segmentation, hetScoreData = hetScoreData,
-
-                         segmentationBinSize=segmentationBinSize, numChroms=numChroms,
-                         pause=pause, skipExtras=skipExtras, omitAnnotations = omitAnnotations,
+                         segmentationBinSize=segmentationBinSize,
 
                          dPeaksCutoff=dPeaksCutoff,    penaltyCoefForAddingGrids=penaltyCoefForAddingGrids, minGridHeight=minGridHeight, minPeriodManual=minPeriodManual, maxPeriodManual=maxPeriodManual, forceFirstDigPeakCopyNum=forceFirstDigPeakCopyNum,   # digital peaks
                          grabDataPercentManual= grabDataPercentManual,  origMaxPercentCutoffManual=origMaxPercentCutoffManual,  #  peaksByDensity
@@ -61,14 +61,10 @@
 
   calcPloidyResultOutputFile=file.path(outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
   loginfo('saving result to: %s',calcPloidyResultOutputFile)
-  saveRDS(result, file=calcPloidyResultOutputFile)
+  saveRDS(calcPloidyResult, file=calcPloidyResultOutputFile)
 
-  print(result)
-
-  mainPeakIndex = which(result$peakInfo$rankByHeight==1)
-  loginfo('Main peak is %sN',result$peakInfo[mainPeakIndex,'nCopy'])
-  loginfo('tumor percentage: %s ',round(result$percentTumor) )
-  loginfo('approximate ploidy: %s ',round( mean(result$segmentData$cnLevel),1) ) # based on segment copy number and not adjusted for size
-
+  loginfo('tumor percentage: %s ',round(calcPloidyResult$percentTumor) )
+  segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
+  loginfo('approximate ploidy: %s ',round(segmentPloidy,1) )
 
 }

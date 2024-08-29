@@ -2,14 +2,14 @@
 % Please edit documentation in R/constellationPlot.R
 \name{loadStarsInTheClouds}
 \alias{loadStarsInTheClouds}
-\title{load all the data necessary to make the plot}
+\title{load all the data necessary to make the constellation plot}
 \usage{
 loadStarsInTheClouds(
   sampleId,
   inputDir,
   readDepthPer30kbBin,
-  hetScorePerBinWigFile,
-  hsMat,
+  hetScorePerBinFile,
+  hsNormMat,
   testVals,
   wsz = 30000,
   mainPeakNRD,
@@ -17,23 +17,31 @@ loadStarsInTheClouds(
 )
 }
 \arguments{
+\item{sampleId}{sample Identifier}
+
+\item{readDepthPer30kbBin}{read depth for 30 kb bins, with bin index in linear coordinates}
+
+\item{hsNormMat}{heterozygosity score mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.}
+
+\item{testVals}{used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)}
+
 \item{mainPeakNRD}{the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak}
+
+\item{expReadsIn2NPeak_1bp}{expected number of reads in a 1 bp bin for the diploid peak}
 }
 \description{
-load all the data necessary to make the plot
+load all the data necessary to make the constellation plot
 }
 \examples{
 sampleId='TCGA-14-1402-02A_ds'
 inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
 outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
   ## load two reference files  ---------------
-# hsMat/lohMat: LOH analysis mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
-# testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
-hsMat   <- bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
+hsNormMat   <- bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
 testVals <-  bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
-hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
+hetScorePerBinFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
 readDepthPer30kbBin=  readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
-mainPeakNRD=getMainPeakNRD(result)
-expReadsIn2NPeak_1bp=result$expReadsIn2NPeak_1bp
-starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile,hsMat, testVals, mainPeakNRD=mainPeakNRD)
+mainPeakNRD=getMainPeakNRD(calcPloidyResult)
+expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
+starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile,hsNormMat, testVals, mainPeakNRD=mainPeakNRD)
 }

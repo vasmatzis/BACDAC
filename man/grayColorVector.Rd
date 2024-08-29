@@ -12,3 +12,4 @@ grayColorVector(x)
 \description{
 Provide gray color coding only for display on the genome plot
 }
+\keyword{internal}

@@ -5,25 +5,22 @@
 #'
 #' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
 #' @param readDepthBinSize size of each window
-#' @param yLimQuantile To prevent an outlier from dominating the plot, we set the max y axis to this quantile (number 0-1, 1=100%, 0.5=median)
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
-#' @param allelicSegments segments used in \code{calculatePloidy} then augmented with major and minor allele specific copy number
-#' @param sampleId plot y axis with normalize read depth to 2 for the median frequency
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear genome plot, default is red
 #' @param zebraStrips option to have alternating gray/white background for chromosome delineation
 #' @param ... Parameters passed onto the actual plot command
-#'
+#' @inheritParams commonParameters
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
-#' inputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
-#' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+#' inputDir <- system.file('extdata', package = "BACDAC")
+#' outputDir=tempDir()
 #' segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-#' segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
+#' segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
 #' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 #' readDepthBinnedData = readRDS(file=thirtyKbFile )
-#'
+#'   yAxisLimits = starCloudResult$plotAxisLimits$nrdAxisLims
 #' op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 #' # default cnv color coding and annotations
 #' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)
@@ -33,9 +30,10 @@
 #' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
 #'
 #' @export
-linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQuantile=0.99, sampleId=NULL, alternateId=NULL, segmentation=NULL,
-                              allelicSegments=NULL, noDelAmpDetection = FALSE, gainColor = 'blue', lossColor= 'red', zebraStrips=FALSE, ...) {
-  # readDepthBinSize=30000; yLimQuantile=0.99; noDelAmpDetection = FALSE;  gainColor = 'blue'; lossColor= 'red';alternateId=NULL
+linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, sampleId=NULL, alternateId=NULL, segmentation=NULL,
+                              allelicSegments=NULL, noDelAmpDetection = FALSE, gainColor = 'blue', lossColor= 'red', zebraStrips=FALSE,
+                              yAxisLimits=NULL, ...) {
+  # readDepthBinSize=30000; yLimQuantile=0.99; noDelAmpDetection = FALSE;  gainColor = 'blue'; lossColor= 'red';zebraStrips=FALSE; alternateId=NULL
 
   if(R.version$major>=4){
     # with R 4.0 the default color palette changed, making reds and blues in the genome plot not true red and blue anymore.
@@ -47,13 +45,13 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
   mainChroms <- 1:24
   # We skip Y chromosome because hetScore does not make much sense there
   mainChromsNoY <- 1:23
-  chromsToPlot = mainChromsNoY
+  chromsToPlot = mainChroms
 
   coords <- getLinearCoordinates(mainChroms)
 
   x <- readDepthBinnedData$goodWindowArray
   y = readDepthBinnedData$readDepthArray
-  ylabel <- paste("Counts per", readDepthBinSize/1000, 'kb window')
+  ylabel <- paste("Counts per", readDepthBinSize/1000, 'kb bin')
 
 
   if(!is.null(segmentation)){
@@ -72,34 +70,45 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
   if(length(x)>0) {
     chrCharacters <- convertChromToCharacter(coords@chroms)
 
-    xlim <- c(0, binnedPosEnd(max(coords@chromEnd[chromsToPlot]), readDepthBinSize))
-    #ylim=c(0,max(y)/2)
-    extraYAxis <- 1.3 # Fudge factor - add a little bit of extra space on top
-    ylim <- c(0, quantile(x=y, probs=yLimQuantile)/yLimQuantile*extraYAxis) # Stretch the y axis, assuming linear distribution of data
+    xlimit <- c(0, binnedPosEnd(max(coords@chromEnd[chromsToPlot]), readDepthBinSize))
+    #ylimit=c(0,max(y)/2)
+    if(is.null(yAxisLimits)){
+      yLimQuantile=.99 # To prevent an outlier from dominating the plot, we set the max y axis to this quantile (number 0-1, 1=100%, 0.5=median)
+      extraYAxis <- 1.3 # Fudge factor - add a little bit of extra space on top
+      ylimit <- c(0, quantile(x=y, probs=yLimQuantile)/yLimQuantile*extraYAxis) # Stretch the y axis, assuming linear distribution of data
+    }else{
+      ylimit=yAxisLimits
+    }
 
-
-    plot(x, y, pch=".", xaxs="i", xlim=xlim, xaxt="n", ylim=ylim,
-         ylab=ylabel,xlab="",cex.axis=1,col=colorVector) # Plot the summed array
-    title(xlab='chromosome', line=0, cex.lab=1.5)
+    plot(x, y, pch=".", xaxs="i", xlim=xlimit, xaxt="n", ylim=ylimit,
+         ylab=ylabel,xlab="",cex.axis=1.3,col=colorVector,cex.lab=1.3) # Plot the summed array
+    title(xlab='chromosome',cex.lab=1.4)
 
     ## option for Zebra bars for the chromosomes. Draw first so the dots can go over
     if(zebraStrips){
       for(i in seq_len(length(chromsToPlot))) {
         if(i%%2==1){
           rect(xleft = coords@chromStart[i],
-               ybottom= yRangeWithLabel[1],
+               ybottom= par('usr')[3],
                xright = coords@chromEnd[i],
-               ytop   = yRangeWithLabel[2]*1.04,
+               ytop   = par('usr')[4],
                col=rgb(0.5,0.5,0.5,alpha=0.15), border=NA)
         }
       }
     }
 
+    # Display the chromosome start as a line between the consecutive windows
+    chromosomeStarts <- coords@chromStart[coords@chroms]/readDepthBinSize
+    chromosomeEnds   <- coords@chromEnd[coords@chroms]/readDepthBinSize
+    axis(side=3, at=chromosomeEnds, labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
+    axis(side=3, at=chromosomeStarts+(chromosomeEnds-chromosomeStarts)/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+
+
     # add purple lines for LOH segments
     # load segmentation TODO:  check for "minor" and "major" in segmentation file?
     if(!is.null(allelicSegments)){
       # we don't want to include the 1N segments
-      minorZeroSegments <- allelicSegments[which(allelicSegments$minor==0 & allelicSegments$major>=2),]
+      minorZeroSegments <- allelicSegments[which(allelicSegments$minor_copy_number==0 & allelicSegments$major_copy_number>=2),]
       if(nrow(minorZeroSegments)>0){
         # convert to linear coordinates
         linPosStart <- abs(bimaToLinear(svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
@@ -108,17 +117,16 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
         linBinStart <- binnedPosStart(linPosStart, readDepthBinSize)
         linBinEnd <- binnedPosEnd(linPosEnd, readDepthBinSize)
         # add allele=0 segments to plot and data.frame
-        segments(x0 = linBinStart, y0 = 0, x1 = linBinEnd, y1 = 0, col = 'purple', lwd=3)
+        segments(x0 = linBinStart, y0 = ylimit[1], x1 = linBinEnd, y1 = ylimit[1], col = 'purple', lwd=3)
+
+        legend('topright', inset=c(0, .04),
+               legend = c('2N+LOH'),col = c('purple'), lty=c(1), pch=c(NA), cex=1.3)
+        #legend = c('2N+LOH', 'gain', 'loss'), col = c('purple',  gainColor, lossColor),lty=c(1,NA,NA), pch=c(NA, ".", "."), cex=.95, pt.cex=2)
       }
     }
 
 
 
-    # Display the chromosome start as a line between the consecutive windows
-    chromosomeStarts <- coords@chromStart[coords@chroms]/readDepthBinSize
-    chromosomeEnds   <- coords@chromEnd[coords@chroms]/readDepthBinSize
-    axis(side=3, at=chromosomeEnds, labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
-    axis(side=3, at=chromosomeStarts+(chromosomeEnds-chromosomeStarts)/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
   } else {
     plotEmptyLinearGenomePlot(chromsToPlot=chromsToPlot,coords=coords)
   }
@@ -138,6 +146,7 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, yLimQ
 #'
 #' @param chromsToPlot vector of chromosome (as integers) to plot
 #' @param coords object describing linear coordinate space for the chromosomes
+#' @keywords internal
 plotEmptyLinearGenomePlot <- function(chromsToPlot,coords){
   # Get a plot started
   maxX <- max(coords@chromEnd[coords@maxcn])
@@ -165,7 +174,7 @@ plotEmptyLinearGenomePlot <- function(chromsToPlot,coords){
 #'
 
 #' @return a vector of color codes to reflect the CNV calls: 2=red/loss, 4=blue/gains, 8=gray/normal; or 1=black/no color coding
-#'
+#' @keywords internal
 makeCNVcolorVector <- function(x, delAmp=NULL, gainColor = 'blue', lossColor= 'red'){
   if(!is.null(delAmp)) {
 
@@ -203,6 +212,7 @@ makeCNVcolorVector <- function(x, delAmp=NULL, gainColor = 'blue', lossColor= 'r
 #' Provide gray color coding only for display on the genome plot
 #'
 #' @param x linear genome x-axis, windows, from the read-depth binned data
+#' @keywords internal
 grayColorVector=function(x){
   # We do not have color data, just use gray
   colorVector <- rep(8, length(x))
@@ -216,6 +226,7 @@ grayColorVector=function(x){
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
 #' @param coords linear genome coordinates, loaded via \code{getLinearCoordinates()}
 #'
+#' @keywords internal
 makeLegacyDelAmp <- function(segmentation, coords) {
   wsz <- 10000
   # Initialize array data = 1, length = genomeLength/10k

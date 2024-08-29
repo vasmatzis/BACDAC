@@ -16,3 +16,4 @@ assignGridHeights(peakInfo, n00, minGridHeight)
 \description{
 each peak gets a group of grid heights based on the mode of the peak
 }
+\keyword{internal}

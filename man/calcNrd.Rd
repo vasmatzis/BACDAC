@@ -2,17 +2,17 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{calcNrd}
 \alias{calcNrd}
-\title{find read depth from copy number and tumor ratio}
+\title{find normalized read depth from copy number and tumor ratio}
 \usage{
 calcNrd(cn, tau)
 }
 \arguments{
 \item{cn}{copy number}
 
-\item{NRD}{normalized read depth}
+\item{tau}{tumor fraction}
 }
 \description{
-find read depth from copy number and tumor ratio
+find normalized read depth from copy number and tumor ratio
 }
 \examples{
 calcNrd(cn=3,tau=.7)

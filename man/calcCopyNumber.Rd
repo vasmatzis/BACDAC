@@ -2,24 +2,22 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{calcCopyNumber}
 \alias{calcCopyNumber}
-\title{find copy number from read depth and tumor ratio}
+\title{find copy number from read depth and tumor fraction}
 \usage{
 calcCopyNumber(NRD, tau)
 }
 \arguments{
 \item{NRD}{normalized read depth}
 
-\item{tau}{tumor ratio}
+\item{tau}{tumor fraction}
 }
 \description{
-find copy number from read depth and tumor ratio
+find copy number from read depth and tumor fraction
 }
 \examples{
-calcCopyNumber(NRD=23,tau=0.85) # CCND1 PT140
-calcCopyNumber(NRD=1.4,tau=0.33) # CDKN2A BL002
+calcCopyNumber(NRD=23,tau=0.85)
+calcCopyNumber(NRD=1.4,tau=0.33)
 calcCopyNumber(NRD=4,tau=0.75)
-calcCopyNumber(NRD=4,tau=0.5)
-calcCopyNumber(NRD=1.745,tau=0.13)
 }
 \seealso{
 Other copyNumberCalcs: 

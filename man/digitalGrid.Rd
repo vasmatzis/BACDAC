@@ -66,3 +66,4 @@ decision tree for minPeriod
 \description{
 fit a group of peaks to a digital grid
 }
+\keyword{internal}

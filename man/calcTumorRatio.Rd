@@ -2,7 +2,7 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{calcTumorRatio}
 \alias{calcTumorRatio}
-\title{find tumor ratio as the ratio between two copy number peaks and their corresponding read depth}
+\title{find tumor fraction from the ratio between two copy number peaks and their corresponding read depth}
 \usage{
 calcTumorRatio(rd1, rd2, cn1, cn2)
 }
@@ -12,7 +12,7 @@ calcTumorRatio(rd1, rd2, cn1, cn2)
 \item{cn1, cn2}{copy number  of two peaks}
 }
 \description{
-find tumor ratio as the ratio between two copy number peaks and their corresponding read depth
+find tumor fraction from the ratio between two copy number peaks and their corresponding read depth
 }
 \examples{
 calcTumorRatio(rd1=1.2,rd2=2,cn1=2,cn2=4)

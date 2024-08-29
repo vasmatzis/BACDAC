@@ -2,12 +2,17 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{pkmodToNRD}
 \alias{pkmodToNRD}
-\title{as calculated in constellation plot
-converts pkmod rather than rd to nrd, normalized read depth}
+\title{converts pkmod rather than rd to nrd, normalized read depth}
 \usage{
 pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
 }
+\arguments{
+\item{segmentData}{segments from segmentation that are longer than minReasonableSegmentSize and then broken up into segments no smaller than 3 Mbs}
+
+\item{peakInfo}{summary table of info for each peak found in \code{peaksByDensity}}
+
+\item{rdNormX_2Npeak}{read depth of the diploid peak normalized by the x axis}
+}
 \description{
-as calculated in constellation plot
 converts pkmod rather than rd to nrd, normalized read depth
 }

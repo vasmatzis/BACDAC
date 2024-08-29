@@ -14,3 +14,4 @@ plotEmptyLinearGenomePlot(chromsToPlot, coords)
 \description{
 create an empty linear genome plot to fill a space when data is not available
 }
+\keyword{internal}
