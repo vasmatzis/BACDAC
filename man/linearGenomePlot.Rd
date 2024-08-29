@@ -49,7 +49,7 @@ If sampleId is provided, title annotations will be added.
 \examples{
 sampleId='TCGA-14-1402-02A_ds'
 inputDir <- system.file('extdata', package = "BACDAC")
-outputDir=tempDir()
+outputDir=tempdir()
 segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))

@@ -28,6 +28,7 @@ testVals <-  bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared
 
 runBACDAC(sampleId, alternateId,
           outputDir,
+          inputDir,
           noPdf,
           readDepthPer30kbBin, readDepthPer100kbBin,segmentation,hsNormMat,testVals)
 }

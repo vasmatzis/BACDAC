@@ -150,12 +150,5 @@ makeStarLookUpTable <- function(starCloudResult,percentTumor){
   return(starLookUp)
 }
 
-# convert the constellation y axis limits which are in NRD units and returned from the function into read depth values
-convertYlimitsToRD=function(starCloudResult, wsz, expReadsIn2NPeak_1bp){
-  minYplotNRD = starCloudResult$plotAxisLimits$nrdAxisLims[1]
-  maxYplotNRD = starCloudResult$plotAxisLimits$nrdAxisLims[2]
-  minYplotRD=  calcRD(nrd=minYplotNRD, wsz=readDepthPer30kbBin$windowSize, expReadsIn2NPeak_1bp)
-  maxYplotRD=  calcRD(nrd=maxYplotNRD, wsz=readDepthPer30kbBin$windowSize, expReadsIn2NPeak_1bp)
-  yAxisLimits=c(minYplotRD, maxYplotRD)
-  return(yAxisLimits)
-}
+
+

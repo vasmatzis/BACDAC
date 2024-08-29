@@ -495,18 +495,19 @@ twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbB
 
   # right figure
   op <- par(mar=c(5,3,2,1),mgp=c(1.5, 0.5,0))
-  yAxisLimits=convertYlimitsToRD(starCloudResult, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
+  # convert the nrd axis limits in the constellation plot to rd, so the linear genome plot can be on the same scale
+  rdAxisLimits= calcRD(nrd=starCloudResult$plotAxisLimits$nrdAxisLims, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
   linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
-                    gainColor = gainColor, lossColor= lossColor, yAxisLimits = yAxisLimits)
-  myAt=yAxisLimits[2]
+                    gainColor = gainColor, lossColor= lossColor, yAxisLimits = rdAxisLimits)
+  myAt=rdAxisLimits[2]
   mtext(rightFigLabel, side=2, cex=labelCex,at =myAt,las=1,line=1.5)
   par(op)
 }
 
 
 
-#' make a blank plot, no data, used as a stand in when combining lots of samples into one pdf
+# make a blank plot, no data, used as a stand in when combining lots of samples into one pdf
 blankPlotStarsInTheClouds=function(
     heterozygosityScoreThreshold=0.98,
     tau=0.8

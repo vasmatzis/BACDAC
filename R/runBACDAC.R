@@ -5,6 +5,7 @@
 #' @example inst/examples/runBACDAC_Example.R
 #' @export
 runBACDAC=function(sampleId, alternateId,
+                   inputDir,
                    outputDir,
                    noPdf=FALSE,
                    readDepthPer30kbBin, readDepthPer100kbBin,segmentation,segmentationBinSize,

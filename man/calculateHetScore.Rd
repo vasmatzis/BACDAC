@@ -68,7 +68,7 @@ To plot see \link{plotHetScorePerBin} and the three graph plot function \link{ma
 sampleId='TCGA-14-1402-02A_ds'
 # inputDir is the path to the load package data
 inputDir <- system.file('extdata', package = "BACDAC")
-outputDir = tempDir() # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+outputDir = tempdir() # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
 segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 segmentation= loadSegmentationFile(segmentationFile) # per segment: chr, start, end, rd
 # defaults:

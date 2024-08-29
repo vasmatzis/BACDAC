@@ -3,7 +3,8 @@
 #'
 #' @param sampleId                   sample Identifier
 #' @param alternateId                optional secondary sample identifier
-#' @param segmentation               identified regions of the genome with constant read depth. Contains chromosome, start, end, expected CNV, actual CNV and other values we do not need.
+#' @param segmentation               identified regions of the genome with constant read depth. Data.frame with required columns:
+#'    chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color coded linear linear genome plot
 #' @param segmentationBinSize        bin size used for the read depth in the segmentation data
 #' @param readDepthPer30kbBin        read depth for 30 kb bins, with bin index in linear coordinates
 #' @param readDepthPer100kbBin       read depth for 100 kb bins, with bin index in linear coordinates

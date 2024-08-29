@@ -10,12 +10,13 @@
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear genome plot, default is red
 #' @param zebraStrips option to have alternating gray/white background for chromosome delineation
+#' @param yAxisLimits
 #' @param ... Parameters passed onto the actual plot command
 #' @inheritParams commonParameters
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
 #' inputDir <- system.file('extdata', package = "BACDAC")
-#' outputDir=tempDir()
+#' outputDir=tempdir()
 #' segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 #' segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
 #' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))

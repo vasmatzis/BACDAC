@@ -166,10 +166,11 @@
   # right figure
   op <- par(mar=c(5,3,2,1),mgp=c(1.5, 0.5,0))
   figLabel='F'
-  yAxisLimits=convertYlimitsToRD(starCloudResult, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
+  # convert the nrd axis limits in the constellation plot to rd, so the linear genome plot can be on the same scale
+  rdAxisLimits= calcRD(nrd=starCloudResult$plotAxisLimits$nrdAxisLims, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
   linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
-                    gainColor = 'blue', lossColor= 'red', yAxisLimits = yAxisLimits)
+                    gainColor = 'blue', lossColor= 'red', yAxisLimits = rdAxisLimits)
   myAt=yAxisLimits[2]
   mtext(figLabel, side=2, cex=labelCex,at =myAt,las=1,line=1.5)
   par(op)
