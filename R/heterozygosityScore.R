@@ -68,7 +68,7 @@ calculateHetScore <- function(
   # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
   if(!dir.exists(file.path(outputDir))){
     dir.create(path = file.path(outputDir))
-    logdebug('creating output directory: \n\t%s:', file.path(outputDir))
+    loginfo('creating output directory: \n\t%s:', file.path(outputDir))
   }
   # specify output file names
   hetScorePerArmFile <- file.path(outputDir, paste0(sampleId, '_hetScorePerArm.csv'))
@@ -216,7 +216,7 @@ saveHetScoreToWig <- function(wigFile, seqListTotal, seqValsTotal, chromsToSave,
 
   if(!dir.exists(dirname(wigFile))){
     dir.create(path = dirname(wigFile))
-    logdebug('creating output directory: \n\t%s:', dirname(wigFile))
+    loginfo('creating output directory: \n\t%s:', dirname(wigFile))
   }
   rtracklayer::export.wig(object = grange, con = wigFile)
   loginfo('wrote hetScore per 30kb bin to wig file: \n\t%s', wigFile)
@@ -381,7 +381,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinFile,
     }
     hetScoreReportPdf <- file.path(outputDir, paste0(sampleId, '_hetScoreReport.pdf'))
     pdf(file=hetScoreReportPdf, width=11, height=8,  paper="a4r", title=paste0('hetScoreReport_',sampleId))
-    logdebug('writing hetScore report to PDF: \n\t%s:', hetScoreReportPdf)
+    loginfo('writing hetScore report to PDF: \n\t%s:', hetScoreReportPdf)
   }else{
     hetScoreReportPdf=NULL
   }

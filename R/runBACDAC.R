@@ -56,8 +56,8 @@ runBACDAC=function(sampleId, alternateId,
 
 
   loginfo('tumor Percent: %s',round(calcPloidyResult$percentTumor))
-  segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
-  loginfo('approximate ploidy: %s ',round(segmentPloidy,1) )
+  # segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
+  # loginfo('approximate ploidy: %s ',round(segmentPloidy,1) )
 
 
   mainPeakNRD=getMainPeakNRD(calcPloidyResult)

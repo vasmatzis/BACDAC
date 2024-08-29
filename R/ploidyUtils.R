@@ -279,7 +279,7 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
     }else{
       # first Max less than 1 must suffice
       testScore <- max( data[which(data < 1)] );
-      loginfo('%i observations for %s, too few for density, returning the first max<1: %.3f',observ,plotTextPrefix,testScore)
+      # loginfo('%i observations for %s, too few for density, returning the first max<1: %.3f',observ,plotTextPrefix,testScore)
       numHetClusters <- NA_integer_; plotCol <- 'orange'
     }
 
@@ -334,7 +334,7 @@ calcTumorRatio=function(rd1,rd2,cn1,cn2){
   D <- abs(rd1-rd2)/abs(cn1-cn2) # expected difference between two peaks  copy number, i.e. 1N and 2N
   T <- 2*D/(rd1+D*(2-cn1))
 
-  loginfo('tumorRatio: %.2f', T)
+  # loginfo('tumorRatio: %.2f', T)
   return(T)
 }
 
@@ -494,7 +494,7 @@ getTwoBestPeakIndexes <- function(peakCopyNum, peakHeight){
     secondBestPeakIndex <- which(peakHeight==tallestNeighborPeak)
   }
 
-  loginfo(' bestPeakIndex = %i; secondBestPeakIndex = %i',bestPeakIndex,secondBestPeakIndex)
+  # loginfo(' bestPeakIndex = %i; secondBestPeakIndex = %i',bestPeakIndex,secondBestPeakIndex)
 
   if(bestPeakIndex==secondBestPeakIndex){
     logerror('something is wrong, bestPeakIndex = secondBestPeakIndex %i = %i, this should not happen', bestPeakIndex,secondBestPeakIndex)
@@ -536,7 +536,7 @@ calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,d
   percentTumor_b <- calcTumorRatio(rd1b,rd2b,cn1,cn2)*100 # using the readDepth at the digital peak position each peak - does not depend on which peaks you use, all spaced equal distance apart
 
   percentTumorMean <- mean(c(percentTumor_a, percentTumor_b))
-  loginfo('mean percent tumor calc: %.1f',percentTumorMean)
+  # loginfo('mean percent tumor calc: %.1f',percentTumorMean)
   return(percentTumor=percentTumor_a)
 }
 

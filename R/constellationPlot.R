@@ -10,19 +10,8 @@
 #' @param testVals used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
 #' @param expReadsIn2NPeak_1bp expected number of reads in a 1 bp bin for the diploid peak
 #' @inheritParams commonParameters
-#' @examples
-#' sampleId='TCGA-14-1402-02A_ds'
-#' inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
-#' outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-#'   ## load two reference files  ---------------
-#' hsNormMat   <- bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata'))
-#' testVals <-  bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
-#' hetScorePerBinFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
-#' readDepthPer30kbBin=  readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
-#' mainPeakNRD=getMainPeakNRD(calcPloidyResult)
-#' expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
-#' starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile,hsNormMat, testVals, mainPeakNRD=mainPeakNRD)
-
+#' @example inst/examples/constellationPlotExample.R
+#' @export
 loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile, hsNormMat, testVals, wsz=30000,
                                  mainPeakNRD, expReadsIn2NPeak_1bp){
   # TODO: testVals - not used, just passed out with the other data needed for the plot
@@ -107,7 +96,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   chrEnd <- NULL
   # colList <- colors()[seq(1,length(colors()),length.out=24)[2:23]]
   for(chrNum in autosomes) {
-    logdebug('process chrom %i',chrNum)
+    # logdebug('process chrom %i',chrNum)
     lohSeqname <- convertChromToCharacter(chrNum, withChrPrefix=TRUE)
     lohChr <- lohIn$score[which(chrList==lohSeqname)]
     posListChr <- posListFull[which(posListFull%in%c(chrStart[chrNum]:(chrStart[chrNum+1]-1)))]
@@ -174,18 +163,12 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 
 #' plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 #'
-#' @param diploidPeakNRD the NRD of the diploid peak in  ---cnvBinned data---, may not be 2 if you choose a different peak from the pipeline to normalize by
-#' @param mainPeakNRD the NRD of the main Peak in the ---cnvBinned data---, if mainPeak based, will be 2, but if ploidybased, may be different
+#' @param diploidPeakNRD the NRD of the diploid peak, don't assume it is 2, may be choosing a different peak than from a previous calculation
+#' @param mainPeakNRD the NRD of the main Peak
 #' @param tau tumor ratio
 #' @inheritParams commonParameters
-#' @examples
-#' sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
-#' tau=min(1,calcPloidyResult$percentTumor/100); segmentData=calcPloidyResult$segmentData; peakInfo=calcPloidyResult$peakInfo
-#' mainPeakNRD= getMainPeakNRD(calcPloidyResult); diploidPeakNRD=NULL; #getDiploidPeakNRD(calcPloidyResult)
-#' digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']]
-#' op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
-#' plotStarsInTheClouds(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=TRUE, mainPeakNRD,segmentData=segmentData, peakInfo=peakInfo)
-#' par(op)
+#' @example inst/examples/constellationPlotExample.R
+#' @export
 plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=FALSE, mainPeakNRD,
                                  segmentData=NULL, peakInfo=NULL, # add the ploidy inputs
                                  forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,minReasonableSegmentSize=5.5e6, # plot annotations
@@ -420,7 +403,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
         mtext(1, text=paste0('manual maxPeriod: ', maxPeriodManual),               adj=1, line=4.0, cex=.7, col=2)
       }
     }
-    par(op)
+
   }
 
   # plot each chromosome individually -----
