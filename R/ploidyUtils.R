@@ -3,9 +3,9 @@
 #' @param calcPloidyResult object returned from \code{calculatePloidy}
 #'
 getMainPeakNRD=function(calcPloidyResult){
-  expReadsIn2NPeak_1bp= result$expReadsIn2NPeak_1bp
-  mainPeakKey=which(result$peakInfo$rankByHeight==1)
-  mainPeakReadDepth_1bp = result$peakInfo[mainPeakKey,'peakReadDepth_1bp']
+  expReadsIn2NPeak_1bp= calcPloidyResult$expReadsIn2NPeak_1bp
+  mainPeakKey=which(calcPloidyResult$peakInfo$rankByHeight==1)
+  mainPeakReadDepth_1bp = calcPloidyResult$peakInfo[mainPeakKey,'peakReadDepth_1bp']
   mainPeakNRD = 2*(mainPeakReadDepth_1bp / expReadsIn2NPeak_1bp)
   # loginfo('mainPeakNRD = %.3f', mainPeakNRD)
   return(mainPeakNRD)
@@ -15,11 +15,11 @@ getMainPeakNRD=function(calcPloidyResult){
 #' @param calcPloidyResult object returned from \code{calculatePloidy}
 #'
 getDiploidPeakNRD=function(calcPloidyResult){
-  mainPeakKey=which(result$peakInfo$rankByHeight==1)
-  rdNormX_Mainpeak = result$peakInfo[mainPeakKey,'peakReadDepth_normX']
+  mainPeakKey=which(calcPloidyResult$peakInfo$rankByHeight==1)
+  rdNormX_Mainpeak = calcPloidyResult$peakInfo[mainPeakKey,'peakReadDepth_normX']
 
-  diploidPeakKey=which(result$peakInfo$nCopy==2)
-  rdNormX_2Npeak = result$peakInfo[diploidPeakKey,'peakReadDepth_normX']
+  diploidPeakKey=which(calcPloidyResult$peakInfo$nCopy==2)
+  rdNormX_2Npeak = calcPloidyResult$peakInfo[diploidPeakKey,'peakReadDepth_normX']
 
   diploidPeakNRD <-round( mainPeakNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
   # loginfo('diploidPeakNRD: %.3f',diploidPeakNRD)  #dipVal => diploidPeakNRD
@@ -520,7 +520,7 @@ getTwoBestPeakIndexes <- function(peakCopyNum, peakHeight){
 #'
 #' @noRd
 calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,dPeaks){
-  # peakInfo=result$peakInfo
+  # peakInfo=calcPloidyResult$peakInfo
   # peakCopyNum = peakInfo$nCopy; peakHeight  = peakInfo$peakHeight; peakReadDepth_1bp=peakInfo$peakReadDepth_1bp; dPeaks=peakInfo$dPeaks
 
   bestPeaksResult <- getTwoBestPeakIndexes(peakCopyNum, peakHeight)
