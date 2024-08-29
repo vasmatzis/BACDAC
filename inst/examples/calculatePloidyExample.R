@@ -18,7 +18,8 @@
 
   # segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile)
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
 
   # hetScore data - the output from calculateHetScore()
   hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'

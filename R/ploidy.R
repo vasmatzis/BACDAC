@@ -17,7 +17,6 @@
 #'
 peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
                           addAreaLinesToPlot=FALSE,qualityPostNorm=NULL, omitAnnotations=FALSE,alternateId=NULL){
-  # peaksByDensity() provided by Jamie, tweaked by Roman, and then Sarah, plotting added by Sarah
   # peaksByDensity(sampleId,  cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08);
   #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
 
@@ -87,9 +86,8 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
 
   ### start of plot -------------------
   # Assume a peak that is greater than origMaxPercentCutoff the size of the main peak has value and we want to consider it for the digital peak algorithm.
-  # logdebug("origMaxPercentCutoff: %s",origMaxPercentCutoff) # Jamie's original heuristic was 2%
+  # logdebug("origMaxPercentCutoff: %s",origMaxPercentCutoff)
 
-  # if(!skipExtras){
   op <- par(mfrow=c(2,1),mar=c(2.75, 3.5, 2, 1.5),mgp=c(1.5, 0.5,0))
 
   # plot stuff
@@ -101,11 +99,9 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
   mtext(3, text=c(sampleId, alternateId),adj=c(0,1),line=0.5)
   mtext(3, text='Peak Rank',adj=0, line=0, cex=.7)
 
-
   polygon(denTempOrig$x, denTempOrig$y, col='gray92',border='gray92')
   abline(h=origMaxPercentCutoff*origMaxPeakY, col='orange')
   mtext(text = origMaxPercentCutoff, side=2, line=-2, at = origMaxPercentCutoff*origMaxPeakY, cex=.75, col='orange', las=2,padj = -1 )
-  # }
 
   # find grabDataPercent
   # by using the main peak width if there is more than one peak (dataBasedGrabDataPercent by getting the pit distance from the main peak)
@@ -125,16 +121,9 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
     peaksY  <- denTempOrig$y[tpOrig$pos[which(tpOrig$peaks & tpOrig$points > origMaxPercentCutoff*origMaxPeakY)]]
 
     if(length(peaksX)>=1){ # at least one peak
-
-      # (pitScoresX  <- denTempOrig$x[pastecs::extract(tpOrig, no.tp = FALSE, peak = FALSE, pit = TRUE)] )
-      # (pitScoresY  <- denTempOrig$y[pastecs::extract(tpOrig, no.tp = FALSE, peak = FALSE, pit = TRUE)])
-      # allPeaksX <- dx[tp$pos[which (tp$peaks)]]
-      # allPeaksY <- dy[tp$pos[which (tp$peaks)]]
       mainPeakReadDepth    <- peaksX[which.max(peaksY)]
 
       allPitsX <- denTempOrig$x[tpOrig$pos[which (tpOrig$pits)]] # aka pitScoresX
-      #allPitsY <- denTempOrig$y[tpOrig$pos[which (tpOrig$pits)]] # aka pitScoresY
-
       pitL <- max(allPitsX[(allPitsX < mainPeakReadDepth* .99)],0) # 0 if there are no left peaks, *.99 just in case there is an adjacent peak, don't pick it i.e. MD66263
       pitR <- min(allPitsX[(allPitsX > mainPeakReadDepth*1.01)])
       # abline(v=c(pitL,pitR),col=c(2,3))
@@ -186,13 +175,10 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
 
     # added plot stuff
     i <- i+1
-    # if(!skipExtras){
-    points(dx, dy, col=cnColors[i], type='l')
 
-    # abline(v=minimX[which.max(minimY)], col=cnColors[i], lwd=3, lty='dashed') # max peak
+    points(dx, dy, col=cnColors[i], type='l')
     if(addAreaLinesToPlot)abline(v=minimX, col=cnColors[i])                           # all peaks
     polygon(dx, dy, col=cnColors[i],border=cnColors[i])
-    # }
 
     #If we seem to have found some peaks find the biggest one and add to the lists
     if (length(minimX)>0) {
@@ -242,7 +228,6 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
         # if(!skipExtras){
         mtext(text ='-------------', side=3, line= -peakInt, adj=1)
         # }
-
 
         break # jump out of while loop, not enough new data in peak to continue searching for peaks
       }
@@ -348,7 +333,6 @@ assignGridHeights <- function(peakInfo, n00, minGridHeight){
 
 #' fit a group of peaks to a digital grid
 #'
-#' @param peakInfo summary table of info for each peak found in \code{peaksByDensity}
 #' @param gridHeights group of 8-10 grid heights set for each peak
 #' @param gridIteration iteration count for digital grid
 #' @param numOfGridCoordsToTest number of grid coordinates to test for the first digital peak
@@ -358,8 +342,8 @@ assignGridHeights <- function(peakInfo, n00, minGridHeight){
 #' @param omitAnnotations should extra annotation be included in digital grid plot
 #'
 #' @inheritParams commonParameters
-#' @keywords internal
 #' @return dPeaks grid coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
+#' @keywords internal
 digitalGrid <- function(peakInfo, gridHeights,
                         dPeaksCutoff, penaltyCoefForAddingGrids,
                         n00, bonusFactor=8, sampleId=NULL, alternateId=NULL,
@@ -386,8 +370,6 @@ digitalGrid <- function(peakInfo, gridHeights,
   gridHeights[gridModes]
 
 
-
-
   ### find if gridModes align with the digital grid
   # fit digital grid
   fitGridPeriod <- function(gridHeights,numOfGridCoordsToTest, minPeriod, maxPeriodToTry=NULL,plotDigDebug=FALSE){
@@ -399,27 +381,16 @@ digitalGrid <- function(peakInfo, gridHeights,
     minPeriodForLoop <- minPeriod
 
     # maximize the number of peaks hit while minimizing the number of periods
-    # maximize the number of peaks hit while maximizing the size of the period. (TODO: would this be a reason to have periodsToTry decreasing rather than increasing?)
+    # maximize the number of peaks hit while maximizing the size of the period.
 
     # initialize
     iCol <- 0  # for plotDebug
     maxSum <- -Inf
     maxShift <- -1
     maxPeriod <- -1
-    # logdebug('gShift - gPeriod - sumD | scoreD - numPeaksHit - numPeriods - penaltyMaxRo | penaltyMax | penaltyRZ | penaltyToUse')
-
-
     # gShift = starting point for the grid
     # gPeriod = the distance between each grid
     for(gShift in gShiftsToTry ) {
-
-      # periodsToTry: define the sequence of periods to try
-      #TODO: periodsToTry -- originally it was decreasing, what if it is increasing?
-      # if(minPeriodForLoop < gShift){
-      # periodsToTry=gShift:minPeriodForLoop
-      # }else{
-      #   periodsToTry= seqFwd(from=minPeriodForLoop, to=(maxGridCoord-minGridCoord))
-      # }
 
       if( (maxGridCoord-minGridCoord) > minPeriodForLoop ){
         toPeriod <- (maxGridCoord-minGridCoord)
@@ -456,7 +427,6 @@ digitalGrid <- function(peakInfo, gridHeights,
           maxSum <- sumD
           maxSumShift <- gShift
           maxSumPeriod <- gPeriod
-          # TODO: should the minPeriodForLoop always be minPeriod or reset to gPeriod??
           # minPeriodForLoop <-gPeriod # reset the min period so it can not be smaller than the previously found period
           minPeriodForLoop <-minPeriod # reset the min period
           # output the values each time a new max score is found
@@ -479,7 +449,6 @@ digitalGrid <- function(peakInfo, gridHeights,
             iCol <- iCol+1
             abline(v=bins0, col=iCol, lwd=iCol*.5)
             points(x=which(gridHeights>0), y=yMin + gridHeights[gridHeights>0] * 0.1, cex=0.3, pch=19, col='red')
-
           }
 
         }
@@ -597,9 +566,9 @@ digitalGrid <- function(peakInfo, gridHeights,
 
 
   absMinPeriod <- 9
-  # absMinPeriod=numGridCoordsFirstpeak+1 # this is not good becasue then you can get two grids per peak in the later peaks
+  # absMinPeriod=numGridCoordsFirstpeak+1 # not good because then you can get two grids per peak in the later peaks
 
-  #' decision tree for maxPeriodToTry, do not allow period to get bigger than this, set to firstToMainPeakGap when: 5 <= mainPeakIndex < 7
+  # decision tree for maxPeriodToTry, do not allow period to get bigger than this, set to firstToMainPeakGap when: 5 <= mainPeakIndex < 7
   setMaxPeriodToTry <- function(mainPeakIndex, maxGridCoord,  minGridCoord, maxPeriodManual){
     if(maxPeriodManual>0){
       maxPeriodToTry <- maxPeriodManual
@@ -650,10 +619,7 @@ digitalGrid <- function(peakInfo, gridHeights,
     return(minPeriod)
   }
 
-  #' decision tree for minPeriod
-  #' @param absMinPeriod the smallest minPeriod allowed
-  #'
-  #' @inheritParams commonParameters
+  # decision tree for minPeriod where absMinPeriod is the smallest minPeriod allowed
   setMinPeriod <- function(previousPeriod,minPeriodManual,absMinPeriod,firstToSecPeakGap,firstToThirdPeakGap,firstToForthPeakGap,firstToFifthPeakGap){
     if(minPeriodManual < 0){
 
@@ -779,9 +745,7 @@ digitalGrid <- function(peakInfo, gridHeights,
                                        data.frame(iteration=gridIteration, numOfGridCoordsToTest=numOfGridCoordsToTest,
                                                   minPeriod=minPeriod,period=maxPeriod, numPeaks=numPeaks,numDigPeaks=length(nCopyPeaks_dig),
                                                   gridScore=round(maxSum/length(nCopyPeaks_dig),3)))
-    # if(!skipExtras){
     plotDigitalGrid(omitAnnotations=omitAnnotations)
-    # }
   }
 
 
@@ -925,7 +889,6 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' @param forceFirstDigPeakCopyNum value to force copy number of first digital peak, use only when ploidy calculation is wrong
 #' @param minReasonableSegmentSize initial smallest segment size to include in ploidy test segments; want to keep as large as possible
 #'  to avoid 0N segments, but will decrease size if not enough segments are found
-#'
 #' @inheritParams commonParameters
 #'
 #' @example inst/examples/calculatePloidyExample.R
@@ -959,8 +922,6 @@ calculatePloidy <- function(
   xind <-23     # index of chrX
   coords <- getLinearCoordinates(chromosomes = 1:numChroms)
   maxcn <- numChroms
-  #centroArray 2D array, first dimension is chromosome number, second is 1=start, 2=end of centromere
-  #centroArray <- getCentromerePositions()
 
   # TODO: consider moving this out of function, as part of set up etc.
   if (!noPdf) {
@@ -1074,10 +1035,8 @@ calculatePloidy <- function(
       ### Get only segments that are longer than minReasonableSegmentSize
       segmentsWeWant <- getSegmentsWeWant(segmentation,minReasonableSegmentSize,xind)
 
-      # TODO: what is an appropriate min number of segments?  just enough so it doesn't crash?
-      #       ie. PT626 has only 48 segments (none of which are in the first digital peak) for minReasonableSegmentSize <- 5.5e6, but 65 at minReasonableSegmentSize <- 5.0e6
-
-      minNumberOfSegments <- 109  # 5-24-22 reduced from 120 to 109
+      # what is an appropriate min number of segments?  just enough so it doesn't crash.
+      minNumberOfSegments <- 109
       while(length(segmentsWeWant) < minNumberOfSegments ){
         minReasonableSegmentSize <- minReasonableSegmentSize-0.5e6
         if(minReasonableSegmentSize < 2e6){
@@ -1107,7 +1066,7 @@ calculatePloidy <- function(
       }else{
         # split up the really big segments into smaller sections
         chunkSize <- 3e6  # TODO: the chunk size could be a lot smaller than minReasonableSegmentSizeFinal, like 1MB?
-        #       this is for getting a mean/median hetScore across the CNV segment so why not, it would provide more data for the hetScore density which would be great!
+        #       this is for getting a mean/median hetScore across the segment so why not, it would provide more data for the hetScore density which would be great!
 
         segmentTemp <- data.frame( segmentation[segmentsWeWant,  c('chr', 'start', 'end')])
         segmentTemp[,'size'] <- segmentTemp$end - segmentTemp$start
@@ -1211,8 +1170,8 @@ calculatePloidy <- function(
   ################################'
   ## While loop-Digital grid ----------------------------------
   ################################'
-  ### TODO:  needs to be more robust yet flexible, most problems occur when it can't detect subClones from actual CN levels, or the first peak is a subclone
-  # penaltyCoefForAddingGrids TODO: what is the correct value?
+  ### need to be robust yet flexible, most problems occur when it can't detect subClones from actual CN levels, or the first peak is a subclone
+  # penaltyCoefForAddingGrids is key
 
   iterationStatsAll <- list(iterationStats=data.frame(),
                             digitalPeakZone=NULL)
@@ -1245,7 +1204,7 @@ calculatePloidy <- function(
     iterationStats <- digGridResult$iterationStats
 
     ### How far can a data point be (from first digital peak) to still count as part of that peak
-    # TODO: what is the correct value?  hard-coded constant for all peaks? based on the spread of data? grabDataPercent (see below)?
+    # rather than hard-coded constant for all peaks, consider basing on the spread of data? grabDataPercent (see below)?
     if(period <= 12){
       digitalPeakZone <- 0.02
     }else if(period <= 15){
@@ -1302,28 +1261,30 @@ calculatePloidy <- function(
     bySegment <- TRUE
     if(bySegment){
 
-      ### get segment het scores, pkmod, and plot
+      ### get segment hetScores, pkmod, and plot
       # this cannot be moved out/above while loop, pkmod will depend on expReadsInFirstDigitalPeak_wsz
 
-      # TODO only have to do some of this once, can skip parts for multiple iterations of while loop
+      # only have to do some of this once, can skip parts for multiple iterations of while loop
       if(TRUE){
         ###############'
         ### Plot frequency (and segments and het score by segment) -------'
         plotFreqVsRd <- FALSE
         if(plotFreqVsRd){
+          chromStarts <- binnedPosStart(coords@chromStart, binSize = wsz) # start positions must be same bin size as the plotted data
+          xMax        <- binnedPosEnd(max(coords@chromEnd[maxcn]), binSize = wsz)
           yMax <- max(frq00  / expReadsInFirstDigitalPeak_wsz)
           yMaxPlot <- min(6, yMax) # do not extend y axis too far
           # plot on normalized y axis...first digital peak will be y=1
           plot(wdnsMSK00,frq00/expReadsInFirstDigitalPeak_wsz,"l",col='gray', main="",
                ylim = c(0,  yMaxPlot),
-               xlim = c(0,  temp00chrEnd[maxcn]), # temp00chrEnd[maxcn] will extend the axis to the end of chrY rather than the end of the Y data
+               xlim = c(0,  xMax), # temp00chrEnd[maxcn] will extend the axis to the end of chrY rather than the end of the Y data
                xaxt="n", xaxs='i')
           if(!is.null(alternateId)){
             mtext(3, text=c(sampleId, alternateId),adj=c(0,1))
           }else{
             mtext(3, text=c(sampleId),adj=c(0))
           }
-          markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, vCol='gray30')
+          markChromEdges(chromStarts = chromStarts,maxcn = maxcn, vCol='gray30')
         }
 
         # mean and median Het. score for each segment
@@ -1372,8 +1333,9 @@ calculatePloidy <- function(
               for(i in 2:23){
                 points(hsNormMat[,i],type = 'p', col=i)
               }
-              temp00chrStart <- binnedPosStart(coords@chromStart, binSize = wsz) # start positions must be same bin size as the plotted data
-              markChromEdges(chromStarts = temp00chrStart,maxcn = maxcn, vCol='gray30')
+              chromStarts <- binnedPosStart(coords@chromStart, binSize = wsz) # start positions must be same bin size as the plotted data
+              chrEnd   <- binnedPosEnd(max(coords@chromEnd[maxcn]), binSize = wsz)
+              markChromEdges(chromStarts = chromStarts,maxcn = maxcn, vCol='gray30')
             }
 
             if(length(passedMaskedIntersectingLoh) > 0){
@@ -1511,7 +1473,7 @@ calculatePloidy <- function(
 
         hetTestScoreFor1stDigPeak <- NA
 
-        ## instead of doing mean over all, find a counter-example - a long enough region that has het. score > .98
+        ## instead of doing mean over all, find a counter-example - a long enough region that has hetScore > .98
         ##    That alone proves this peak is 2N and not 1N ?
         ## should only have to check the first digital peak, but there are cases where the first digital peak does not have valid LOH scores,
         ##    then go to the next digital peak i.e. 58024,82012 ? or just assign this peak as 1N?
@@ -1633,9 +1595,6 @@ calculatePloidy <- function(
     }
 
 
-
-
-
     whileLoopStep <- repeatSteps(peakInfo,keyHetScoresPerPeak,nCopyPeaks_step=nCopyPeaks_while)
     peakInfo <- whileLoopStep$peakInfo
     percentTumor <- whileLoopStep$percentTumor
@@ -1647,7 +1606,7 @@ calculatePloidy <- function(
     ###############################################'
 
     if(TRUE){
-      # TODO: what is the correct value for 'allowedTumorPercent'
+      # what is the correct value for 'allowedTumorPercent'
       #     PDXs will be high ie 78014=108.4 78024=103.4, perhaps they need a different limit than tumor?
       #     need a bit of a tolerance; 49052 is 106%, 26295 was finding 106% for 2N, 3N-main, which is wrong but digital peaks isn't having this problem anymore
 
@@ -1791,7 +1750,7 @@ calculatePloidy <- function(
   ## testing and finalizing results ----------------------------------
   ################################'
 
-  # forceFirstDigPeakCopyNum  - use this if ploidy calc is wrong and you need to specify it manually to get it correct
+  # forceFirstDigPeakCopyNum  - use this if ploidy calc is wrong and you need to specify it manually to get it correct aka line up in the constellation pot
   # otherwise see if both of the first two peaks have high het Scores (happens in low tumor), if so, find which one is bigger and more reliable and assign it to the 2N peak
   # otherwise run through options for checking the copy number of first digital peak by testing the 3N peak
 
@@ -1917,10 +1876,9 @@ calculatePloidy <- function(
   ## test 3N peak ----------------------------------
   ################################'
   if(test3Npeaks){
-
     # TODO: add exit status values so I know which test the sample exited on. Track which tests never get used or seem to fail
-    ### density of mean loh scores in the 3N peak: get mode, see if mode fits the expected side of cutoff for 3N, adjust accordingly
 
+    ### density of mean hetScores in the 3N peak: get mode, see if mode fits the expected side of cutoff for 3N, adjust accordingly
     testsForIncreasingCNof4Npeak <- function(){
 
       if(!is.na(densityResult4$testScore)){
@@ -2023,9 +1981,6 @@ calculatePloidy <- function(
             ## can't decrease copy number if....
             # if 1st peak has more than 1 hetScore cluster, and the copy number is only 2N, otherwise increase
             # that is if NumClusters =2 and nCopy=2, can not reduce nCopy to 1 because 1N can't have two clusters
-
-            # PT58126 - 1N peak 1 cluster, 2N peak 2 clusters
-            # PT58147 -  fails because it is increased when it shouldn't, the first peak has 2 distinct peaks and this should be incorporated.
 
             ##  First see if we --MUST-- increase copy number?
             if(firstPeakMustBeTwoNorMore &&
@@ -2290,7 +2245,6 @@ calculatePloidy <- function(
     ### test 4N het scores
     ###     4N 2:2 should have higher het scores than 1N, 3N, 5N, but might be 3:1 segments rather than 2:2 i.e. 58109
     ###     therefore this is just for informational purposes.  FYI: 2N could be 2NcnLOH so don't check it,
-    # TODO: what is the correct quantile to check?  58124 requires 85th, 75th will fail
     # TODO: instead of quantiles, check het score densities, assuming there are enough observations
     fourNpasses <- NA
     if(length(cn4index) > 0){
@@ -2332,74 +2286,7 @@ calculatePloidy <- function(
 
   }
 
-  # if(!skipExtras){
   par(op) # done with hetScore density plots
-  # }
-
-  if(FALSE){
-    # add NRD value- this will replace the value that was there if it was loaded from a pre-run pipeline version), the previous value will now be labeled 'nrd_org'
-    segmentDataAccum <- addNewNRD(wszNormalPeak = wsz, ploidyBasedNormalBin=expReadsIn2NPeak_1bp ,segmentation=segmentData)
-
-    for(segmentId in seq_len(nrow(segmentDataAccum))) {  # keys=which(segmentDataAccum$chr==10); segmentDataAccum[keys,];  keys=which(segmentDataAccum$lohScoreMedian>1.05); segmentDataAccum[keys,]
-      # segmentId =455
-      segment <- segmentDataAccum[segmentId,]
-      # TODO: get the cutoffs from pipeline
-      if(segment[['nrd']] >= 1.85 & segment[['nrd']] <= 2.15){
-        cnvLevel <- 2
-        cnvState <- 2
-      }else if(segment[['nrd']] < 1.85){
-        cnvLevel  <-  max(0,round((segment[['nrd']]-2)/(percentTumor/100) + 2)) # can not be smaller than 0 # TODO:floor?
-        cnvState <- 1
-      }else{
-        cnvLevel  <-  round((segment[['nrd']]-2)/(percentTumor/100) + 2) # TODO: ceiling?
-        cnvState <- 3
-      }
-      # add segments to data.frame
-      segmentDataAccum[segmentId, 'cnvState'] <- cnvState
-      segmentDataAccum[segmentId, 'cnvLevel'] <- cnvLevel
-    }
-
-    table(segmentDataAccum$cnvLevel)
-    table(segmentDataAccum$cnvState)
-
-    considerPeakCutoff <- 0.02
-    maxLevel <- max(segmentDataAccum$cnvLevel)
-
-    maxHetDensityPeak <- data.frame()
-    for(iLevel in 1:maxLevel){
-      # iLevel <- 2
-      iKeys <- which(segmentDataAccum$cnvLevel==iLevel &
-                       segmentDataAccum$valid==1)
-      if(length(iKeys) >= 20){ # TODO: what is an appropriate min number of observations
-        hetToUse <- segmentDataAccum[iKeys, 'lohScoreMedian']
-
-        bandwidth <- bw.nrd(hetToUse)
-        hetDen <- density(hetToUse,bw <- bandwidth)
-        plot(hetDen, main=paste('density of mean het scores for segments in cnvLevel:',iLevel))
-        polygon(hetDen$x, hetDen$y, col='gray92',border='gray92')
-        dx <- hetDen$x
-        dy <- hetDen$y
-        maxPeakY <- dy[which.max(dy)]
-        maxPeakX <- dx[which.max(dy)]
-
-        #Find the peaks
-        tp <- pastecs::turnpoints(dy)
-
-        #Get all of them that seem interesting (i.e. big enough)
-        topConsidX <- dx[tp$pos[which(tp$peaks & tp$points > considerPeakCutoff*maxPeakY)]]
-        topConsidY <- dy[tp$pos[which(tp$peaks & tp$points > considerPeakCutoff*maxPeakY)]]
-        abline(v=topConsidX, lty='dotted', col='red')
-
-        # second max
-        max2  <-  function(x) max( x[-which.max(x)]) #// return a second max even if it happens to equal the first max, while the following code will not:  max( x[x!=max(x)])
-        max2PeakY <-  max2(topConsidY)
-        max2PeakX <- dx[which(dy==max2PeakY)]
-
-        maxHetDensityPeak <- rbind(maxHetDensityPeak,
-                                   data.frame(cnLevel=iLevel, n=length(iKeys), maxPeakX,maxPeakY, max2PeakX,max2PeakY))
-      }
-    }
-  }
 
 
   ### 2D plot -------
@@ -2430,13 +2317,6 @@ calculatePloidy <- function(
                                  heterozygosityScoreThreshold=heterozygosityScoreThreshold)
     testScores <- c(testScores,hsdResult$testScore)
 
-    # TODO: replace this code below which is scattered about, using the stuff above
-    # # add hetScore to peak info
-    # testScoreForPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=cn3index,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix= paste('double check? 3N peak'),
-    #                                     heterozygosityScoreThreshold=heterozygosityScoreThreshold)
-    # peakInfo[cn3index,'hetScore'] <- testScoreForPeak$testScore
-    # peakInfo[cn3index,'hetScoreObserv'] <- testScoreForPeak$observ
-
 
   }
   if(!any(testScores>=heterozygosityScoreThreshold)){
@@ -2466,7 +2346,7 @@ calculatePloidy <- function(
 plotHetScoreVsPeakMode <- function(peakInfo,segmentData,sampleId, alternateId, percentTumor,
                                    segmentCountText,digitalPeakZone,keyHetScoresPerPeak,segmentDataSizes,
                                    heterozygosityScoreThreshold,
-                                   origMaxPercentCutoffManual,grabDataPercentManual ,minPeriodManual,maxPeriodManual){
+                                   forceFirstDigPeakCopyNum,origMaxPercentCutoffManual,grabDataPercentManual ,minPeriodManual,maxPeriodManual){
 
   # segmentData=result$segmentData; percentTumor=result$percentTumor;  peakInfo= result$peakInfo
 
@@ -2590,14 +2470,12 @@ plotHetScoreVsPeakMode <- function(peakInfo,segmentData,sampleId, alternateId, p
   ymax <- par('usr')[4]
   colorCodeRank <- ifelse(is.na(peakInfo$dPeaks),'gray40', 'black')
   mtext(text=peakInfo$rankByHeight, side=4, at=peakInfo$peakReadDepth_normX/normXofFirstDigPeak, las=2, line=-.25, col=colorCodeRank, adj=1, cex=.7)
-  # mtext(text='Rank', side=4, at=ymin*1.1, col='black', las=1, line=-1.5, cex=.8, col='gray') # bottom
   mtext(text='Peak', side=4, at=ymax*.98, col='gray40', las=1, line=-1.7, cex=.75)
   mtext(text='Rank', side=4, at=ymax*.96, col='gray40', las=1, line=-1.7, cex=.75) # top
 
   legend(legendPlacement, legend=c(1:22), col=segColors, pch=1:22, cex=1.1) # do legend after lines so the legend is on top
   mtext(paste('pink zone: +/-',digitalPeakZone), side=1, adj=0, line=.75, cex=.8, col='hotpink')
-  # mtext(paste('cyan: 75th'), side=1, adj=0, line=0, cex=.8, col='cyan')
-  # mtext(paste('magenta: 85th'), side=1, adj=0, line=.75, cex=.8, col='magenta')
+
 
   ## segment Data stats
   mtext(text=paste('Initial segment min:', round(segmentDataSizes$minReasonableSegmentSizeFinal/1e6, 1),'Mb'), side=1, adj=0, line=1.5, cex=.8) # cnv segment size before breaking up into smaller chunks

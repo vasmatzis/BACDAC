@@ -12,7 +12,7 @@ bimaToLinear(svaNumber, svaPos, binSize = 1)
 \item{svaPos}{Position within the sequence (1-based)}
 
 \item{binSize}{How to round the coordinates. The result will be divided by this number.
-Note - recreates a bug in George's code at the moment,
+Note - recreates a bug in original developers code at the moment,
 so the result can be up to binSize away from what you'd expect.}
 }
 \value{

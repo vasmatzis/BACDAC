@@ -3,35 +3,35 @@
 #' Displays the read-depth array in a linear fashion. Can report CNV as all gray or use color calls.
 #' If sampleId is provided, title annotations will be added.
 #'
-#' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
-#' @param readDepthBinSize size of each window
-#' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
+#' @param readDepthBinSize size of each window (bin) default is 30 kb
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear genome plot, default is red
 #' @param zebraStrips option to have alternating gray/white background for chromosome delineation
-#' @param yAxisLimits option to set y axis to user specified limits
+#' @param yAxisLimits option to set y axis to user specified limits, e.g. to align with the constellation plot
 #' @param ... Parameters passed onto the actual plot command
 #' @inheritParams commonParameters
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'
 #' inputDir <- system.file('extdata', package = "BACDAC")
 #' outputDir=tempdir()
-#' segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-#' segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
+#' segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+#' segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+#' segmentation <- checkSegmentation(segmentation)
 #' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-#' readDepthBinnedData = readRDS(file=thirtyKbFile )
+#' readDepthPer30kbBin = readRDS(file=thirtyKbFile )
 #'
 #' op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
-#' # default cnv color coding and annotations
-#' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)
-#' # example with no cnv color coding
-#' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,noDelAmpDetection=TRUE,segmentation=segmentation)
-#' # reviewer preferred cnv color coding
-#' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
+#' # default copy number color coding
+#' linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,segmentation=segmentation)
+#' # example with no copy number color coding
+#' linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,noDelAmpDetection=TRUE,segmentation=segmentation)
+#' # alternate copy number color coding, no sample id label
+#' linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=NULL,segmentation=segmentation,
+#' gainColor = 'red', lossColor= 'blue' )
 #'
 #' @export
-linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, sampleId=NULL, alternateId=NULL, segmentation=NULL,
+linearGenomePlot <- function( readDepthPer30kbBin, readDepthBinSize=30000, sampleId=NULL, alternateId=NULL, segmentation=NULL,
                               allelicSegments=NULL, noDelAmpDetection = FALSE, gainColor = 'blue', lossColor= 'red', zebraStrips=FALSE,
                               yAxisLimits=NULL, ...) {
   # readDepthBinSize=30000; yLimQuantile=0.99; noDelAmpDetection = FALSE;  gainColor = 'blue'; lossColor= 'red';zebraStrips=FALSE; alternateId=NULL
@@ -50,8 +50,8 @@ linearGenomePlot <- function( readDepthBinnedData, readDepthBinSize=30000, sampl
 
   coords <- getLinearCoordinates(mainChroms)
 
-  x <- readDepthBinnedData$goodWindowArray
-  y = readDepthBinnedData$readDepthArray
+  x <- readDepthPer30kbBin$goodWindowArray
+  y = readDepthPer30kbBin$readDepthArray
   ylabel <- paste("Counts per", readDepthBinSize/1000, 'kb bin')
 
 
@@ -223,11 +223,10 @@ grayColorVector=function(x){
 
 
 
-#' for compatibility with genomePlot. Make George's old array from new structure: 1=normal, -1=loss, 2=gain
+#' for compatibility with genomePlot. Make old array from new structure: 1=normal, -1=loss, 2=gain
 #' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
 #' @param coords linear genome coordinates, loaded via \code{getLinearCoordinates()}
 #'
-#' @keywords internal
 makeLegacyDelAmp <- function(segmentation, coords) {
   wsz <- 10000
   # Initialize array data = 1, length = genomeLength/10k

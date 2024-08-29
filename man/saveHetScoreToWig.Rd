@@ -34,3 +34,4 @@ Other hetScore:
 \code{\link{plotHetScorePerBin}()}
 }
 \concept{hetScore}
+\keyword{internal}

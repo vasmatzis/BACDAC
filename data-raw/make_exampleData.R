@@ -1,40 +1,63 @@
 if(FALSE){
+
+  # convert from .Rdata to .Rds for better file management. To be loaded in to Zenodo
+  myHsNormMat <- bmdTools::loadRdata(file.path(bmdTools::mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata')) # aka lohMat
+  myTestVals <-  bmdTools::loadRdata(file.path(bmdTools::mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
+  saveRDS(myHsNormMat, file=file.path(bmdTools::mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/hetScoreNormMat.Rds'))
+  saveRDS(myTestVals,  file=file.path(bmdTools::mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rds') )
+
+
+
   folder=66301
   sampleId=bmdSvPipeline::getSampleId(folder)
   postProcessingDir=bmdSvPipeline::getPostProcessingDir(folder)
-  # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
+  outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata')
 
   # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
   if(!dir.exists(file.path(outputDir))){
     dir.create(file.path(outputDir))
   }
-  if(!dir.exists(file.path(outputDir, 'reports'))){
-    dir.create(file.path(outputDir, 'reports'))
+  if(!dir.exists(file.path(outputDir))){
+    dir.create(file.path(outputDir))
   }
 
-  # hetScorePerArmFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))
-  # hetScore30Kb_wigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScore30Kb.wig.gz'))
-  # hetScoreWithReadDepthReport <- file.path(outputDir, 'reports', paste0(sampleId, '_HetScoreWithReadDepthReport.pdf'))
+  copyFileToNewLocation=function(oldFileNamePath, newFileNamePath){
+    # cpCmd = paste('cp', oldFileNamePath, newFileNamePath)
+    if(file.exists(oldFileNamePath)){
+      params <- c(oldFileNamePath, newFileNamePath)
+      params <- shQuote(params)
+      loginfo("Executing '%s %s'", 'cp', paste(params, collapse = " "))
+      ret <- system2('cp', params)
+      if(ret!=0) {
+        stop(sprintf("cp '%s' returned nonzero value %d\nPlease review ", paste(params, collapse = " "), ret))
+      }
+    }
+  }
+
 
   ### segmentation data ----
   # convert <sampleId>_cnvIntervals.csv to <sampleId>_segmentation.csv
-  # /research/labs/experpath/vasm/shared/NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/cnv/TCGA-14-1402-02A_ds_cnvIntervals.csv
+  #      file.path(bmdTools::mainDir, 'NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/cnv/TCGA-14-1402-02A_ds_cnvIntervals.csv')
   outputDir = system.file('extdata', package = "BACDAC")
-  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
+  outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata')
   newFileNamePath=file.path(outputDir,  paste0(sampleId,'_segmentation.csv'))
-
   oldFileNamePath=file.path(postProcessingDir, 'cnv', paste0(sampleId,'_cnvIntervals.csv'))
-  cpCmd = paste('cp', oldFileNamePath, newFileNamePath)
-  if(file.exists(oldFileNamePath)){
-    params <- c(oldFileNamePath, newFileNamePath)
-    params <- shQuote(params)
-    loginfo("Executing '%s %s'", 'cp', paste(params, collapse = " "))
-    ret <- system2('cp', params)
-    if(ret!=0) {
-      stop(sprintf("cp '%s' returned nonzero value %d\nPlease review ", paste(params, collapse = " "), ret))
-    }
-  }
+
+  copyFileToNewLocation(oldFileNamePath, newFileNamePath)
+
+  # hetScore data -----------
+
+  oldLohPerArm <- file.path(postProcessingDir, 'reports', paste0(sampleId, '_lohPerArm.csv'))
+  newHetScorePerArm <- file.path(outputDir, paste0(sampleId, '_hetScorePerArm.csv'))
+
+  oldLohPerBin <- file.path(postProcessingDir, 'reports', paste0(sampleId, '_loh.wig.gz'))
+  newHetScorePerBin <- file.path(outputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
+
+  copyFileToNewLocation(oldFileNamePath=oldLohPerArm, newFileNamePath=newHetScorePerArm)
+  copyFileToNewLocation(oldFileNamePath=oldLohPerBin, newFileNamePath=newHetScorePerBin)
+
+
+
 
   ### refAlt count data ----
   # convert .Rdata to .Rds
@@ -59,6 +82,8 @@ if(FALSE){
   usethis::use_data(my_pkg_data)
 
 
+
+
   # without chr column
   # [m071478@mforgers3 data]$ du -hs
   # 108M    .
@@ -70,7 +95,7 @@ if(FALSE){
   folder=66301
   sampleId=bmdSvPipeline::getSampleId(folder)
   postProcessingDir=bmdSvPipeline::getPostProcessingDir(folder)
-  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
+  outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata')
 
   cnvBinnedFile <- file.path(postProcessingDir, 'cnv/cnvBinned.Rdata')
   if(file.exists(cnvBinnedFile)){

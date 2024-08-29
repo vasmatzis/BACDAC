@@ -166,7 +166,7 @@ binnedPosStart <- function(pos, binSize=1000) {
 #' @param svaNumber BIMA chromosome number (as present in the SVA file)
 #' @param svaPos Position within the sequence (1-based)
 #' @param binSize How to round the coordinates. The result will be divided by this number.
-#' Note - recreates a bug in George's code at the moment,
+#' Note - recreates a bug in original developers code at the moment,
 #' so the result can be up to binSize away from what you'd expect.
 #'
 #' @return Linear genome position (1-based). For negative \code{svaPos}
@@ -352,3 +352,4 @@ getCentromerePositions <- function() {
   }
   return(centroArray)
 }
+

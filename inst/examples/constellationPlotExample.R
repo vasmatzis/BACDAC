@@ -62,7 +62,9 @@
   readDepthPer30kbBin = readRDS(file=thirtyKbFile )
   # load segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile)
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
+
   hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScore <- loadHetScoreFromWig(hetScorePerBinWigFile)
 
@@ -85,7 +87,7 @@
 
   # right figure
   op <- par(mar=c(5, 3, 2,1),mgp=c(1.5, 0.5,0))
-  linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
+  linearGenomePlot( readDepthPer30kbBin=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
                     gainColor = 'blue', lossColor= 'red', yAxisLimits = yAxisLimits)
   par(op)

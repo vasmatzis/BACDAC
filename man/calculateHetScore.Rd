@@ -18,7 +18,7 @@ calculateHetScore(
   minSnpsToCalculateStatistic = 20,
   samplingStep = 30000,
   extraWindow = 1e+06,
-  readDepthBinnedData = NULL,
+  readDepthPer30kbBin = NULL,
   readDepthBinSize = 30000,
   gainColor = "blue",
   lossColor = "red",
@@ -26,17 +26,19 @@ calculateHetScore(
 )
 }
 \arguments{
-\item{sampleId}{sample identifier, used as prefix for all input and output file names \code{<sampleId>_snpVals_<chromosome>.Rdata} and \code{<sampleId>_countBP_<chromosome>.Rdata}}
+\item{sampleId}{sample identifier, used as prefix for all input and output file names
+\code{<sampleId>_snpVals_<chromosome>.Rds} and \code{<sampleId>_countBP_<chromosome>.Rds}}
 
 \item{alternateId}{optional secondary sample identifier}
 
-\item{inputDir}{full path to snpVal and countBP Rdata}
+\item{inputDir}{full path to snpVal and countBP Rds, segmentation data}
 
-\item{outputDir}{full path for output files}
+\item{outputDir}{full path to directory to output all files and intermediate objects created}
 
-\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
+\item{segmentation}{identified regions of the genome with constant read depth. Data.frame with required columns:
+chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color coded linear linear genome plot}
 
-\item{noPdf}{When TRUE, pdf files will not be generated, instead plots are drawn on default device}
+\item{noPdf}{if present (TRUE), pdf files will not be generated, instead plots are drawn on default device}
 
 \item{maximumCoverage}{Do not process SNPs covered more than this}
 
@@ -52,9 +54,13 @@ calculateHetScore(
 
 \item{extraWindow}{Size of the window, how many bps to look at during each sampling step}
 
-\item{readDepthBinnedData}{list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)}
+\item{readDepthPer30kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 30 kb bins, normalized for GC content and other artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin), masked windows have been removed
+}}
 
-\item{readDepthBinSize}{size of each window}
+\item{readDepthBinSize}{bp size of the bins in the read depth array, expecting 30000 or 100000}
 
 \item{gainColor}{color to use for gains in linear genome plot, default is blue}
 
@@ -63,26 +69,19 @@ calculateHetScore(
 \item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
 }
 \description{
-Outputs heterozygosity score by bin (.wig) and by arm (.csv) for each chromosome
-To plot see \link{plotHetScorePerBin} and the three graph plot function \link{makeHetScoreReportPdf}
+Calculate heterozygosity score by bin (.wig) and by chromosome arm (.csv). Save files to outputDir.
+}
+\details{
+Will automatically create the the three panel plot, either to pdf or plot window.
+This three panel plot can also be called separately, see \link{makeHetScoreReportPdf}
 }
 \examples{
-sampleId='TCGA-14-1402-02A_ds'
-# inputDir is the path to the load package data
-inputDir <- system.file('extdata', package = "BACDAC")
-outputDir = tempdir() # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-segmentation= loadSegmentationFile(segmentationFile) # per segment: chr, start, end, rd
-# defaults:
-noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1; trimExtraPerCoverage = 0.1; minSnpsToCalculateStatistic = 20; samplingStep = 30000; extraWindow = 1000000
-readDepthBinnedData=NULL; readDepthBinSize=30000; gainColor='blue'; lossColor='red'; noDelAmpDetection=FALSE
-
 \dontrun{
 
   library(BACDAC)
   library(logging)
   # calculateHetScoreExample.R
-  # generate heterozygosity score by bin and by arm
+  # generate heterozygosity score by bin and by chromosome arm and save to the output directory
   # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm
 
   basicConfig("DEBUG")
@@ -92,9 +91,11 @@ readDepthBinnedData=NULL; readDepthBinSize=30000; gainColor='blue'; lossColor='r
   # inputDir is the path to the load package data
   inputDir <- system.file('extdata', package = "BACDAC")
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
+
   thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-  readDepthBinnedData = readRDS(file=thirtyKbFile )
+  readDepthPer30kbBin = readRDS(file=thirtyKbFile )
 
   calculateHetScore(
     sampleId=sampleId,
@@ -102,9 +103,9 @@ readDepthBinnedData=NULL; readDepthBinSize=30000; gainColor='blue'; lossColor='r
     outputDir=outputDir,
     segmentation=segmentation,
     noPdf = TRUE,
-    #optional
-    readDepthBinnedData=readDepthBinnedData,
-    readDepthBinSize=readDepthBinnedData$windowSize
+    #optional - used for the top panel of the three panel plot
+    readDepthPer30kbBin=readDepthPer30kbBin,
+    readDepthBinSize=readDepthPer30kbBin$windowSize
    )
 }
 }

@@ -9,3 +9,4 @@ getCNcolors()
 \description{
 list of colors to use for the peaks in \code{peaksByDensity}
 }
+\keyword{internal}

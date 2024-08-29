@@ -3,7 +3,7 @@
   library(BACDAC)
   library(logging)
   # calculateHetScoreExample.R
-  # generate heterozygosity score by bin and by arm
+  # generate heterozygosity score by bin and by chromosome arm and save to the output directory
   # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm
 
   basicConfig("DEBUG")
@@ -13,9 +13,11 @@
   # inputDir is the path to the load package data
   inputDir <- system.file('extdata', package = "BACDAC")
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
+
   thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-  readDepthBinnedData = readRDS(file=thirtyKbFile )
+  readDepthPer30kbBin = readRDS(file=thirtyKbFile )
 
   calculateHetScore(
     sampleId=sampleId,
@@ -23,8 +25,8 @@
     outputDir=outputDir,
     segmentation=segmentation,
     noPdf = TRUE,
-    #optional
-    readDepthBinnedData=readDepthBinnedData,
-    readDepthBinSize=readDepthBinnedData$windowSize
+    #optional - used for the top panel of the three panel plot
+    readDepthPer30kbBin=readDepthPer30kbBin,
+    readDepthBinSize=readDepthPer30kbBin$windowSize
    )
 }

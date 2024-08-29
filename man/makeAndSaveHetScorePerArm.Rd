@@ -34,3 +34,4 @@ Other hetScore:
 \code{\link{saveHetScoreToWig}()}
 }
 \concept{hetScore}
+\keyword{internal}

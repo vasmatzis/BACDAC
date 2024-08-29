@@ -12,3 +12,4 @@ getDiploidPeakNRD(calcPloidyResult)
 \description{
 Find the NRD of the diploid peak from the binned read depth data
 }
+\keyword{internal}

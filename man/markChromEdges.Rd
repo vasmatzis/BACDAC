@@ -14,3 +14,4 @@ markChromEdges(chromStarts, maxcn, vCol = "gray90")
 \description{
 add vertical lines to linear genome plot
 }
+\keyword{internal}

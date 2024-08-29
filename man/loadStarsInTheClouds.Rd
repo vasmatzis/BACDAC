@@ -19,11 +19,21 @@ loadStarsInTheClouds(
 \arguments{
 \item{sampleId}{sample Identifier}
 
-\item{readDepthPer30kbBin}{read depth for 30 kb bins, with bin index in linear coordinates}
+\item{inputDir}{full path to directory with input files}
 
-\item{hsNormMat}{heterozygosity score mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.}
+\item{readDepthPer30kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 30 kb bins, normalized for GC content and other artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin), masked windows have been removed
+}}
 
-\item{testVals}{used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)}
+\item{hsNormMat}{heterozygosity score mask, used to find genomic positions where the heterozgosity score is atypically low.
+\itemize{
+\item rows: hetScores for each 30 kb segment of the genome, 1-22, X and a part of Y.
+\item columns: one column for each of the 23 normal samples
+}}
+
+\item{testVals}{pre-built array to assist finding each possible heterozygosity value for each copy number level}
 
 \item{mainPeakNRD}{the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak}
 
@@ -97,7 +107,9 @@ load all the data necessary to make the constellation plot
   readDepthPer30kbBin = readRDS(file=thirtyKbFile )
   # load segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile)
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
+
   hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScore <- loadHetScoreFromWig(hetScorePerBinWigFile)
 
@@ -120,7 +132,7 @@ load all the data necessary to make the constellation plot
 
   # right figure
   op <- par(mar=c(5, 3, 2,1),mgp=c(1.5, 0.5,0))
-  linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
+  linearGenomePlot( readDepthPer30kbBin=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
                     gainColor = 'blue', lossColor= 'red', yAxisLimits = yAxisLimits)
   par(op)

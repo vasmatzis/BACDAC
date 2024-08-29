@@ -40,11 +40,12 @@ plotStarsInTheClouds(
 
 \item{segmentData}{segments from segmentation that are longer than minReasonableSegmentSize and then broken up into segments no smaller than 3 Mbs}
 
-\item{peakInfo}{summary table of info for each peak found in \code{peaksByDensity}}
+\item{peakInfo}{summary table of info for each peak output by \code{calculatePloidy}}
 
 \item{forceFirstDigPeakCopyNum}{value to force copy number of first digital peak, use only when ploidy calculation is wrong}
 
-\item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width}
+\item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location),
+default is -1, and value will be base on width of the main (dominate) read depth peak}
 
 \item{origMaxPercentCutoffManual}{peaks smaller than this portion of the max peak are not considered; set to -1 to use default value}
 
@@ -52,9 +53,11 @@ plotStarsInTheClouds(
 
 \item{maxPeriodManual}{user provided \code{maxPeriod} for digital grid, default is -1 to indicate no user input}
 
-\item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found}
+\item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments (segmentData); want to
+keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found}
 
-\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation}
+\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98,
+but may vary depending on NGS library quality and preparation}
 }
 \description{
 plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
@@ -124,7 +127,9 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
   readDepthPer30kbBin = readRDS(file=thirtyKbFile )
   # load segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile)
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
+
   hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScore <- loadHetScoreFromWig(hetScorePerBinWigFile)
 
@@ -147,7 +152,7 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 
   # right figure
   op <- par(mar=c(5, 3, 2,1),mgp=c(1.5, 0.5,0))
-  linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
+  linearGenomePlot( readDepthPer30kbBin=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
                     gainColor = 'blue', lossColor= 'red', yAxisLimits = yAxisLimits)
   par(op)

@@ -10,6 +10,7 @@ runBACDAC=function(sampleId, alternateId,
                    noPdf=FALSE,
                    readDepthPer30kbBin, readDepthPer100kbBin,segmentation,segmentationBinSize,
                    hsNormMat,testVals,
+                   gainColor='blue', lossColor= 'red',
                    dPeaksCutoff=0.01,penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1, forceFirstDigPeakCopyNum=-1,   # digital peaks
                    grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,  #  peaksByDensity
                    minReasonableSegmentSize=5.5e6,
@@ -28,7 +29,7 @@ runBACDAC=function(sampleId, alternateId,
     segmentation=segmentation,
     noPdf = noPdf,
     #optional
-    readDepthBinnedData=readDepthPer30kbBin,
+    readDepthPer30kbBin=readDepthPer30kbBin,
     readDepthBinSize=readDepthPer30kbBin$windowSize
   )
 
@@ -74,8 +75,8 @@ runBACDAC=function(sampleId, alternateId,
                                              hsNormMat=hsNormMat, testVals=testVals, wsz=30000, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
   }
 
-  ### draw constellation plot with linear plot ----
-  twoPanelReport(starCloudPlotInputs, calcPloidyResult,readDepthPer30kbBin,segmentation)
+  ### draw constellation plot left of the linear genome plot ----
+  twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,gainColor=gainColor, lossColor= lossColor)
 
 
 }

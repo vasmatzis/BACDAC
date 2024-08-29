@@ -31,13 +31,21 @@ calculatePloidy(
 \arguments{
 \item{sampleId}{sample Identifier}
 
-\item{outputDir}{output directory}
+\item{outputDir}{full path to directory to output all files and intermediate objects created}
 
 \item{alternateId}{optional secondary sample identifier}
 
-\item{readDepthPer30kbBin}{read depth for 30 kb bins, with bin index in linear coordinates}
+\item{readDepthPer30kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 30 kb bins, normalized for GC content and other artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin), masked windows have been removed
+}}
 
-\item{readDepthPer100kbBin}{read depth for 100 kb bins, with bin index in linear coordinates}
+\item{readDepthPer100kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 100 kb bins, normalized for GC content and other sequencing artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin) (masked windows have been removed)
+}}
 
 \item{segmentation}{identified regions of the genome with constant read depth. Data.frame with required columns:
 chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color coded linear linear genome plot}
@@ -61,16 +69,23 @@ set to -1 to base off of mainPeak width}
 
 \item{origMaxPercentCutoffManual}{peaks smaller than this portion of the max peak are not considered; set to -1 to use default value}
 
-\item{noPdf}{if present, do not create pdfs}
+\item{noPdf}{if present (TRUE), pdf files will not be generated, instead plots are drawn on default device}
 
 \item{forceFirstDigPeakCopyNum}{value to force copy number of first digital peak, use only when ploidy calculation is wrong}
 
 \item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments; want to keep as large as possible
 to avoid 0N segments, but will decrease size if not enough segments are found}
 
-\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation}
+\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98,
+but may vary depending on NGS library quality and preparation}
 
-\item{hsNormMat}{hetScores from  a database of 23 Normals,  101046 x 23 rows, one row for each 30 kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment}
+\item{allowedTumorPercent}{allow some tolerance to go over 100 especially for PDXs which will very near 100}
+
+\item{hsNormMat}{heterozygosity score mask, used to find genomic positions where the heterozgosity score is atypically low.
+\itemize{
+\item rows: hetScores for each 30 kb segment of the genome, 1-22, X and a part of Y.
+\item columns: one column for each of the 23 normal samples
+}}
 }
 \description{
 Fit the peaks from the read depth distributions to a digital grid.
@@ -100,7 +115,8 @@ If outputDir is provided and noPdf=FALSE, figures will saved to
 
   # segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= loadSegmentationFile(segmentationFile)
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
 
   # hetScore data - the output from calculateHetScore()
   hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'

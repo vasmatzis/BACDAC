@@ -2,7 +2,7 @@
 % Please edit documentation in R/constellationPlot.R
 \name{twoPanelReport}
 \alias{twoPanelReport}
-\title{draw the constellation plot and the linear genome plot side by side}
+\title{draw constellation plot left of the linear genome plot}
 \usage{
 twoPanelReport(
   starCloudPlotInputs,
@@ -13,11 +13,9 @@ twoPanelReport(
   alternateId = NULL,
   diploidPeakNRD = NULL,
   gainColor = "blue",
-  lossColor = "red",
-  leftFigLabel = NULL,
-  rightFigLabel = NULL
+  lossColor = "red"
 )
 }
 \description{
-draw the constellation plot and the linear genome plot side by side
+draw constellation plot left of the linear genome plot
 }

@@ -1,7 +1,7 @@
 #' Find the NRD of the main Peak in the ---cnvBinned data---
 #' Will equal 2 if main peak is the normal peak
 #' @param calcPloidyResult object returned from \code{calculatePloidy}
-#'
+#' @keywords internal
 getMainPeakNRD=function(calcPloidyResult){
   expReadsIn2NPeak_1bp= calcPloidyResult$expReadsIn2NPeak_1bp
   mainPeakKey=which(calcPloidyResult$peakInfo$rankByHeight==1)
@@ -13,7 +13,7 @@ getMainPeakNRD=function(calcPloidyResult){
 
 #' Find the NRD of the diploid peak from the binned read depth data
 #' @param calcPloidyResult object returned from \code{calculatePloidy}
-#'
+#' @keywords internal
 getDiploidPeakNRD=function(calcPloidyResult){
   mainPeakKey=which(calcPloidyResult$peakInfo$rankByHeight==1)
   rdNormX_Mainpeak = calcPloidyResult$peakInfo[mainPeakKey,'peakReadDepth_normX']
@@ -21,6 +21,7 @@ getDiploidPeakNRD=function(calcPloidyResult){
   diploidPeakKey=which(calcPloidyResult$peakInfo$nCopy==2)
   rdNormX_2Npeak = calcPloidyResult$peakInfo[diploidPeakKey,'peakReadDepth_normX']
 
+  mainPeakNRD=getMainPeakNRD(calcPloidyResult)
   diploidPeakNRD <-round( mainPeakNRD*rdNormX_2Npeak/rdNormX_Mainpeak, 3)
   # loginfo('diploidPeakNRD: %.3f',diploidPeakNRD)  #dipVal => diploidPeakNRD
   return(diploidPeakNRD)
@@ -33,7 +34,7 @@ getDiploidPeakNRD=function(calcPloidyResult){
 #' @param minObservations required number of input values to determine number of clusters present
 #'
 #' @inheritParams commonParameters
-#'
+#' @keywords internal
 hasNorMoreClusters <- function(hetScoreDensityResult, N, heterozygosityScoreThreshold, minObservations=20){
   # hetScoreDensityResult=densityFirstDigPeak
   if(hetScoreDensityResult$observ > minObservations){
@@ -85,23 +86,23 @@ hetScoreDensity <- function(segmentsCloseToPeak,segmentData, index,sampleId,fold
 #'
 #' If enough data ( >minObserv ) return testScore=right-most mode that is big enough (> consider PeakCutoff * max peak) and numHetClusters > 20% max peak
 #' If not enough data return max loh score and numHetClusters =NA
-#'
-#' @param data lohScores mean het scores for selected copy number segments
+#' @keywords internal
+#' @param dataIn hetScores mean hetScores for selected copy number segments
 #' @param considerPeakCutoff peaks must be bigger than this percentage of maxPeak to be considered # TODO: should this be adjusted higher when there are more data points, ie >100 or 125? 26297 requires >=0.06 not 0.05 which is what I've done all my testing on
 #' @param countPeakCutoff peaks must be bigger than this percentage of maxPeak to be counted for numClusters
 #' @param plotTextPrefix text to add to front of plot title
 #' @param default default return value
 #' @param skipPlot logical to control making density plot
-#' @param minObserv
+#' @param minObserv minimum number of hetScores to compute the mode of a peak, otherwise the max value is used
+#' @param folderId alternate id
+#' @inheritParams commonParameters
 #'
 getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0.25, plotTextPrefix=NULL,
                               folderId=NULL, sampleId=NULL, skipPlot=FALSE, minObserv=15,default=0, heterozygosityScoreThreshold) {
   # dataIn=lohScores; considerPeakCutoff=0.06; countPeakCutoff=0.25; minObserv=15;skipPlot=FALSE;default=0
-  # considerPeakCutoff? PT58162 PT636 requires 0.031 or bigger when using bw=SJ
-  # considerPeakCutoff? PT58115 PT618 requires 0.028 or less when using bw=nrd
-  # considerPeakCutoff=0.028 for bw=nrd
+
   # TODO: what is the minimum for minObserv 10? 15? 20?
-  data <- dataIn[dataIn <= 1] # do not take density with data greater than 1 aka noisy data # TODO: consider 1.001 instead of 1.0
+  data <- dataIn[dataIn <= 1] # do not take density with data greater than 1 aka noisy data
   observ <- length(data)
 
   if (observ >= 2) {
@@ -429,7 +430,7 @@ extrapRD <- function(cn,cn1,cn2,rd1,rd2){
 #' Do not default to two biggest peaks, we want to use lower copy number peaks which will typically align to the digital grid better due to less (sub) clonal mixing
 #' @param peakCopyNum from peakInfo, copy number for the peak
 #' @param peakHeight from peakInfo, height of each peak normalized so max peak = 1
-#' @noRd
+#' @keywords internal
 getTwoBestPeakIndexes <- function(peakCopyNum, peakHeight){
   # peakCopyNum = peakInfo$nCopy; peakHeight  = peakInfo$peakHeight;
   # peakHeight=c(0.568, NA, 1.0, 0.501, 0.584, 0.086, 0.039); peakCopyNum=c(3, NA,  4,  5,  7,  8, 12)
@@ -518,7 +519,7 @@ getTwoBestPeakIndexes <- function(peakCopyNum, peakHeight){
 #' @param peakHeight from peakInfo, height of each peak normalized so max peak = 1, to determine two best peaks
 #' @param peakReadDepth_1bp from peakInfo, read depth per peak normalized to 1bp window
 #'
-#' @noRd
+#' @keywords internal
 calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,dPeaks){
   # peakInfo=calcPloidyResult$peakInfo
   # peakCopyNum = peakInfo$nCopy; peakHeight  = peakInfo$peakHeight; peakReadDepth_1bp=peakInfo$peakReadDepth_1bp; dPeaks=peakInfo$dPeaks
@@ -546,6 +547,7 @@ calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,d
 #'
 #' @param chromStarts must be same window size scale as the plotted frequency data
 #' @param maxcn max chromosome number
+#' @keywords internal
 markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
   chroms <- convertChromToCharacter(1:maxcn)
   abline(v=chromStarts[1:maxcn], col=vCol)
@@ -557,7 +559,7 @@ markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
 
 
 #' list of colors to use for the peaks in \code{peaksByDensity}
-#'
+#' @keywords internal
 getCNcolors <- function(){
   # cnColors <- c(palette()[-1], "orange", 'white', palette()[-1]) # remove black, add orange, white, and repeat to make sure we have enough colors
 
@@ -571,7 +573,8 @@ getCNcolors <- function(){
 
 #' chromosome segment colors
 #'
-#' one color for each chromosome 1-22
+#' one color for each chromosome 1-
+#' @keywords internal
 getSegmentColors=function(){
   ### one color for each chromosome 1-22
   segColors <- c(

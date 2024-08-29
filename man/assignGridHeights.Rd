@@ -7,7 +7,7 @@
 assignGridHeights(peakInfo, n00, minGridHeight)
 }
 \arguments{
-\item{peakInfo}{summary table of info for each peak found in \code{peaksByDensity}}
+\item{peakInfo}{summary table of info for each peak output by \code{calculatePloidy}}
 
 \item{n00}{Precision for creating initial grid}
 

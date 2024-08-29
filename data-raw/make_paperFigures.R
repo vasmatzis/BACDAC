@@ -67,7 +67,8 @@
   }
 
   segmentationFile <- file.path(postProcessingDir,'cnv', paste0(sampleId, '_cnvIntervals.csv'))
-  segmentation= loadSegmentationFile(segmentationFile)
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- checkSegmentation(segmentation)
 
   # result from heterozgygosityScore
   hetScorePerBinWigFile <- file.path(postProcessingDir, 'reports', paste0(sampleId, '_loh.wig.gz'))
@@ -168,7 +169,7 @@
   figLabel='F'
   # convert the nrd axis limits in the constellation plot to rd, so the linear genome plot can be on the same scale
   rdAxisLimits= calcRD(nrd=starCloudResult$plotAxisLimits$nrdAxisLims, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
-  linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
+  linearGenomePlot( readDepthPer30kbBin=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
                     gainColor = 'blue', lossColor= 'red', yAxisLimits = rdAxisLimits)
   myAt=yAxisLimits[2]

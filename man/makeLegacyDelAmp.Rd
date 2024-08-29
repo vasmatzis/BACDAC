@@ -2,7 +2,7 @@
 % Please edit documentation in R/linearGenomePlot.R
 \name{makeLegacyDelAmp}
 \alias{makeLegacyDelAmp}
-\title{for compatibility with genomePlot. Make George's old array from new structure: 1=normal, -1=loss, 2=gain}
+\title{for compatibility with genomePlot. Make old array from new structure: 1=normal, -1=loss, 2=gain}
 \usage{
 makeLegacyDelAmp(segmentation, coords)
 }
@@ -12,6 +12,5 @@ makeLegacyDelAmp(segmentation, coords)
 \item{coords}{linear genome coordinates, loaded via \code{getLinearCoordinates()}}
 }
 \description{
-for compatibility with genomePlot. Make George's old array from new structure: 1=normal, -1=loss, 2=gain
+for compatibility with genomePlot. Make old array from new structure: 1=normal, -1=loss, 2=gain
 }
-\keyword{internal}

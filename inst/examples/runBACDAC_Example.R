@@ -17,7 +17,9 @@ readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
 # segmentation data
 segmentationFile <- file.path(myInputDir, paste0(mySampleId, '_segmentation.csv'))
-mySegmentation= loadSegmentationFile(segmentationFile)
+segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+segmentation <- checkSegmentation(segmentation)
+
 mySegmentationBinSize=30000
 ## load two reference files  ---------------
 # hsNormMat/lohMat: hetScores from 23 Normals,  101046 x 23 rows, one row for each 30kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment

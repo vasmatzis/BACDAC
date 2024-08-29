@@ -18,21 +18,29 @@ getModeOrMaxScore(
 )
 }
 \arguments{
+\item{dataIn}{hetScores mean hetScores for selected copy number segments}
+
 \item{considerPeakCutoff}{peaks must be bigger than this percentage of maxPeak to be considered # TODO: should this be adjusted higher when there are more data points, ie >100 or 125? 26297 requires >=0.06 not 0.05 which is what I've done all my testing on}
 
 \item{countPeakCutoff}{peaks must be bigger than this percentage of maxPeak to be counted for numClusters}
 
 \item{plotTextPrefix}{text to add to front of plot title}
 
+\item{folderId}{alternate id}
+
+\item{sampleId}{sample Identifier}
+
 \item{skipPlot}{logical to control making density plot}
 
-\item{minObserv}{}
+\item{minObserv}{minimum number of hetScores to compute the mode of a peak, otherwise the max value is used}
 
 \item{default}{default return value}
 
-\item{data}{lohScores mean het scores for selected copy number segments}
+\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98,
+but may vary depending on NGS library quality and preparation}
 }
 \description{
 If enough data ( >minObserv ) return testScore=right-most mode that is big enough (> consider PeakCutoff * max peak) and numHetClusters > 20\% max peak
 If not enough data return max loh score and numHetClusters =NA
 }
+\keyword{internal}

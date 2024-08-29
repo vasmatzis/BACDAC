@@ -16,6 +16,8 @@ runBACDAC(
   segmentationBinSize,
   hsNormMat,
   testVals,
+  gainColor = "blue",
+  lossColor = "red",
   dPeaksCutoff = 0.01,
   penaltyCoefForAddingGrids = 0.49,
   minGridHeight = 0.2,
@@ -34,20 +36,40 @@ runBACDAC(
 
 \item{alternateId}{optional secondary sample identifier}
 
-\item{outputDir}{output directory}
+\item{inputDir}{full path to directory with input files}
 
-\item{noPdf}{if present, do not create pdfs}
+\item{outputDir}{full path to directory to output all files and intermediate objects created}
 
-\item{readDepthPer30kbBin}{read depth for 30 kb bins, with bin index in linear coordinates}
+\item{noPdf}{if present (TRUE), pdf files will not be generated, instead plots are drawn on default device}
 
-\item{readDepthPer100kbBin}{read depth for 100 kb bins, with bin index in linear coordinates}
+\item{readDepthPer30kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 30 kb bins, normalized for GC content and other artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin), masked windows have been removed
+}}
+
+\item{readDepthPer100kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 100 kb bins, normalized for GC content and other sequencing artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin) (masked windows have been removed)
+}}
 
 \item{segmentation}{identified regions of the genome with constant read depth. Data.frame with required columns:
 chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color coded linear linear genome plot}
 
 \item{segmentationBinSize}{bin size used for the read depth in the segmentation data}
 
-\item{hsNormMat}{hetScores from  a database of 23 Normals,  101046 x 23 rows, one row for each 30 kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment}
+\item{hsNormMat}{heterozygosity score mask, used to find genomic positions where the heterozgosity score is atypically low.
+\itemize{
+\item rows: hetScores for each 30 kb segment of the genome, 1-22, X and a part of Y.
+\item columns: one column for each of the 23 normal samples
+}}
+
+\item{testVals}{pre-built array to assist finding each possible heterozygosity value for each copy number level}
+
+\item{gainColor}{color for gains in the linear genome plot, default is blue}
+
+\item{lossColor}{color for losses in the linear genome plot, default is red}
 
 \item{dPeaksCutoff}{dPeaksCutoff min grid height for a peak to be considered a digital peak}
 
@@ -61,13 +83,18 @@ chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color cod
 
 \item{forceFirstDigPeakCopyNum}{value to force copy number of first digital peak, use only when ploidy calculation is wrong}
 
-\item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location), set to -1 to base off of mainPeak width}
+\item{grabDataPercentManual}{portion of main peak data to grab, other peaks will be scaled based on read depth (x location),
+default is -1, and value will be base on width of the main (dominate) read depth peak}
 
 \item{origMaxPercentCutoffManual}{peaks smaller than this portion of the max peak are not considered; set to -1 to use default value}
 
-\item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments; want to keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found}
+\item{minReasonableSegmentSize}{initial smallest segment size to include in ploidy test segments (segmentData); want to
+keep as large as possible to avoid 0N segments, but will decrease size if not enough segments are found}
 
-\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98, but may vary depending on NGS library quality and preparation}
+\item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98,
+but may vary depending on NGS library quality and preparation}
+
+\item{allowedTumorPercent}{allow some tolerance to go over 100 especially for PDXs which will very near 100}
 }
 \description{
 run all the steps in BACDAC, will output pdfs and intermediate files if outputDir is provided
@@ -92,7 +119,9 @@ readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
 # segmentation data
 segmentationFile <- file.path(myInputDir, paste0(mySampleId, '_segmentation.csv'))
-mySegmentation= loadSegmentationFile(segmentationFile)
+segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+segmentation <- checkSegmentation(segmentation)
+
 mySegmentationBinSize=30000
 ## load two reference files  ---------------
 # hsNormMat/lohMat: hetScores from 23 Normals,  101046 x 23 rows, one row for each 30kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment

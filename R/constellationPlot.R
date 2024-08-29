@@ -1,13 +1,8 @@
-# code and example to run Jamie's stars in the clouds plot - the actual and theoretical heterozygosity scores vs NRD for a given tumor ratio
-# source this file first, to make the functions below available
-
-
+# code and example to Constellation Plot - the actual and theoretical heterozygosity scores vs NRD for a given tumor ratio
 
 
 #' load all the data necessary to make the constellation plot
 #' @param mainPeakNRD the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak
-#' @param hsNormMat heterozygosity score mask, used to look for places in the 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
-#' @param testVals used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
 #' @param expReadsIn2NPeak_1bp expected number of reads in a 1 bp bin for the diploid peak
 #' @inheritParams commonParameters
 #' @example inst/examples/constellationPlotExample.R
@@ -455,15 +450,16 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
 
 
 
-#' draw the constellation plot and the linear genome plot side by side
+#' draw constellation plot left of the linear genome plot
 #' @export
 twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbBin,segmentation, sampleId=NULL, alternateId=NULL,  diploidPeakNRD=NULL,
-                        gainColor='blue', lossColor= 'red',leftFigLabel=NULL,rightFigLabel=NULL){
+                        gainColor='blue', lossColor= 'red'){
 
-  layout( matrix(c(1,2,2),nrow=1),
-          heights= c(1),
-          widths = c(1.5,2))   # Widths of the two columns
+  graphics::layout( matrix(c(1,2,2),nrow=1),
+                    heights= c(1),
+                    widths = c(1.5,2))   # Widths of the two columns
   labelCex=1.5
+  leftFigLabel=NULL;rightFigLabel=NULL
 
   # left figure
   op <- par(mar=c(5,3,2,3),mgp=c(1.5, 0.5,0))

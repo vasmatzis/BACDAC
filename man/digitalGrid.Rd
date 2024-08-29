@@ -24,7 +24,7 @@ digitalGrid(
 )
 }
 \arguments{
-\item{peakInfo}{summary table of info for each peak found in \code{peaksByDensity}}
+\item{peakInfo}{summary table of info for each peak output by \code{calculatePloidy}}
 
 \item{gridHeights}{group of 8-10 grid heights set for each peak}
 
@@ -55,13 +55,9 @@ digitalGrid(
 \item{iterationStats}{stats collected during each \code{gridIteration}}
 
 \item{omitAnnotations}{should extra annotation be included in digital grid plot}
-
-\item{absMinPeriod}{the smallest minPeriod allowed}
 }
 \value{
 dPeaks grid coordinates of the digital peaks, where NA is a peak not on the digital grid, and nCopyPeaks_dig-first digital peak set to 1
-decision tree for maxPeriodToTry, do not allow period to get bigger than this, set to firstToMainPeakGap when: 5 <= mainPeakIndex < 7
-decision tree for minPeriod
 }
 \description{
 fit a group of peaks to a digital grid

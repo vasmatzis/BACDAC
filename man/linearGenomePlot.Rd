@@ -5,7 +5,7 @@
 \title{Draw a linear genome plot}
 \usage{
 linearGenomePlot(
-  readDepthBinnedData,
+  readDepthPer30kbBin,
   readDepthBinSize = 30000,
   sampleId = NULL,
   alternateId = NULL,
@@ -20,15 +20,20 @@ linearGenomePlot(
 )
 }
 \arguments{
-\item{readDepthBinnedData}{list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)}
+\item{readDepthPer30kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 30 kb bins, normalized for GC content and other artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin), masked windows have been removed
+}}
 
-\item{readDepthBinSize}{size of each window}
+\item{readDepthBinSize}{size of each window (bin) default is 30 kb}
 
 \item{sampleId}{sample Identifier}
 
 \item{alternateId}{optional secondary sample identifier}
 
-\item{segmentation}{read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot}
+\item{segmentation}{identified regions of the genome with constant read depth. Data.frame with required columns:
+chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color coded linear linear genome plot}
 
 \item{allelicSegments}{segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number}
 
@@ -52,17 +57,18 @@ If sampleId is provided, title annotations will be added.
 sampleId='TCGA-14-1402-02A_ds'
 inputDir <- system.file('extdata', package = "BACDAC")
 outputDir=tempdir()
-segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
+segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+segmentation <- checkSegmentation(segmentation)
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-readDepthBinnedData = readRDS(file=thirtyKbFile )
+readDepthPer30kbBin = readRDS(file=thirtyKbFile )
 
 op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
-# default cnv color coding and annotations
-linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)
-# example with no cnv color coding
-linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,noDelAmpDetection=TRUE,segmentation=segmentation)
-# reviewer preferred cnv color coding
-linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
+# default copy number color coding
+linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,segmentation=segmentation)
+# example with no copy number color coding
+linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,noDelAmpDetection=TRUE,segmentation=segmentation)
+# alternate copy number color coding, no sample id label
+linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
 
 }

@@ -7,5 +7,6 @@
 getSegmentColors()
 }
 \description{
-one color for each chromosome 1-22
+one color for each chromosome 1-
 }
+\keyword{internal}

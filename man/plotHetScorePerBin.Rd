@@ -14,7 +14,7 @@ plotHetScorePerBin(
 )
 }
 \arguments{
-\item{hetScore}{binned heterozygosity scores as loaded from the hetScore wig file}
+\item{hetScore}{30 kb binned heterozygosity scores as loaded from the hetScore wig file, object produced in \code{calculateHetScore}}
 
 \item{sampleId}{sample id, will be used as the prefix for all input and output file names}
 

@@ -1,13 +1,13 @@
 #' Combines ref/alt SNP data from each chromosome 1-22,X
 #'
-#' Outputs heterozygosity score by bin (.wig) and by arm (.csv) for each chromosome
-#' To plot see \link{plotHetScorePerBin} and the three graph plot function \link{makeHetScoreReportPdf}
+#' Calculate heterozygosity score by bin (.wig) and by chromosome arm (.csv). Save files to outputDir.
 #'
-#' @param sampleId sample identifier, used as prefix for all input and output file names \code{<sampleId>_snpVals_<chromosome>.Rdata} and \code{<sampleId>_countBP_<chromosome>.Rdata}
-#' @param inputDir full path to snpVal and countBP Rdata
-#' @param outputDir full path for output files
-#' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
-#' @param noPdf When TRUE, pdf files will not be generated, instead plots are drawn on default device
+#' Will automatically create the the three panel plot, either to pdf or plot window.
+#' This three panel plot can also be called separately, see \link{makeHetScoreReportPdf}
+#'
+#' @param sampleId sample identifier, used as prefix for all input and output file names
+#'   \code{<sampleId>_snpVals_<chromosome>.Rds} and \code{<sampleId>_countBP_<chromosome>.Rds}
+#' @param inputDir full path to snpVal and countBP Rds, segmentation data
 #' @param maximumCoverage Do not process SNPs covered more than this
 #' @param trimFromAlt Bins to discard from the 'alt' side of the distribution
 #' @param trimFromRef Bins to discard from the 'ref' side of the distribution
@@ -15,23 +15,10 @@
 #' @param minSnpsToCalculateStatistic  Minimum SNPs required in the window (1Mb) to calculate the statistic
 #' @param samplingStep How frequently to try to summarize the data (bp), to produce overlapping windows
 #' @param extraWindow Size of the window, how many bps to look at during each sampling step
-#' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
-#' @param readDepthBinSize size of each window
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear geneome plot, default is red
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
 #' @inheritParams commonParameters
-#'
-#' @examples
-#' sampleId='TCGA-14-1402-02A_ds'
-#' # inputDir is the path to the load package data
-#' inputDir <- system.file('extdata', package = "BACDAC")
-#' outputDir = tempdir() # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-#' segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-#' segmentation= loadSegmentationFile(segmentationFile) # per segment: chr, start, end, rd
-#' # defaults:
-#' noPdf = FALSE; maximumCoverage = 1000; trimFromAlt = 2; trimFromRef = 1; trimExtraPerCoverage = 0.1; minSnpsToCalculateStatistic = 20; samplingStep = 30000; extraWindow = 1000000
-#' readDepthBinnedData=NULL; readDepthBinSize=30000; gainColor='blue'; lossColor='red'; noDelAmpDetection=FALSE
 #'
 #' @example inst/examples/calculateHetScoreExample.R
 #'
@@ -52,7 +39,7 @@ calculateHetScore <- function(
     extraWindow = 1000000,
 
     # inputs just for makeHetScoreReportPdf
-    readDepthBinnedData=NULL,  # if null will make an empty plot
+    readDepthPer30kbBin=NULL,  # if null will make an empty plot
     readDepthBinSize=30000,
     gainColor='blue',
     lossColor='red',
@@ -175,7 +162,7 @@ calculateHetScore <- function(
     hetScorePerBinFile=hetScorePerBinFile,
     hetScorePerArmFile=hetScorePerArmFile,
     segmentation=segmentation,
-    readDepthBinnedData=readDepthBinnedData,
+    readDepthPer30kbBin=readDepthPer30kbBin,
     readDepthBinSize=readDepthBinSize,
     sampleId=sampleId, alternateId = alternateId,
     outputDir=outputDir,
@@ -198,6 +185,7 @@ calculateHetScore <- function(
 #' @param samplingStep Only uniformly sampled data can be used, use this sampling step
 #'
 #' @family hetScore
+#' @keywords internal
 saveHetScoreToWig <- function(wigFile, seqListTotal, seqValsTotal, chromsToSave,
                                  samplingStep) {
   # We go through GRanges object which is a bit of an overkill
@@ -234,6 +222,7 @@ saveHetScoreToWig <- function(wigFile, seqListTotal, seqValsTotal, chromsToSave,
 #' @return data.frame with chr, arm, hetScore columns
 #'
 #' @family hetScore
+#' @keywords internal
 makeAndSaveHetScorePerArm <- function(hetScorePerArmFile, seqValsTotal, chromsToSave=1:23, noPArm = c(13, 14, 15, 21, 22)) {
   # previously lohSummary and without the write to file
 
@@ -305,15 +294,16 @@ loadHetScoreFromWig <- function(wigFile) {
 
 #' Make 3-subplot hetScore analysis PDF
 #'
-#' Will show 3 separate plots contrasting CNV, heterozygosity score per 30K and heterozygosity score per arm.
+#' Will show 3 separate plots aligning segmentation, heterozygosity score per 30K and
+#' heterozygosity score per arm.
 #'
-#' @param segmentation read depth data.frame with required columns: chr, start, end, rd
-#' @param hetScorePerBinFile full path to Heterozygosity Score per bin wig file as created by \code{calculateHetScore}
-#' @param hetScorePerArmFile full path to Heterozygosity Score per arm csv file as created by \code{calculateHetScore}
-#' @param segmentation read depth data.frame with required columns: chr, start, end, rd; optional: cnvState for color coded linear genome plot
-#' @param outputDir full path for output files
-#' @param readDepthBinnedData list of two arrays: one with (normalized) read count per each window, second with linear genome position of each window (masked windows have been removed)
-#' @param readDepthBinSize size of each window
+#' Will print to plot window if `noPdf=TRUE`. Use `noPdf=FALSE` and provide an `outputDir` to save
+#' to file.
+#'
+#' @param hetScorePerBinFile full path to Heterozygosity Score per bin wig file
+#'   as created by \code{calculateHetScore}
+#' @param hetScorePerArmFile full path to Heterozygosity Score per arm csv file
+#'   as created by \code{calculateHetScore}
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear geneome plot, default is red
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
@@ -323,31 +313,29 @@ loadHetScoreFromWig <- function(wigFile) {
 #' alternateId=NULL
 #' outputDir <- tempdir()
 #'
-#' # inputDir is the path to input data, either the users data, or in this example, the package data
+#' # inputDir is the path to input data, here we point the example data provided in the package.
 #' inputDir <- system.file('extdata', package = "BACDAC")
-#' outputDir = '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-#' hetScoreDir=file.path(outputDir, 'reports') # outputDir here is the outputDir for calculateHetScore.R
-#' hetScorePerArmFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerArm.csv'))
-#' hetScorePerBinFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
+#' hetScorePerArmFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerArm.csv'))
+#' hetScorePerBinFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
 #'
-#' segmentationFile = file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-#' segmentation <- read.csv(segmentationFile,comment.char = '#', header = TRUE); dim(segmentation)
-#' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-#' readDepthBinnedData = readRDS(file=thirtyKbFile )
+#' segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+#' segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+#' segmentation <- checkSegmentation(segmentation)
+#' thirtyKbFile <- file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+#' readDepthPer30kbBin <- readRDS(file=thirtyKbFile )
 #'
-#' gainColor = 'blue'; lossColor= 'red'; noDelAmpDetection=FALSE; noPdf=TRUE
 #'
-#'  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
-#' # default cnv coloring (by default) and annotations
+#' # plot to window using default segmentation coloring
 #' makeHetScoreReportPdf(
 #'    hetScorePerBinFile=hetScorePerBinFile,hetScorePerArmFile=hetScorePerArmFile,
-#'    segmentation=segmentation,readDepthBinnedData=readDepthBinnedData,
-#'    readDepthBinSize=readDepthBinnedData$windowSize,sampleId=sampleId,noPdf=TRUE)
+#'    segmentation=segmentation,readDepthPer30kbBin=readDepthPer30kbBin,
+#'    readDepthBinSize=readDepthPer30kbBin$windowSize,sampleId=sampleId,noPdf=TRUE)
+#'
 #' @export
 makeHetScoreReportPdf <- function(hetScorePerBinFile,
                                   hetScorePerArmFile,
                                   segmentation=NULL,
-                                  readDepthBinnedData=NULL,
+                                  readDepthPer30kbBin=NULL,
                                   readDepthBinSize=30000,
                                   sampleId,
                                   alternateId=NULL,
@@ -389,12 +377,12 @@ makeHetScoreReportPdf <- function(hetScorePerBinFile,
   op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext
 
   # Row 1: linear genome plot ----
-  if(!is.null(readDepthBinnedData)){
-    linearGenomePlot( readDepthBinnedData, wsz=readDepthBinSize, segmentation=segmentation,
+  if(!is.null(readDepthPer30kbBin)){
+    linearGenomePlot( readDepthPer30kbBin, wsz=readDepthBinSize, segmentation=segmentation,
                       sampleId=NULL, noDelAmpDetection = noDelAmpDetection,
                       gainColor = gainColor, lossColor= lossColor)
   }else{
-    logwarn('no readDepthBinnedData provided so printing and empty linear Genome Plot')
+    logwarn('no readDepthPer30kbBin provided so printing an empty linear Genome Plot')
     plotEmptyLinearGenomePlot(chromsToPlot=mainChromsNoY,coords=coords)
   }
 
@@ -404,8 +392,8 @@ makeHetScoreReportPdf <- function(hetScorePerBinFile,
   mtext(alternateId,side=3, adj=1)
 
   # Row 2: heterozygosity scores -per bin- ----
-  hetScore <- loadHetScoreFromWig(hetScorePerBinFile)
-  plotHetScorePerBin(hetScore,
+  hetScorePerBin <- loadHetScoreFromWig(hetScorePerBinFile)
+  plotHetScorePerBin(hetScorePerBin,
                      ylab="Heterozygosity Score by bin" )
 
 
@@ -430,7 +418,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinFile,
 #' For per arm values, see \link{plotHetScorePerArm}. \code{sampleId} is optional,
 #' for plot annotation only.
 #'
-#' @param hetScore binned heterozygosity scores as loaded from the hetScore wig file
+#' @param hetScore 30 kb binned heterozygosity scores as loaded from the hetScore wig file, object produced in \code{calculateHetScore}
 #' @param sampleId sample id, will be used as the prefix for all input and output file names
 #' @param yMap A function that turns the actual y value into a position on screen, transform y coordinates for drawing purposes
 #' @param ylab label for y axis default "Heterozygosity Score"
@@ -444,7 +432,6 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
                             ylab="Heterozygosity Score",
                             allelicSegments=NULL,
                             zebraStrips=FALSE) {
-  # @example inst/examples/plotLohAnalysisExample.R
 
   mainChroms <- 1:24
   chromsToPlot = mainChroms
@@ -498,8 +485,6 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
            col=ifelse(i%%2==0, 'black', 'black'),pch=".") # was alternating black, orange, but opted instead to offer zebraStrips
   }
 
-
-
   # Display the chromosome start as a line between the consecutive windows
   chrCharacters <- convertChromToCharacter(chromsToPlot) # required for X aka 23
   chromosomeStarts <- coords@chromStart[chromsToPlot]
@@ -513,7 +498,7 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
   # load allelicSegments TODO:  check for "minor" and "major"
   if(!is.null(allelicSegments)){
     # we don't want to include the 1N segments
-    minorZeroSegments <- allelicSegments[which(allelicSegments$minor==0 & allelicSegments$major>=2),]
+    minorZeroSegments <- allelicSegments[which(allelicSegments$minor_copy_number==0 & allelicSegments$major_copy_number>=2),]
     if(nrow(minorZeroSegments)>0){
       # convert to linear coordinates
       linPosStart <- abs(bimaToLinear(svaNumber=minorZeroSegments$chr, svaPos=minorZeroSegments$start) )
@@ -667,8 +652,8 @@ plotHetScorePerArm <- function(hetScorePerArm, sampleId=NULL,
 #'
 #' @return Array with test statistic for each coverage from 1 to maximumCoverage
 #'
-#' @export
 #' @family hetScore
+#' @keywords internal
 calculateHetScoreTestStatisticPerCoverage <- function(maximumCoverage, trimFromAlt=2, trimFromRef=1, trimExtraPerCoverage=0.1) {
   # This is binomial distribution (initially for coverage of 1)
   # We will use "Pascal's triangle" method of computing this distribution

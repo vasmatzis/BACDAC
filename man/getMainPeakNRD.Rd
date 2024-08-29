@@ -14,3 +14,4 @@ getMainPeakNRD(calcPloidyResult)
 Find the NRD of the main Peak in the ---cnvBinned data---
 Will equal 2 if main peak is the normal peak
 }
+\keyword{internal}
