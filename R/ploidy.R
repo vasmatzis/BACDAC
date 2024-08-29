@@ -64,7 +64,7 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
 
       # we successfully found another peak
       if(length(peaksXTemp)>1){
-        logwarn('origMaxPercentCutoffTemp lowered to %s to find another peak, now have %i-ish peaks',origMaxPercentCutoffTemp,length(peaksXTemp))
+        # logwarn('origMaxPercentCutoffTemp lowered to %s to find another peak, now have %i-ish peaks',origMaxPercentCutoffTemp,length(peaksXTemp))
         origMaxPercentCutoff <- origMaxPercentCutoffTemp
       }else{
         origMaxPercentCutoff <- origMaxPercentCutoffInitial
@@ -87,7 +87,7 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
 
   ### start of plot -------------------
   # Assume a peak that is greater than origMaxPercentCutoff the size of the main peak has value and we want to consider it for the digital peak algorithm.
-  logdebug("origMaxPercentCutoff: %s",origMaxPercentCutoff) # Jamie's original heuristic was 2%
+  # logdebug("origMaxPercentCutoff: %s",origMaxPercentCutoff) # Jamie's original heuristic was 2%
 
   # if(!skipExtras){
   op <- par(mfrow=c(2,1),mar=c(2.75, 3.5, 2, 1.5),mgp=c(1.5, 0.5,0))
@@ -116,7 +116,7 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
     if(!is.null(qualityPostNorm)){
       dataBasedGrabDataPercentMax <- ifelse(qualityPostNorm < 2.5, 0.15, 0.17)
     }else{
-      logdebug('need qualityPostNorm to be able to determined dataBasedGrabDataPercentMax, will set this max to 0.15')
+      # logdebug('need qualityPostNorm to be able to determined dataBasedGrabDataPercentMax, will set this max to 0.15')
       dataBasedGrabDataPercentMax <- 0.15
     }
     #Find the peaks for the unclassified data
@@ -406,7 +406,7 @@ digitalGrid <- function(peakInfo, gridHeights,
     maxSum <- -Inf
     maxShift <- -1
     maxPeriod <- -1
-    logdebug('gShift - gPeriod - sumD | scoreD - numPeaksHit - numPeriods - penaltyMaxRo | penaltyMax | penaltyRZ | penaltyToUse')
+    # logdebug('gShift - gPeriod - sumD | scoreD - numPeaksHit - numPeriods - penaltyMaxRo | penaltyMax | penaltyRZ | penaltyToUse')
 
 
     # gShift = starting point for the grid
@@ -460,9 +460,7 @@ digitalGrid <- function(peakInfo, gridHeights,
           # minPeriodForLoop <-gPeriod # reset the min period so it can not be smaller than the previously found period
           minPeriodForLoop <-minPeriod # reset the min period
           # output the values each time a new max score is found
-
-          # print(paste('maxNumPeriods:', round(maxNumPeriods,3),'possNumPeriods:', round(possNumPeriods,3) ))
-          logdebug(paste(gShift,'----',gPeriod,'----',round(maxSum,4), '|', round(maxScore,4), '----', numPeaksHit, '----', numPeriods, '----',round(penaltyMaxRo,4),'|',round(penaltyMax,4),'|',round(penaltyRZ,4), '|',round(penaltyToUse,4))   )
+          # logdebug(paste(gShift,'----',gPeriod,'----',round(maxSum,4), '|', round(maxScore,4), '----', numPeaksHit, '----', numPeriods, '----',round(penaltyMaxRo,4),'|',round(penaltyMax,4),'|',round(penaltyRZ,4), '|',round(penaltyToUse,4))   )
 
           if(plotDigDebug){
             # make a new plot since the previous one is probably getting cluttered
@@ -611,7 +609,7 @@ digitalGrid <- function(peakInfo, gridHeights,
       }else{
         maxPeriodToTry <- maxGridCoord  - minGridCoord
       }
-      loginfo('do digital grid with maxPeriodToTry:%s',maxPeriodToTry)
+      # loginfo('do digital grid with maxPeriodToTry:%s',maxPeriodToTry)
     }
 
 
@@ -635,20 +633,20 @@ digitalGrid <- function(peakInfo, gridHeights,
           minPeriod  <-  firstToFifthPeakGap
           extendToPeak <- 5
         }else{
-          logwarn('need to decide what to do now,  previousPeriod > %s (firstToFifthPeakGap)', firstToFifthPeakGap)
+          # logwarn('need to decide what to do now,  previousPeriod > %s (firstToFifthPeakGap)', firstToFifthPeakGap)
           return(NA)
         }
 
       }else{
-        logwarn('need to decide what to do now, firstToFifthPeakGap is %s', firstToFifthPeakGap)
+        # logwarn('need to decide what to do now, firstToFifthPeakGap is %s', firstToFifthPeakGap)
         return(NA)
       }
 
     }else{
-      logwarn('need to decide what to do now, firstToForthPeakGap is %s', firstToForthPeakGap)
+      # logwarn('need to decide what to do now, firstToForthPeakGap is %s', firstToForthPeakGap)
       return(NA)
     }
-    loginfo('redo digital grid with (bigger) minPeriod:%i, extending to peak %i',minPeriod,extendToPeak)
+    # loginfo('redo digital grid with (bigger) minPeriod:%i, extending to peak %i',minPeriod,extendToPeak)
     return(minPeriod)
   }
 
@@ -695,7 +693,7 @@ digitalGrid <- function(peakInfo, gridHeights,
         }else if( mainPeakIndex>=7){
           # use the default minPeriod
         }
-        loginfo('do digital grid with minPeriod:%i',minPeriod)
+        # loginfo('do digital grid with minPeriod:%i',minPeriod)
       }else if(gridIteration==2){
         if(numOfGridCoordsToTest == numGridCoordsFirstpeak){
           # be conservative, will increase just the numOfGridCoordsToTest first, leave minPeriod the same
@@ -739,12 +737,12 @@ digitalGrid <- function(peakInfo, gridHeights,
         # PT58158 first peak is 1N but main peak is the 6th peak so don't open it too far
         numOfGridCoordsToTest <-   numGridCoordsFirstpeak+9+9    # do not force first peak to be the first digital peak, allow other peaks to be the first digital peak
       }
-      loginfo(' do digital grid with numOfGridCoordsToTest: %i', numOfGridCoordsToTest)
+      # loginfo(' do digital grid with numOfGridCoordsToTest: %i', numOfGridCoordsToTest)
 
     }else if(gridIteration==2){
       if(numOfGridCoordsToTest == numGridCoordsFirstpeak){
         numOfGridCoordsToTest <- length(nonZeroGridCoords)    # do not force first peak to be the first digital peak, allow other peaks to be the first digital peak
-        loginfo(' redo digital grid with (more) numOfGridCoordsToTest: %i', numOfGridCoordsToTest)
+        # loginfo(' redo digital grid with (more) numOfGridCoordsToTest: %i', numOfGridCoordsToTest)
       }
     }else{  # this will be a x.1+ or x.01+ iteration implemented when nCopyMaxDigPeakOnGrid >= 5 or !isMainPeakDigital
       # be conservative, try increasing just the numOfGridCoordsToTest first, leave minPeriod the same
@@ -754,7 +752,7 @@ digitalGrid <- function(peakInfo, gridHeights,
         # max out numOfGridCoordsToTest and bump up minPeriod
         numOfGridCoordsToTest <- length(nonZeroGridCoords)    # do not force first peak to be the first digital peak, allow other peaks to be the first digital peak
       }
-      loginfo(' redo digital grid with (more) numOfGridCoordsToTest: %i', numOfGridCoordsToTest)
+      # loginfo(' redo digital grid with (more) numOfGridCoordsToTest: %i', numOfGridCoordsToTest)
 
     }
     return(numOfGridCoordsToTest)
@@ -823,14 +821,14 @@ digitalGrid <- function(peakInfo, gridHeights,
     gridIteration <- gridIteration + 0.1
 
     if(TRUE){
-      loginfo('nCopyMaxDigPeakOnGrid=%i redo digital grid',nCopyMaxDigPeakOnGrid)
+      # loginfo('nCopyMaxDigPeakOnGrid=%i redo digital grid',nCopyMaxDigPeakOnGrid)
       minPeriod <- setMinPeriod(previousPeriod=maxPeriod,minPeriodManual=minPeriodManual,absMinPeriod=absMinPeriod,firstToSecPeakGap,firstToThirdPeakGap,firstToForthPeakGap,firstToFifthPeakGap)
       numOfGridCoordsToTest <- setNumOfGridCoordsToTest(previousPeriod=maxPeriod)
     }else{
       # be conservative, try increasing just the numOfGridCoordsToTest first, leave minPeriod the same
       if(numOfGridCoordsToTest == numGridCoordsFirstpeak){
         numOfGridCoordsToTest <- numGridCoordsFirstpeak+9    # do not force first peak to be the first digital peak, allow other peaks to be the first digital peak
-        loginfo('nCopyMaxDigPeakOnGrid=%i redo digital grid with (more) numOfGridCoordsToTest: %i',nCopyMaxDigPeakOnGrid,numOfGridCoordsToTest)
+        # loginfo('nCopyMaxDigPeakOnGrid=%i redo digital grid with (more) numOfGridCoordsToTest: %i',nCopyMaxDigPeakOnGrid,numOfGridCoordsToTest)
       }else{
         # max out numOfGridCoordsToTest and bump up minPeriod
         numOfGridCoordsToTest <- length(nonZeroGridCoords)    # do not force first peak to be the first digital peak, allow other peaks to be the first digital peak
@@ -842,7 +840,7 @@ digitalGrid <- function(peakInfo, gridHeights,
         }else{
           stop(sprintf('need to decide what to do now, previous period (maxPeriod) > %s firstToForthPeakGap ',firstToForthPeakGap))
         }
-        loginfo('nCopyMaxDigPeakOnGrid=%i redo digital grid with (bigger) minPeriod: %i and (more) numOfGridCoordsToTest: %i',nCopyMaxDigPeakOnGrid,minPeriod,numOfGridCoordsToTest)
+        # loginfo('nCopyMaxDigPeakOnGrid=%i redo digital grid with (bigger) minPeriod: %i and (more) numOfGridCoordsToTest: %i',nCopyMaxDigPeakOnGrid,minPeriod,numOfGridCoordsToTest)
       }
     }
 
@@ -881,7 +879,7 @@ digitalGrid <- function(peakInfo, gridHeights,
       numOfGridCoordsToTest <- length(nonZeroGridCoords)    # do not force first peak to be the first digital peak, allow other peaks to be the first digital peak
     }
 
-    loginfo('isMainPeakDigital=%s redo digital grid with (more) numOfGridCoordsToTest',isMainPeakDigital)
+    # loginfo('isMainPeakDigital=%s redo digital grid with (more) numOfGridCoordsToTest',isMainPeakDigital)
 
     # another fit
     out <-  fitGridPeriod(gridHeights,numOfGridCoordsToTest, minPeriod)
@@ -1086,7 +1084,7 @@ calculatePloidy <- function(
           logerror('not enough segments (%i) and minReasonableSegmentSize is too small: %s',length(segmentsWeWant), minReasonableSegmentSize)
           break
         }
-        loginfo('only %i fragments, reducing minReasonableSegmentSize to %s',length(segmentsWeWant), minReasonableSegmentSize)
+        # loginfo('only %i fragments, reducing minReasonableSegmentSize to %s',length(segmentsWeWant), minReasonableSegmentSize)
         segmentsWeWant <- getSegmentsWeWant(segmentation,minReasonableSegmentSize,xind=xind)
       }
       minReasonableSegmentSizeFinal <- minReasonableSegmentSize
@@ -1104,7 +1102,7 @@ calculatePloidy <- function(
         segmentData[,'size'] <- segmentData$end - segmentData$start
         segmentData[,'rd'] <- segmentation[segmentsWeWant,'rd']
 
-        loginfo(' %i segments of size %i Mb or bigger.', nrow(segmentData),minReasonableSegmentSize/1000000)
+        # loginfo(' %i segments of size %i Mb or bigger.', nrow(segmentData),minReasonableSegmentSize/1000000)
 
       }else{
         # split up the really big segments into smaller sections
@@ -1139,9 +1137,9 @@ calculatePloidy <- function(
         }
 
         segmentData[,'size'] <- segmentData$end - segmentData$start
-        loginfo('segmentData was broken into smaller chunks: from %i to %i segments', nrow(segmentTemp), nrow(segmentData) )
+        # loginfo('segmentData was broken into smaller chunks: from %i to %i segments', nrow(segmentTemp), nrow(segmentData) )
         if(minReasonableSegmentSizeStart!=minReasonableSegmentSizeFinal){
-          loginfo('start and final segment size min: %i to  %i ', minReasonableSegmentSizeStart, minReasonableSegmentSizeFinal )
+          # loginfo('start and final segment size min: %i to  %i ', minReasonableSegmentSizeStart, minReasonableSegmentSizeFinal )
         }
 
       }
@@ -1155,7 +1153,7 @@ calculatePloidy <- function(
     minSegment <- round(min(segmentData$size)/1000000,1)
     maxSegment <- round(max(segmentData$size)/1000000,1)
     meanSegment <- round(mean(segmentData$size)/1000000,1)
-    logdebug('segmentData from segmentation: min = %s Mb  max = %s Mb  mean = %s Mb', minSegment, maxSegment, meanSegment)
+    # logdebug('segmentData from segmentation: min = %s Mb  max = %s Mb  mean = %s Mb', minSegment, maxSegment, meanSegment)
 
     segmentDataSizes=list(minReasonableSegmentSizeFinal=minReasonableSegmentSizeFinal,
                           minSegment=minSegment,
@@ -1191,13 +1189,13 @@ calculatePloidy <- function(
                                                peakReadDepth_1bp=peakInfo$peakReadDepth_1bp,
                                                dPeaks = peakInfo$dPeaks)
       if(percentTumor > allowed){
-        logwarn('percentTumor: %s more than %i algorithm error?', round(percentTumor,2),allowed)
+        # logwarn('percentTumor: %s more than %i algorithm error?', round(percentTumor,2),allowed)
       }else if(percentTumor <40){
-        logwarn('low percentTumor: %s ', round(percentTumor,2))
+        # logwarn('low percentTumor: %s ', round(percentTumor,2))
       }
     }else{
       percentTumor <- NA
-      loginfo('cannot calculate Tumor Percentage, only one nCopyPeak found')
+      loginfo('cannot calculate Tumor Percentage, only one peak found')
     }
 
     return(list(peakInfo=peakInfo, percentTumor=percentTumor,hetScoreQuantiles=hetScoreQuantiles))
@@ -1275,7 +1273,7 @@ calculatePloidy <- function(
 
       mainPeakIndex <- which(peakInfo$rankByHeight==1) # out of all the peaks
       if(is.na(peakInfo[mainPeakIndex, 'dPeaks'])){
-        logwarn('mainPeak is not a digital peak, this is a problem, look closer at the digital peak algorithm and cutoffs/coefficients')
+        logwarn('mainPeak is not a digital peak, this is likely a problem, consider using manual input options ')
       }
 
       firstDigPeakIndex <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
@@ -1451,7 +1449,7 @@ calculatePloidy <- function(
         numSegmentsValid <- length(which(segmentData$valid==1))
         percentSegmentsValid <- numSegmentsValid/nrow(segmentData)*100
         if(numSegmentsValid<150){
-          logwarn('numSegmentsValid is low, may want to consider smaller segment chunk size? %i < %i',numSegmentsValid,150)
+          # logwarn('numSegmentsValid is low, may want to consider smaller segment chunk size? %i < %i',numSegmentsValid,150)
         }
         segmentCountText <- paste0( numSegmentsValid, '/', nrow(segmentData),' (',round(percentSegmentsValid,1),'%) ', 'segments with valid het. score')
         if(plotFreqVsRd){
@@ -1541,7 +1539,7 @@ calculatePloidy <- function(
             }
           }else{
             ## could not use first digital peak because there were no valid het. scores.
-            logwarn('using het. scores of digital peak number %i to determine copy number', dPeak_forMaxLOHscore)
+            # logwarn('using hetScores of digital peak number %i to determine copy number', dPeak_forMaxLOHscore)
             if(sum(segmentsCloseToPeak[,dPeak_forMaxLOHscore], na.rm=TRUE) > 0 && hetTestScoreFor1stDigPeak >= heterozygosityScoreThreshold) {
               # if TRUE, then the digital peak does not have LOH and cannot correspond to deletion, therefore it must be a 2N peak (or 4N or 6N...)
 
@@ -1580,11 +1578,11 @@ calculatePloidy <- function(
           densityFirstDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=firstDigPeakIndex,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix='1st digital peak:',
                                                  heterozygosityScoreThreshold=heterozygosityScoreThreshold)
           hetTestScoreFor1stDigPeak <- densityFirstDigPeak$testScore
-          loginfo('het test score for first digital peak: %.3f',densityFirstDigPeak$testScore)
+          # loginfo('hetScore for first digital peak: %.3f',densityFirstDigPeak$testScore)
 
           # not used right away but is used later
           if(all(peakInfo$dPeaks != min(peakInfo$dPeaks, na.rm = TRUE))){
-            stop('all NAs need to inspect and debug this step %s %s', sampleId, alternateId)
+            stop('all NAs need to inspect this step %s %s', sampleId, alternateId)
           }
 
           if(numDigPeaks>1){
@@ -1592,7 +1590,7 @@ calculatePloidy <- function(
             secondDigPeakIndex <-     which(peakInfo$dPeaks== secondDigPeak)
             densitySecondDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=secondDigPeakIndex,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix='2nd digital peak:',
                                                     heterozygosityScoreThreshold=heterozygosityScoreThreshold)
-            loginfo('het test score for second digital peak: %.3f',densitySecondDigPeak$testScore)
+            # loginfo('hetScore for second digital peak: %.3f',densitySecondDigPeak$testScore)
           }else{
             secondDigPeakIndex <- NA
             densitySecondDigPeak <- list(testScore=0,numHetClusters=NA,observ=0)
@@ -1631,7 +1629,7 @@ calculatePloidy <- function(
       loginfo(' but forceFirstDigPeakCopyNum is enabled so now first peak is %iN', nCopyPeaks_while[1])
     }else{
       nCopyPeaks_while <- nCopyPeaks_seg
-      loginfo('ploidy results determined by segment, first peak is %iN', nCopyPeaks_seg[1])
+      # loginfo('ploidy results determined by segment, first peak is %iN', nCopyPeaks_seg[1])
     }
 
 
@@ -1673,7 +1671,7 @@ calculatePloidy <- function(
         mainMaxCopyPasses <-TRUE
       }else{
         mainMaxCopyPasses <-FALSE
-        logerror('mainPeak is %s; -too- high (or NA); redo digital peaks', peakInfo[mainPeakIndex,'nCopy'] )
+        # logerror('mainPeak is %s; -too- high (or NA); redo digital peaks', peakInfo[mainPeakIndex,'nCopy'] )
       }
 
 
@@ -1699,11 +1697,11 @@ calculatePloidy <- function(
       }else{
         if(gridIteration+1 < numPeaks){
           gridIteration <- gridIteration+1
-          logwarn("rerun digital grid: %s", gridIteration)
+          # logwarn("rerun digital grid: %s", gridIteration)
         }else{
           gridIteration <- gridIteration+1000 # high value will exit out of while loop
-          logwarn('digital grid not quite right,(not TRUE: %s), but too many gridIterations; exiting while loop to try something different',
-                  paste(c('mainMaxCopyPasses','pTumorPasses','twoNPresentPasses')[-which(c(mainMaxCopyPasses,pTumorPasses,twoNPresentPasses))]))
+          # logwarn('digital grid not quite right,(not TRUE: %s), but too many gridIterations; exiting while loop to try something different',
+                  # paste(c('mainMaxCopyPasses','pTumorPasses','twoNPresentPasses')[-which(c(mainMaxCopyPasses,pTumorPasses,twoNPresentPasses))]))
         }
 
       }
@@ -1720,7 +1718,7 @@ calculatePloidy <- function(
   #####'
   if(densityFirstDigPeak$testScore >= heterozygosityScoreThreshold &
      densitySecondDigPeak$testScore >= heterozygosityScoreThreshold){
-    logwarn('both of the first two digital peaks have a het score above the threshold: %.3f & %.3f >= %.2f',
+    logwarn('while allowed (it is a bad sign regarding data quality), both of the first two digital peaks have a het score above the threshold: %.3f & %.3f >= %.2f',
             densityFirstDigPeak$testScore, densitySecondDigPeak$testScore, heterozygosityScoreThreshold )
   }
 
@@ -1746,7 +1744,7 @@ calculatePloidy <- function(
       if(!newTuPercentValid){
         stop("new tumor percent is STILL not valid")
       }else{
-        loginfo('lets roll with this new Tumer Percent: %.1f', newTuPercent)
+        # loginfo('lets roll with this new Tumer Percent: %.1f', newTuPercent)
         percentTumor <- newTuPercent
         nCopyPeaks_while <- peakInfo[!is.na(peakInfo$nCopy),'nCopy']
       }
@@ -1763,12 +1761,12 @@ calculatePloidy <- function(
     testFirstPeakStep <- repeatSteps(peakInfo,keyHetScoresPerPeak,nCopyPeaks_step=nCopyPeaks_test)
 
     if(checkTumorPercent(testFirstPeakStep$percentTumor)){
-      logwarn('must increase copy number by 1 because first peak has two hetScore clusters but was only 1N')
+      # logwarn('must increase copy number by 1 because first peak has two hetScore clusters but was only 1N')
       nCopyPeaks_while <- nCopyPeaks_while+1
       peakInfo <- testFirstPeakStep$peakInfo
       percentTumor <- testFirstPeakStep$percentTumor
     }else{
-      logwarn('will not increase copy number by 1 even though first peak has two hetScore clusters and is 1N because the tumor percent will not be valid')
+      # logwarn('will not increase copy number by 1 even though first peak has two hetScore clusters and is 1N because the tumor percent will not be valid')
       firstPeakMustBeTwoNorMore <- FALSE
     }
 
@@ -1809,7 +1807,7 @@ calculatePloidy <- function(
     hetScoreQuantiles <- forceStep$hetScoreQuantiles
     hetTestScoreFor3NPeak <- NA
     test3Npeaks <- FALSE
-    loginfo("first digital peak forced to %iN with %.1f tumor percent", nCopyPeaks_final[1], percentTumor)
+    # loginfo("first digital peak forced to %iN with %.1f tumor percent", nCopyPeaks_final[1], percentTumor)
   }else if(length(nCopyPeaks_while)==1 &
            # numPeaks==1 &  # test length of nCopyPeaks_while rather than numPeaks
            nCopyPeaks_while[1]==1){
@@ -1821,7 +1819,7 @@ calculatePloidy <- function(
     hetScoreQuantiles <- onePeakStep$hetScoreQuantiles
     hetTestScoreFor3NPeak <- NA
     test3Npeaks <- FALSE
-    loginfo("first digital peak changed from 1N to 2N even though hetscore was below the threshold (%.3f) because it is the only peak", densityFirstDigPeak$testScore)
+    # loginfo("first digital peak changed from 1N to 2N even though hetscore was below the threshold (%.3f) because it is the only peak", densityFirstDigPeak$testScore)
 
   }else if(densityFirstDigPeak$testScore >= heterozygosityScoreThreshold &
            densitySecondDigPeak$testScore >=heterozygosityScoreThreshold ){
@@ -1869,8 +1867,8 @@ calculatePloidy <- function(
 
         }else{
           # no third peak so go ahead
-          logwarn('reducing copy number by 1 (because it is safe to do so: 1st peak will not be 0N and does not have multiple het score clusters ) and
-            because it is more likely that the first two peaks are 1N 2N, rather than 2N 3N')
+          # logwarn('reducing copy number by 1 (because it is safe to do so: 1st peak will not be 0N and does not have multiple het score clusters ) and
+            # because it is more likely that the first two peaks are 1N 2N, rather than 2N 3N')
 
           nCopyPeaks_final <- nCopyPeaks_while-1
           test3Npeaks <- FALSE
@@ -1887,12 +1885,12 @@ calculatePloidy <- function(
               which.max(c(densityFirstDigPeak$observ,    densitySecondDigPeak$observ   ))==1){
       #  strong support that of the two peaks, the 1st dig peak is more likely the 2N peak
       if(nCopyPeaks_while[1]==2){
-        loginfo('the first two peaks both have high het scores but no change to copy number needed')
+        # loginfo('the first two peaks both have high het scores but no change to copy number needed')
         nCopyPeaks_final <- nCopyPeaks_while
       }else if(nCopyPeaks_while[1]==1){
-        logwarn('increasing copy number by 1 because the first two peaks both have high het scores and
-                  it is more likely that the first two peaks are 2N 3N, rather than 1N 2N,
-                  because the first peak hetScore is bigger AND has more observations')
+        # logwarn('increasing copy number by 1 because the first two peaks both have high het scores and
+        #           it is more likely that the first two peaks are 2N 3N, rather than 1N 2N,
+        #           because the first peak hetScore is bigger AND has more observations')
         nCopyPeaks_final <- nCopyPeaks_while+1
       }else if(nCopyPeaks_while[1]>=3){
         stop(sprintf('nCopyPeaks_while[1] = %i, this is not possible, is it? inspect further!',nCopyPeaks_while[1]))
@@ -1905,7 +1903,7 @@ calculatePloidy <- function(
       hetTestScoreFor3NPeak <- NA
 
     }else{
-      logwarn('the first two peaks both have high het scores but it is not clear which one should be the 2N peak')
+      # logwarn('the first two peaks both have high het scores but it is not clear which one should be the 2N peak')
     }
 
   }
@@ -1928,14 +1926,14 @@ calculatePloidy <- function(
       if(!is.na(densityResult4$testScore)){
         # testing if it is ok to make the tested 3N peak the 4N peak, this test could fail if the testScore of the 3N peak (proposed 4N) has LOH, uncommon but maybe common enough to cause problems?
         if(densityResult4$testScore < densityResult3$testScore){   # proposed 5N peak < proposed 4N peak ?
-          logwarn('increase copy number by 1 because it is safe to do so: het score of 4N peak (proposed 5N) is less than 3N peak (proposed 4N): %.3f < %.3f',  densityResult4$testScore, densityResult3$testScore)
+          # logwarn('increase copy number by 1 because it is safe to do so: het score of 4N peak (proposed 5N) is less than 3N peak (proposed 4N): %.3f < %.3f',  densityResult4$testScore, densityResult3$testScore)
           nCopyPeaks_final <- nCopyPeaks_while+1
         }else{
-          loginfo('NOT increasing copy number by 1 because it is NOT safe to do so: het score of 4N peak (proposed 5N) would be more than 3N peak (proposed 4N): %.3f !< %.3f',  densityResult4$testScore, densityResult3$testScore)
+          # loginfo('NOT increasing copy number by 1 because it is NOT safe to do so: het score of 4N peak (proposed 5N) would be more than 3N peak (proposed 4N): %.3f !< %.3f',  densityResult4$testScore, densityResult3$testScore)
           nCopyPeaks_final <- nCopyPeaks_while
         }
       }else{
-        loginfo('NOT increasing copy number by 1 because it is NOT safe to do so: no het score from 4N peak (proposed 5N) to test')
+        # loginfo('NOT increasing copy number by 1 because it is NOT safe to do so: no het score from 4N peak (proposed 5N) to test')
         nCopyPeaks_final <- nCopyPeaks_while
       }
       return(nCopyPeaks_final)
@@ -1965,7 +1963,7 @@ calculatePloidy <- function(
 
 
     if(!cn3existsTemp){
-      loginfo('no 3N peak to test')
+      # loginfo('no 3N peak to test')
       nCopyPeaks_final <- nCopyPeaks_while
       hetTestScoreFor3NPeak <- NA
       densityResult3 <- NA
@@ -1979,7 +1977,7 @@ calculatePloidy <- function(
       }
 
       if(densityResult3$observ < 15){
-        logwarn('only %i segments in 3N peak, not enough to test reliably, not changing copy number of 3N peak', densityResult3$observ)
+        # logwarn('only %i segments in 3N peak, not enough to test reliably, not changing copy number of 3N peak', densityResult3$observ)
         nCopyPeaks_final <- nCopyPeaks_while
         hetTestScoreFor3NPeak <- NA
       }else{
@@ -2005,24 +2003,17 @@ calculatePloidy <- function(
           percentTumorTemp <- NA_real_
         }
 
-        # TODO: 26278 do not want to decrease copy number because then the new 3N peak will have the highest het score, even bigger than the new 4N peak
-        #       test for this occurrence before deciding to increase/decrease copy number.
-        # TODO: 58061 do not want to increase copy number because then the new 5N peak will have the highest het score, even bigger than the new 4N peak
-        #       test for this occurrence before deciding to increase/decrease copy number.
 
         # to compare to the 3N peak het scores
-
         ### test 3N peak for three het score clusters
-        # TODO: test lowering the heterozygosityScoreThreshold for this test? ie. LU19102 & LU19103 right cluster=0.978
         peakHas3HetScoreClusters <- hasNorMoreClusters(densityResult3,N=3,heterozygosityScoreThreshold = heterozygosityScoreThreshold-.005 )
 
         if(peakHas3HetScoreClusters){
-          # incrementBy=
-          logwarn('temp3N peak has 3 or more het score clusters, must be 4N or more, increasing copy number by 1')
+          # logwarn('temp3N peak has 3 or more het score clusters, must be 4N or more, increasing copy number by 1')
           nCopyPeaks_final <- nCopyPeaks_while+1
 
         }else if(hetTestScoreFor3NPeak >= heterozygosityScoreThreshold){
-          logwarn('temp 3N Peak het score is above threshold: %.3f >= %.2f',  hetTestScoreFor3NPeak,heterozygosityScoreThreshold )
+          # logwarn('temp 3N Peak het score is above threshold: %.3f >= %.2f',  hetTestScoreFor3NPeak,heterozygosityScoreThreshold )
 
           # make sure percentTumor isn't too low, otherwise checking the 3N peak isn't a good test.
           if(!is.na(percentTumorTemp) & percentTumorTemp >= 15){ # TODO: what is the correct value? This percent tumor isn't the final value though, will change if copy number is changed
@@ -2039,7 +2030,7 @@ calculatePloidy <- function(
             ##  First see if we --MUST-- increase copy number?
             if(firstPeakMustBeTwoNorMore &&
                nCopyPeaks_while[1]==1){  # if numHetClusters=2, copyNum must be at least 2, so increasing is ok, in fact it is necessary
-              logwarn('increasing copy number by 1 because first peak needs it too')
+              # logwarn('increasing copy number by 1 because first peak needs it too')
               nCopyPeaks_final <- nCopyPeaks_while+1
 
               # do some checks before decreasing copy number such that   3-->2 and 2-->1
@@ -2050,26 +2041,26 @@ calculatePloidy <- function(
                 if(!is.na(densityResult4$testScore)){
                   # if(densityResult4$testScore < heterozygosityScoreThreshold){ # check proposed 3N peak -- this is not as reliable in low tumor samples
                   if(densityResult4$testScore < densityResult3$testScore ){       # compare to proposed 3N peak -- only works if there is a higher peak to test
-                    logwarn('reducing copy number by 1 because it is safe to do so: no 0N peak and het score of 4N peak (proposed 3N) is less than 3N peak (proposed 2N): %.3f < %.3f',  densityResult4$testScore, densityResult3$testScore)
+                    # logwarn('reducing copy number by 1 because it is safe to do so: no 0N peak and het score of 4N peak (proposed 3N) is less than 3N peak (proposed 2N): %.3f < %.3f',  densityResult4$testScore, densityResult3$testScore)
                     nCopyPeaks_final <- nCopyPeaks_while-1
                   }else{
                     # TODO: what about when all the het Scores are above threshold (due to low tumor % ie 80180)
                     #       for example could reduce copy number when densityResult1$testScore & densityResult2$testScore & densityResult3$testScore are all above .98
-                    loginfo('NOT reducing copy number by 1 because it is NOT safe to do so: het score of 4N peak (proposed 3N) would be more than 3N peak (proposed 2N): %.3f !< %.3f',  densityResult4$testScore, densityResult3$testScore)
+                    # loginfo('NOT reducing copy number by 1 because it is NOT safe to do so: het score of 4N peak (proposed 3N) would be more than 3N peak (proposed 2N): %.3f !< %.3f',  densityResult4$testScore, densityResult3$testScore)
                     nCopyPeaks_final <- nCopyPeaks_while
                   }
                 }else{
-                  loginfo('NOT reducing copy number by 1 because it is NOT safe to do so: no het score of 4N peak (proposed 3N) to test')
+                  # loginfo('NOT reducing copy number by 1 because it is NOT safe to do so: no het score of 4N peak (proposed 3N) to test')
                   nCopyPeaks_final <- nCopyPeaks_while
                 }
               }else{
                 # check het score of the temp2N peak to make sure it is ok to be 1N, but only do this if it is a reliable test
                 if(densityResult2$observ >= minObservations &  densityResult2$testScore >= heterozygosityScoreThreshold){
                   # this peak needs to stay 2N do not change
-                  logwarn('not reducing copy number by 1 because it is not safe to do so: would result in a 1N peak with high het score. No new 3N peak to test')
+                  # logwarn('not reducing copy number by 1 because it is not safe to do so: would result in a 1N peak with high het score. No new 3N peak to test')
                   nCopyPeaks_final <- nCopyPeaks_while
                 }else{
-                  logwarn('reducing copy number by 1 because it is safe to do so: no 0N peak will result and no new 3N peak to test')
+                  # logwarn('reducing copy number by 1 because it is safe to do so: no 0N peak will result and no new 3N peak to test')
                   nCopyPeaks_final <- nCopyPeaks_while-1
                 }
               }
@@ -2077,7 +2068,7 @@ calculatePloidy <- function(
               # do some checks before increasing copy number....
             }else{
               if(nCopyPeaks_dig[1] < nCopyPeaks_while[1]){
-                logwarn('NOT changing copy number, it was already increased in while loop') # increasing again would make first peak 3N, which would more likely be an error than doing nothing
+                # logwarn('NOT changing copy number, it was already increased in while loop') # increasing again would make first peak 3N, which would more likely be an error than doing nothing
                 nCopyPeaks_final <- nCopyPeaks_while
               }else if(cn2existsTemp){
                 if( densityResult2$observ >= 15 &
@@ -2086,41 +2077,41 @@ calculatePloidy <- function(
                   # this test could fail if the testScore of the tested 3N peak (proposed 4N) has LOH, uncommon but maybe common enough to cause problems?
                   if((densityResult2$testScore+0.004) <= densityResult3$testScore){   # proposed 3N peak <= proposed 4N peak ?
                     # TODO: changed from 0.005 to 0.004 because 0.005 is too much for 26258, but I could fix it by forcingFirst digital peak if 0.005 is required for some other sample
-                    logwarn('increase copy number by 1 because it is safe to do so: het score of 2N peak (proposed 3N) is less than (or equal to) tested 3N peak (proposed 4N): %.3f+0.004 <= %.3f',  densityResult2$testScore, densityResult3$testScore)
+                    # logwarn('increase copy number by 1 because it is safe to do so: het score of 2N peak (proposed 3N) is less than (or equal to) tested 3N peak (proposed 4N): %.3f+0.004 <= %.3f',  densityResult2$testScore, densityResult3$testScore)
                     nCopyPeaks_final <- nCopyPeaks_while+1
                   }else{
-                    loginfo('NOT increasing copy number by 1 because it is NOT safe to do so: het score of 2N peak (proposed 3N) is not less than (or equal to) tested 3N peak (proposed 4N): %.3f+0.004 !<= %.3f',  densityResult2$testScore+0.005, densityResult3$testScore)
+                    # loginfo('NOT increasing copy number by 1 because it is NOT safe to do so: het score of 2N peak (proposed 3N) is not less than (or equal to) tested 3N peak (proposed 4N): %.3f+0.004 !<= %.3f',  densityResult2$testScore+0.005, densityResult3$testScore)
                     nCopyPeaks_final <- nCopyPeaks_while
                   }
                 }else{
                   if(cn4existsTemp){
                     if(densityResult4$observ >= 15){  # TODO what is a good number of observ for the temp cn4 peak?
-                      loginfo('not enough data in 2N peak (proposed 3N) so check 4N peak (proposed 5N)')
+                      # loginfo('not enough data in 2N peak (proposed 3N) so check 4N peak (proposed 5N)')
                       nCopyPeaks_final <- testsForIncreasingCNof4Npeak()
                     }else{
-                      loginfo('not enough data in 2N peak (proposed 3N) and not enough data (%i observ) in 4N peak (proposed 5N) to test',densityResult4$observ)
-                      loginfo('thus NOT increasing copy number by 1 because it is NOT safe to do so: no het scores to test')
+                      # loginfo('not enough data in 2N peak (proposed 3N) and not enough data (%i observ) in 4N peak (proposed 5N) to test',densityResult4$observ)
+                      # loginfo('thus NOT increasing copy number by 1 because it is NOT safe to do so: no het scores to test')
                       nCopyPeaks_final <- nCopyPeaks_while
                     }
                   }else if(!cn4existsTemp){
-                    loginfo('not enough data in 2N peak (proposed 3N) and no 4N peak (proposed 5N) to test')
-                    loginfo('thus NOT increasing copy number by 1 because it is NOT safe to do so: no het scores to test')
+                    # loginfo('not enough data in 2N peak (proposed 3N) and no 4N peak (proposed 5N) to test')
+                    # loginfo('thus NOT increasing copy number by 1 because it is NOT safe to do so: no het scores to test')
                     nCopyPeaks_final <- nCopyPeaks_while
                   }
                 }
               }else if(cn4existsTemp){
-                loginfo('no 2N peak (proposed 3N) so check 4N peak (proposed 5N)')
+                # loginfo('no 2N peak (proposed 3N) so check 4N peak (proposed 5N)')
                 # TODO: do i need to check length of valid 4N peak indexes?
                 nCopyPeaks_final <- testsForIncreasingCNof4Npeak()
               }else{
-                loginfo('NOT increasing copy number by 1, because it is NOT safe to do so: no proposed 3N or proposed 5N peak to test')
+                # loginfo('NOT increasing copy number by 1, because it is NOT safe to do so: no proposed 3N or proposed 5N peak to test')
                 nCopyPeaks_final <- nCopyPeaks_while
               }
             }
           }else{
             # when tumor percent is low, or coverage is low, het scores for odd peaks will creep past the cut off of 0.98,
             # in which case we will allow the 3N peak to go over the threshold and will not change copy number
-            logwarn('tumor percent with 3N as main peak is less than 15%, too low to test so will not change copy number')
+            # logwarn('tumor percent with 3N as main peak is less than 15%, too low to test so will not change copy number')
             nCopyPeaks_final <- nCopyPeaks_while
           }
         }else{
@@ -2136,14 +2127,14 @@ calculatePloidy <- function(
       hetScoreQuantiles <- test3NStep$hetScoreQuantiles
       if(percentTumor > allowedTumorPercent){
         if(!all(nCopyPeaks_final == nCopyPeaks_while)){
-          logerror('undo change to copy number, percentTumor cannot be above 100')
+          # logerror('undo change to copy number, percentTumor cannot be above %i',allowedTumorPercent)
           nCopyPeaks_final <- nCopyPeaks_while
           peakInfo <- whileLoopStep$peakInfo
           percentTumor <- whileLoopStep$percentTumor
           hetScoreQuantiles <- whileLoopStep$hetScoreQuantiles
         }
       }else{
-        logdebug('percent tumor after testing 3N peak passes')
+        # logdebug('percent tumor after testing 3N peak passes')
       }
 
     }
@@ -2159,7 +2150,7 @@ calculatePloidy <- function(
 
     if(length(diploidIndex)==0){
       # when we specified/forced the first digital peak, or bumped up the peaks, we ended up with no 2N peak, so we need to extrapolate it
-      loginfo('extrapolating 2N peak')
+      # loginfo('extrapolating 2N peak')
 
       bestPeaksResult <- getTwoBestPeakIndexes(peakCopyNum = peakInfo$nCopy, peakHeight = peakInfo$peakHeight)
 
@@ -2178,7 +2169,7 @@ calculatePloidy <- function(
       # which peakRD_1bp, peakRD_normX is diploid peak
       normPeaks2Nindex <- which.min(abs(dPeaks[diploidIndex] - (peakInfo$peakReadDepth_normX * n00)))
       if(which(peakInfo$nCopy==2) != normPeaks2Nindex){
-        logerror('peakInfo$peakReadDepth_normX and peakInfo are out of sync, normPeaks2Nindex = %i',normPeaks2Nindex)
+        # logerror('peakInfo$peakReadDepth_normX and peakInfo are out of sync, normPeaks2Nindex = %i',normPeaks2Nindex)
       }
       expReadsIn2NPeak_1bp <- peakInfo[normPeaks2Nindex, 'peakReadDepth_1bp']
 
@@ -2234,7 +2225,7 @@ calculatePloidy <- function(
       testFirstDigPeakPasses_1 <- TRUE
     }
     if(!testFirstDigPeakPasses_1){
-      logwarn(sprintf('Confirmation failed: %i clusters in first digital peak, but it is not 2N or higher', densityFirstDigPeak$numHetClusters))
+      # logwarn(sprintf('Confirmation failed: %i clusters in first digital peak, but it is not 2N or higher', densityFirstDigPeak$numHetClusters))
     }
 
     ### test 2)
@@ -2244,7 +2235,7 @@ calculatePloidy <- function(
       testFirstDigPeakPasses_2 <- TRUE
     }
     if(!testFirstDigPeakPasses_2){
-      logwarn('test score of first digital peak is above threshold, %.3f > %.2f,  but copy number is %i',densityFirstDigPeak$testScore, heterozygosityScoreThreshold, nCopyPeaks_final[1])
+      # logwarn('test score of first digital peak is above threshold, %.3f > %.2f,  but copy number is %i',densityFirstDigPeak$testScore, heterozygosityScoreThreshold, nCopyPeaks_final[1])
     }
 
 
@@ -2271,12 +2262,12 @@ calculatePloidy <- function(
 
         if(peakHas3HetScoreClustersDC){  # 3N peaks can not have more than 2 het score clusters
           threeNpasses <- FALSE
-          logwarn("3N het score has too many clusters: %.3f > 2", testScoreForPeak$numHetClusters)
+          # logwarn("3N het score has too many clusters: %.3f > 2", testScoreForPeak$numHetClusters)
         }
         # check testScore
         if( testScoreForPeak$testScore >= heterozygosityScoreThreshold){
           threeNpasses <- FALSE
-          logwarn("3N het score is high: %.3f >= %.2f (percentTumor: %.1f)",testScoreForPeak$testScore, heterozygosityScoreThreshold,percentTumor)
+          # logwarn("3N het score is high: %.3f >= %.2f (percentTumor: %.1f)",testScoreForPeak$testScore, heterozygosityScoreThreshold,percentTumor)
         }
       }
     }
@@ -2288,11 +2279,11 @@ calculatePloidy <- function(
     if(length(cn2index) > 0){
       twoNpasses <- ifelse(peakInfo[cn2index,'rankByHeight'] <=4, TRUE, FALSE)
       if(!twoNpasses){
-        logwarn("twoNpasses=FALSE: 2N peak is not one of the top four prominent peaks: %i of %i",peakInfo[cn2index,'rankByHeight'],max(peakInfo[,'rankByHeight']))
+        # logwarn("twoNpasses=FALSE: 2N peak is not one of the top four prominent peaks: %i of %i",peakInfo[cn2index,'rankByHeight'],max(peakInfo[,'rankByHeight']))
       }
     }else{
       twoNpasses <- FALSE
-      logwarn("twoNpasses=FALSE: 2N peak does not exist")
+      # logwarn("twoNpasses=FALSE: 2N peak does not exist")
     }
 
     ### fourNpasses:  --------
@@ -2334,7 +2325,7 @@ calculatePloidy <- function(
       if(all(c(fourNgt1N, fourNgt3N,fourNgt5N), na.rm=TRUE)){
         fourNpasses <- TRUE
       }else{
-        logwarn('4N q85th het. score: %s is lower than 1 or more -odd- CN levels (1N, 3N and/or 5N)', round(hetScoreQuantiles[cn4index,'q0.85'],4)  )
+        # logwarn('4N q85th het. score: %s is lower than 1 or more -odd- CN levels (1N, 3N and/or 5N)', round(hetScoreQuantiles[cn4index,'q0.85'],4)  )
         fourNpasses <- FALSE
       }
     }
@@ -2457,7 +2448,7 @@ calculatePloidy <- function(
 
 
   mainPeakIndex <- which(peakInfo$rankByHeight==1)
-  loginfo('Main peak is %sN',peakInfo[mainPeakIndex,'nCopy'])
+  # loginfo('Main peak is %sN',peakInfo[mainPeakIndex,'nCopy'])
 
   ## return output -------------
   ploidyOutput <- list(expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp,
@@ -2491,7 +2482,7 @@ plotHetScoreVsPeakMode <- function(peakInfo,segmentData,sampleId, alternateId, p
 
 
   firstDigPeakKey <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
-  logdebug('firstDigPeakKey %i ',firstDigPeakKey)
+  # logdebug('firstDigPeakKey %i ',firstDigPeakKey)
 
   rdNormX_firstDigPeak <- peakInfo[firstDigPeakKey, 'peakReadDepth_normX']  # index = firstDigPeakIndex
   numDigPeaks = sum(!is.na(peakInfo$dPeaks))
