@@ -10,7 +10,7 @@
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear genome plot, default is red
 #' @param zebraStrips option to have alternating gray/white background for chromosome delineation
-#' @param yAxisLimits
+#' @param yAxisLimits option to set y axis to user specified limits
 #' @param ... Parameters passed onto the actual plot command
 #' @inheritParams commonParameters
 #' @examples
@@ -21,7 +21,7 @@
 #' segmentation= loadSegmentationFile(segmentationFile) # chr, start, end, rd per segment
 #' thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 #' readDepthBinnedData = readRDS(file=thirtyKbFile )
-#'   yAxisLimits = starCloudResult$plotAxisLimits$nrdAxisLims
+#'
 #' op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 #' # default cnv color coding and annotations
 #' linearGenomePlot(readDepthBinnedData=readDepthBinnedData,sampleId=sampleId,segmentation=segmentation)

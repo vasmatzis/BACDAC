@@ -28,6 +28,8 @@ calculateHetScore(
 \arguments{
 \item{sampleId}{sample identifier, used as prefix for all input and output file names \code{<sampleId>_snpVals_<chromosome>.Rdata} and \code{<sampleId>_countBP_<chromosome>.Rdata}}
 
+\item{alternateId}{optional secondary sample identifier}
+
 \item{inputDir}{full path to snpVal and countBP Rdata}
 
 \item{outputDir}{full path for output files}

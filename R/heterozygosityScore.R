@@ -20,6 +20,7 @@
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear geneome plot, default is red
 #' @param noDelAmpDetection do not color code deletions and gains in genome plot
+#' @inheritParams commonParameters
 #'
 #' @examples
 #' sampleId='TCGA-14-1402-02A_ds'

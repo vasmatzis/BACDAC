@@ -37,7 +37,8 @@ commonParameters(
 
 \item{alternateId}{optional secondary sample identifier}
 
-\item{segmentation}{identified regions of the genome with constant read depth. Contains chromosome, start, end, expected CNV, actual CNV and other values we do not need.}
+\item{segmentation}{identified regions of the genome with constant read depth. Data.frame with required columns:
+chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color coded linear linear genome plot}
 
 \item{segmentationBinSize}{bin size used for the read depth in the segmentation data}
 
