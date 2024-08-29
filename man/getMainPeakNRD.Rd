@@ -2,15 +2,15 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{getMainPeakNRD}
 \alias{getMainPeakNRD}
-\title{NRD of the main Peak in the ---cnvBinned data---
+\title{Find the NRD of the main Peak in the ---cnvBinned data---
 Will equal 2 if main peak is the normal peak}
 \usage{
-getMainPeakNRD(result)
+getMainPeakNRD(calcPloidyResult)
 }
 \arguments{
-\item{result}{output from \code{calculatePloidy()}}
+\item{calcPloidyResult}{object returned from \code{calculatePloidy}}
 }
 \description{
-NRD of the main Peak in the ---cnvBinned data---
+Find the NRD of the main Peak in the ---cnvBinned data---
 Will equal 2 if main peak is the normal peak
 }

@@ -4,11 +4,14 @@
 \name{BACDAC-package}
 \alias{BACDAC}
 \alias{BACDAC-package}
-\title{BACDAC: Ploidy Analysis using the Binomial Allelic Content with Discretization Algorithm and Constellation plot}
+\title{BACDAC: Ploidy Analysis using Binomial Allelic Content with Discretization Algorithm and Constellation plot}
 \description{
-Reports tumor ploidy and purity from whole-genome sequencing data including low-pass low-tumor NGS.
-    Inputs include read-depth and segmentation data, and ref/alt counts for common single nucleutide polymorphisms (SNPs). Calculates 
-    the "Heterozygosity Score" and produces the Constellation plot to visualize allele-specific copy-number as shown in publication xyz.
+Reports tumor ploidy and purity from whole-genome sequencing (WGS) 
+    data including low-pass low-tumor NGS. Inputs include read-depth and 
+    segmentation data, and ref/alt counts for common single nucleutide 
+    polymorphisms (SNPs). Calculates the "Heterozygosity Score" and produces 
+    the Constellation plot to visualize allele-specific copy-number as shown in 
+    publication xyz.
 }
 \author{
 \strong{Maintainer}: Sarah H Johnson \email{johnson.sarah14@mayo.edu} (\href{https://orcid.org/0000-0001-7412-5322}{ORCID})

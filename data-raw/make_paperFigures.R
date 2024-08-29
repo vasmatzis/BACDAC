@@ -166,7 +166,7 @@
   # right figure
   op <- par(mar=c(5,3,2,1),mgp=c(1.5, 0.5,0))
   figLabel='F'
-  yAxisLimits=convertYlimitsToNrd(starCloudResult, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
+  yAxisLimits=convertYlimitsToRD(starCloudResult, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
   linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
                     gainColor = 'blue', lossColor= 'red', yAxisLimits = yAxisLimits)

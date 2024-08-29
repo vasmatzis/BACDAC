@@ -26,3 +26,4 @@ Other copyNumberCalcs:
 \code{\link{calcTumorRatio}()}
 }
 \concept{copyNumberCalcs}
+\keyword{internal}

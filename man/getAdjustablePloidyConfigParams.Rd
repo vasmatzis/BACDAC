@@ -2,12 +2,11 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{getAdjustablePloidyConfigParams}
 \alias{getAdjustablePloidyConfigParams}
-\title{parameters available for non-default config inputs to calculatePloidy() as determined through testing
-returns the columns included in the ploidySampleConfig.csv file}
+\title{parameters available for non-default config inputs to calculatePloidy() as determined through testing}
 \usage{
 getAdjustablePloidyConfigParams()
 }
 \description{
 parameters available for non-default config inputs to calculatePloidy() as determined through testing
-returns the columns included in the ploidySampleConfig.csv file
 }
+\keyword{internal}

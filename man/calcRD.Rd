@@ -7,11 +7,11 @@
 calcRD(nrd, wsz, expReadsIn2NPeak_1bp)
 }
 \arguments{
+\item{nrd}{normalized read depth}
+
 \item{wsz}{window size}
 
 \item{expReadsIn2NPeak_1bp}{expected number of reads in a 1 bp bin for the diploid peak}
-
-\item{NRD}{normalized read depth}
 }
 \description{
 find read depth per window size from NRD

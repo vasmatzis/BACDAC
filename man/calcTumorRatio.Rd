@@ -25,3 +25,4 @@ Other copyNumberCalcs:
 \code{\link{calcTau}()}
 }
 \concept{copyNumberCalcs}
+\keyword{internal}

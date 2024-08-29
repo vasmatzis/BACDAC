@@ -36,4 +36,3 @@ getModeOrMaxScore(
 If enough data ( >minObserv ) return testScore=right-most mode that is big enough (> consider PeakCutoff * max peak) and numHetClusters > 20\% max peak
 If not enough data return max loh score and numHetClusters =NA
 }
-\keyword{internal}

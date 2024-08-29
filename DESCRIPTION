@@ -1,5 +1,5 @@
 Package: BACDAC
-Title: Ploidy Analysis using the Binomial Allelic Content with Discretization Algorithm and Constellation plot
+Title: Ploidy Analysis using Binomial Allelic Content with Discretization Algorithm and Constellation plot
 Version: 0.0.5
 Authors@R: c(
   person("George", "Vasmatzis",    role = c("aut"),       email = "vasmatzis.george@mayo.edu"),
@@ -7,9 +7,12 @@ Authors@R: c(
   person("James", "Smadbeck", role = c("aut")),
   person("Roman", "Zenka",    role = c("aut")) 
   )
-Description: Reports tumor ploidy and purity from whole-genome sequencing data including low-pass low-tumor NGS.
-    Inputs include read-depth and segmentation data, and ref/alt counts for common single nucleutide polymorphisms (SNPs). Calculates 
-    the "Heterozygosity Score" and produces the Constellation plot to visualize allele-specific copy-number as shown in publication xyz.
+Description: Reports tumor ploidy and purity from whole-genome sequencing (WGS) 
+    data including low-pass low-tumor NGS. Inputs include read-depth and 
+    segmentation data, and ref/alt counts for common single nucleutide 
+    polymorphisms (SNPs). Calculates the "Heterozygosity Score" and produces 
+    the Constellation plot to visualize allele-specific copy-number as shown in 
+    publication xyz.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a license
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -29,4 +32,8 @@ Imports:
     graphics,
     methods,
     utils,
-    stats
+    stats,
+    pastecs,
+    plyr,
+    scales,
+    data.table (>= 1.14.0)

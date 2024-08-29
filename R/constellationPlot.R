@@ -304,7 +304,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
   if(!is.null(segmentData)){
     starInfoTemp <- list(starVals=starVals,medStarVals=medStarVals,plotStarRange=plotStarRange)
     starLookUp <- makeStarLookUpTable(starCloudResult=starInfoTemp,percentTumor=tau*100)
-    allelicSegments <- allelicCNV(starLookUp, segmentDataIn=segmentData)
+    allelicSegments <- allelicCNV(starLookUp, segmentData=segmentData)
     lohContent <- getLohContent(allelicSegments)  ## getLohContent() is in ploidy.R
     lohContentA_maj2_min0 <- lohContent$lohContentA_maj2_min0
     loginfo('2N+LOH content: %s',round(lohContentA_maj2_min0,3))
@@ -470,14 +470,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
   ))
 }
 
-convertYlimitsToNrd=function(starCloudResult, wsz, expReadsIn2NPeak_1bp){
-  minYplotNRD = starCloudResult$plotAxisLimits$nrdAxisLims[1]
-  maxYplotNRD = starCloudResult$plotAxisLimits$nrdAxisLims[2]
-  minYplotRD=  calcRD(nrd=minYplotNRD, wsz=readDepthPer30kbBin$windowSize, expReadsIn2NPeak_1bp)
-  maxYplotRD=  calcRD(nrd=maxYplotNRD, wsz=readDepthPer30kbBin$windowSize, expReadsIn2NPeak_1bp)
-  yAxisLimits=c(minYplotRD, maxYplotRD)
-  return(yAxisLimits)
-}
+
 
 #' draw the constellation plot and the linear genome plot side by side
 #' @export
@@ -502,7 +495,7 @@ twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbB
 
   # right figure
   op <- par(mar=c(5,3,2,1),mgp=c(1.5, 0.5,0))
-  yAxisLimits=convertYlimitsToNrd(starCloudResult, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
+  yAxisLimits=convertYlimitsToRD(starCloudResult, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
   linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
                     gainColor = gainColor, lossColor= lossColor, yAxisLimits = yAxisLimits)

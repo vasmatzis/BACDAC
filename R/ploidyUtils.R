@@ -1,8 +1,8 @@
-#' NRD of the main Peak in the ---cnvBinned data---
+#' Find the NRD of the main Peak in the ---cnvBinned data---
 #' Will equal 2 if main peak is the normal peak
-#' @param result output from \code{calculatePloidy()}
+#' @param calcPloidyResult object returned from \code{calculatePloidy}
 #'
-getMainPeakNRD=function(result){
+getMainPeakNRD=function(calcPloidyResult){
   expReadsIn2NPeak_1bp= result$expReadsIn2NPeak_1bp
   mainPeakKey=which(result$peakInfo$rankByHeight==1)
   mainPeakReadDepth_1bp = result$peakInfo[mainPeakKey,'peakReadDepth_1bp']
@@ -11,9 +11,10 @@ getMainPeakNRD=function(result){
   return(mainPeakNRD)
 }
 
-#' NRD of the diploid peak from the binned read depth data
+#' Find the NRD of the diploid peak from the binned read depth data
+#' @param calcPloidyResult object returned from \code{calculatePloidy}
 #'
-getDiploidPeakNRD=function(result){
+getDiploidPeakNRD=function(calcPloidyResult){
   mainPeakKey=which(result$peakInfo$rankByHeight==1)
   rdNormX_Mainpeak = result$peakInfo[mainPeakKey,'peakReadDepth_normX']
 
@@ -93,7 +94,6 @@ hetScoreDensity <- function(segmentsCloseToPeak,segmentData, index,sampleId,fold
 #' @param skipPlot logical to control making density plot
 #' @param minObserv
 #'
-#' @keywords internal
 getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0.25, plotTextPrefix=NULL,
                               folderId=NULL, sampleId=NULL, skipPlot=FALSE, minObserv=15,default=0, heterozygosityScoreThreshold) {
   # dataIn=lohScores; considerPeakCutoff=0.06; countPeakCutoff=0.25; minObserv=15;skipPlot=FALSE;default=0
@@ -146,7 +146,6 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
     # SJ-dpi: only finds two but the max is the far right of the right 2 clusters
     # SJ-ste: finds three clusters
     if(FALSE){
-      library(pastecs)
       op <- par(mfrow=c(3,1),mar=c(3, 3.5, 1.5, 1),mgp=c(1.5, 0.5,0))
       bwMethodsAll <-  c( "ucv", "nrd","nrd0","bcv", "SJ-dpi",  "SJ-ste")
       for(bwMethod in bwMethodsAll ){
@@ -168,7 +167,7 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
 
         plot(hetDen,main=bwMethod ); rug(dataIn)
         # Get scores for peaks only
-        #peakScores <- hetDen$x[extract(hetDenY.tp, no.tp = FALSE, peak = TRUE, pit = FALSE)]
+        #peakScores <- hetDen$x[pastecs::extract(hetDenY.tp, no.tp = FALSE, peak = TRUE, pit = FALSE)]
 
         ## Get all the scores that seem interesting (i.e. big enough)
         peakConsidX <- hetDen$x[hetDenY.tp$pos[which(hetDenY.tp$peaks & hetDenY.tp$points > considerPeakCutoff*maxPeakY)]]
@@ -208,7 +207,7 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
         hetDen <- density(data,bw=bwMethod)
         hetDenY.tp <- pastecs::turnpoints(hetDen$y)
         lines(hetDen, col = i)
-        peakScores <- hetDen$x[extract(hetDenY.tp, no.tp = FALSE, peak = TRUE, pit = FALSE)]
+        peakScores <- hetDen$x[pastecs::extract(hetDenY.tp, no.tp = FALSE, peak = TRUE, pit = FALSE)]
         print(peakScores)
         abline(v=peakScores, col=i);
         # mtext(round(peakScores,3), side=3, at=peakScores, cex=0.5)
@@ -329,6 +328,8 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
 #' @examples calcTumorRatio(rd1=1.2,rd2=2,cn1=2,cn2=4)
 #' @examples calcTumorRatio(rd1=2, rd2=3.5, cn1=1,cn2=2) # 58163 = .155
 #' @family copyNumberCalcs
+#' @export
+#' @keywords internal
 calcTumorRatio=function(rd1,rd2,cn1,cn2){
   D <- abs(rd1-rd2)/abs(cn1-cn2) # expected difference between two peaks  copy number, i.e. 1N and 2N
   T <- 2*D/(rd1+D*(2-cn1))
@@ -345,6 +346,8 @@ calcTumorRatio=function(rd1,rd2,cn1,cn2){
 #' @examples calcTau(NRD=2.9,cn=3)
 #' @family copyNumberCalcs
 #'
+#' @export
+#' @keywords internal
 calcTau <- function(cn, NRD){
   tau  <-  (NRD-2)/ (cn-2)
   return(tau)
@@ -360,10 +363,12 @@ calcTau <- function(cn, NRD){
 #' @examples calcCopyNumber(NRD=4,tau=0.75)
 #' @family copyNumberCalcs
 #'
+#' @export
+#' @keywords internal
 calcCopyNumber <- function(NRD, tau){
   #nrd=2+((iCN-2)*tau)
   cn <- 2+ ((NRD-2)/tau)
-  return(cn)
+  return(round(cn,1))
 }
 
 
@@ -373,18 +378,20 @@ calcCopyNumber <- function(NRD, tau){
 #' @param tau tumor fraction
 #' @examples calcNrd(cn=3,tau=.7)
 #' @family copyNumberCalcs
-#'
+#' @export
+#' @keywords internal
 calcNrd <- function(cn, tau){
   nrd <- 2+((cn-2)*tau)
-  return(nrd)
+  return(round(nrd,3))
 }
 
 #' find read depth per window size from NRD
-#' @param NRD normalized read depth
+#' @param nrd normalized read depth
 #' @param wsz window size
 #' @param expReadsIn2NPeak_1bp expected number of reads in a 1 bp bin for the diploid peak
 calcRD=function(nrd, wsz, expReadsIn2NPeak_1bp){
   rd=(nrd/2)*wsz*expReadsIn2NPeak_1bp
+  return(round(rd,3))
 }
 
 #' converts pkmod rather than rd to nrd, normalized read depth
@@ -401,11 +408,13 @@ pkmodToNRD <- function(segmentData, peakInfo, rdNormX_2Npeak){
 }
 
 
-#' interpolate read depth for a give copy number
+#' extrapolate or interpolate read depth for a give copy number
 #'
 #' given read depth and copy number for two other positions
 #' @examples extrapRD(cn=2,cn1=4,cn2=5,rd1=2,rd2=2.376)
 #'
+#' @export
+#' @keywords internal
 extrapRD <- function(cn,cn1,cn2,rd1,rd2){
   rd  <-  rd1 + ((cn - cn1) / (cn2 - cn1)) * (rd2 - rd1)
   return(rd)
@@ -420,7 +429,7 @@ extrapRD <- function(cn,cn1,cn2,rd1,rd2){
 #' Do not default to two biggest peaks, we want to use lower copy number peaks which will typically align to the digital grid better due to less (sub) clonal mixing
 #' @param peakCopyNum from peakInfo, copy number for the peak
 #' @param peakHeight from peakInfo, height of each peak normalized so max peak = 1
-#'
+#' @noRd
 getTwoBestPeakIndexes <- function(peakCopyNum, peakHeight){
   # peakCopyNum = peakInfo$nCopy; peakHeight  = peakInfo$peakHeight;
   # peakHeight=c(0.568, NA, 1.0, 0.501, 0.584, 0.086, 0.039); peakCopyNum=c(3, NA,  4,  5,  7,  8, 12)
@@ -509,6 +518,7 @@ getTwoBestPeakIndexes <- function(peakCopyNum, peakHeight){
 #' @param peakHeight from peakInfo, height of each peak normalized so max peak = 1, to determine two best peaks
 #' @param peakReadDepth_1bp from peakInfo, read depth per peak normalized to 1bp window
 #'
+#' @noRd
 calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,dPeaks){
   # peakInfo=result$peakInfo
   # peakCopyNum = peakInfo$nCopy; peakHeight  = peakInfo$peakHeight; peakReadDepth_1bp=peakInfo$peakReadDepth_1bp; dPeaks=peakInfo$dPeaks
@@ -536,7 +546,6 @@ calcTumorFromPloidyPeaks <- function(peakCopyNum, peakHeight,peakReadDepth_1bp,d
 #'
 #' @param chromStarts must be same window size scale as the plotted frequency data
 #' @param maxcn max chromosome number
-#' @keywords internal
 markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
   chroms <- convertChromToCharacter(1:maxcn)
   abline(v=chromStarts[1:maxcn], col=vCol)
@@ -547,11 +556,8 @@ markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
 }
 
 
-
-
-
-
-#' @keywords internal
+#' list of colors to use for the peaks in \code{peaksByDensity}
+#'
 getCNcolors <- function(){
   # cnColors <- c(palette()[-1], "orange", 'white', palette()[-1]) # remove black, add orange, white, and repeat to make sure we have enough colors
 
@@ -563,155 +569,51 @@ getCNcolors <- function(){
 
 
 
-
-
-
-
-
-#' create the starLookUp table
-#' @keywords internal
-makeStarLookUpTable <- function(starCloudResult,percentTumor){
-  # percentTumor= ploidyOutput$percentTumor
-
-  # create the starLookUp table
-  hetScore <- starCloudResult$starVals / starCloudResult$medStarVals
-  nrd <- starCloudResult$plotStarRange
-  cn <- round(calcCopyNumber(NRD=nrd, tau=percentTumor/100))
-  starLookUp <- data.frame(hetScore,
-                           nrd=round(nrd,3),
-                           cn,
-                           major=0,    # initialize to 0
-                           minor=0 )   # initialize to 0
-
-  # assign major and minor allele columns for each CN and het score
-  # the cnLOH level will be the first row, the heterozygous level the last row, within the rows for a given copy number level.
-  for(icn in 1:max(cn)){
-    # icn=6
-    minor <- seq(from=0, to=icn/2)
-    major <-  icn-minor
-    starLookUp[which(starLookUp[,'cn']==icn),'major'] <- major
-    starLookUp[which(starLookUp[,'cn']==icn),'minor'] <- minor
-  }
-  return(starLookUp)
-}
-
-
-
-
-#' allele specific cnv
-#' 1) find CN for the segment by rounding the cnLevel to an integer
-#' 2) find which closest star, within that CN, is closest to the hetScore of the segment
-#' 3) the closest star is then the segment's major:minor allele
+#' chromosome segment colors
 #'
-allelicCNV <- function(starLookUp, segmentDataIn){
-  # see alleleCNVtesting() for testing different strategies
-
-  dfColumns <-  c('Chr','Start','End','Size', 'Copy_Number', 'Major_Copy_Number', 'Minor_Copy_Number')
-
-
-  # segmentDataIn=result$segmentData
-
-  # get rid of some of those columns that are annoying me
-  segmentDataOut <- segmentDataIn[,c('chr','start','end','size','rd', 'nrd','lohScoreMedian','valid','cnLevel')]
-
-  # round the copy number level to get an integer value
-  segmentDataOut[['copy_number']] <- round(segmentDataOut$cnLevel)     # integer
+#' one color for each chromosome 1-22
+getSegmentColors=function(){
+  ### one color for each chromosome 1-22
+  segColors <- c(
+    #E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00","#A65628","#F781BF",
+    "red","blue","cyan","gray45","magenta",
+    "#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F","#E5C494","gray75",
+    "purple","#00FF92FF")
 
 
-  # for each segment, based on the CN and hetScore, list the major and minor allele as integers
-  for(i in 1:nrow(segmentDataOut)){
-    # i <- 56; segmentDataOut[i,]
+  # if(FALSE){
+  #   # how the colors above were created
+  #   segColors <- c(RColorBrewer::brewer.pal(9, 'Set1')[-c(6,9)] ,                     # remove the yellow and gray
+  #                  'red', 'blue', 'cyan', 'gray45','magenta',                         # to get to 22
+  #                  RColorBrewer::brewer.pal(8, 'Set2')[-c(8)], 'gray75',              # replace the gray with a slightly lighter color
+  #                  'purple', "#00FF92FF"
+  #   )
+  #
+  #   # past color scheme that was not ideal
+  #   segColorsOld <- c(
+  #     'black',
+  #     RColorBrewer::brewer.pal(9, 'Set1')[-c(6)] ,                     # remove the yellow and gray
+  #     palette()[-7],
+  #     '#FF0000FF', '#00FF92FF', '#FFDB00FF',  '#0092FFFF',  '#4900FFFF',  '#FF00DBFF'
+  #   )
+  #   plot(1:22, type='n');    #abline(v=7.5);    abline(v=13.5)
+  #   points(x=1:22, y=rep(5,22), pch=1:22, cex=2,col=segColors)
+  #   points(x=1:22, y=rep(3,22), pch=1:22, cex=2,col=segColorsOld)
+  # }
 
-    if(!is.na(segmentDataOut[i, 'valid']) &&
-       segmentDataOut[i, 'valid'] == 1){ # hetScore mean and median are both not zero
-      iHetScore <- segmentDataOut[i, 'lohScoreMedian']
-
-      # find which hetScore in the starLookUp table is the closest to the segment hetScore
-      iCN <- segmentDataOut[i,'copy_number']
-      key <- which(starLookUp[,'cn']==iCN)
-      keyInd <- which.min(abs(iHetScore-starLookUp[key,'hetScore']))
-      #assign the major and minor values from the starLookUp table to the segment
-      if(length(keyInd)==1){
-        segmentDataOut[i,'major_copy_number'] <- starLookUp[key[keyInd],'major']
-        segmentDataOut[i,'minor_copy_number'] <- starLookUp[key[keyInd],'minor']
-      }
-    }
-  }
-  # clean up columns
-  # names(df)[names(df) == 'old.var.name'] <- 'new.var.name'
-  names(segmentDataOut)[names(segmentDataOut) == "lohScoreMedian"] <- "heterozygosity_score"
-  names(segmentDataOut)[names(segmentDataOut) == "cnLevel"] <- "copy_clonality"
-  names(segmentDataOut)[names(segmentDataOut) == "nrd"] <- "normalized_read_depth"
-  names(segmentDataOut)[names(segmentDataOut) == "rd"] <- "read_depth"
-
-
-  zero=which(segmentDataOut$minor_copy_number==0)
-  segmentDataOut[zero,]
-
-
-
-  return(segmentData=segmentDataOut)
-}
-
-#' get LOH content metrics used to identify high-ploidy
-#'
-#' @param allelicSegData segment data returned from \code{calculatePloidy} and augmented with major and minor allele specific copy number
-#' @return a list with the three metrics used by us (A) and other authors (B and C)
-#' lohContentA_maj2_min0
-#' lohContentB_maj1_min0
-#' lohContentC_maj2
-#' @keywords internal
-getLohContent <- function(allelicSegData){
-  numTotalSegments <- nrow(allelicSegData)
-  hemiDel_keys  <-  which(allelicSegData$minor==0 & allelicSegData$copy_number == 1)
-  cnLOH_keys <- which(allelicSegData$minor==0 & allelicSegData$copy_number == 2)
-  gainLOH_keys <- which(allelicSegData$minor==0 & (allelicSegData$copy_number ==3 | allelicSegData$copy_number ==4))
-  ampLOH_keys <- which(allelicSegData$minor==0 & allelicSegData$copy_number >=5)
-  allLOH_keys <- c(cnLOH_keys, gainLOH_keys,ampLOH_keys)
-
-  sum(allelicSegData[hemiDel_keys,'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[cnLOH_keys,  'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[gainLOH_keys,'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[ampLOH_keys, 'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-  sum(allelicSegData[allLOH_keys, 'size'] )/sum(allelicSegData[,'size']) # weighted by length of segment
-
-  sum(allelicSegData[cnLOH_keys,'size'] )/sum(allelicSegData[,'size'])
-  sum(allelicSegData[cnLOH_keys,'size'] * allelicSegData[cnLOH_keys,'copy_number']  )/sum(allelicSegData[,'size']) # also weighted by copy_number
-
-  # cnLohRatioA = lohContentA_maj2_min0
-  # cnLohRatioB = lohContentB_maj1_min0
-  # mcnGtEq2Ratio = lohContentC_maj2
-
-  #svatools methodA: minor allele = 0 and major  >=2 aka 2N+LOH
-  minorEq0_cnGtEq2_keys <- which(allelicSegData$minor==0 & allelicSegData$copy_number >= 2)
-  lohContentA_maj2_min0_NW        <- length(minorEq0_cnGtEq2_keys)/ numTotalSegments  # not weighted, WRONG
-  lohContentA_maj2_min0_pW        <- sum(allelicSegData[minorEq0_cnGtEq2_keys,'size']* allelicSegData[minorEq0_cnGtEq2_keys,'copy_number'] )/sum(allelicSegData[,'size']) # weighted by length of segment and copy number
-  lohContentA_maj2_min0           <- sum(allelicSegData[minorEq0_cnGtEq2_keys,'size'] )/sum(allelicSegData[,'size'])                                                   # weighted by length of segment
-
-  #svatools methodB: minor allele = 0 (will include CN=1) aka all LOH including haploid LOH
-  minorEq0_keys  <- which(allelicSegData$minor==0 )
-  lohContentB_maj1_min0_NW <- length(minorEq0_keys)/numTotalSegments  # not weighted
-  lohContentB_maj1_min0    <- sum(allelicSegData[minorEq0_keys,'size'])/sum(allelicSegData[,'size']) # weighted by length of segment
-
-
-  #bielski method: major allele, copy number (MCN) >=2
-  majorGtEq2_keys <- which(allelicSegData$major>=2)
-  lohContentC_maj2_NW  <- length(majorGtEq2_keys)/numTotalSegments  # not weighted
-  lohContentC_maj2    <- sum(allelicSegData[majorGtEq2_keys,'size'])/sum(allelicSegData[,'size']) # weighted by length of segment
-  return(list(lohContentA_maj2_min0=lohContentA_maj2_min0,
-              lohContentB_maj1_min0=lohContentB_maj1_min0,
-              lohContentC_maj2=lohContentC_maj2)
-  )
+  return(segColors)
 }
 
 
 
 #' parameters available for non-default config inputs to calculatePloidy() as determined through testing
-#' returns the columns included in the ploidySampleConfig.csv file
 #' @export
+#' @keywords internal
 getAdjustablePloidyConfigParams <- function(){
   columns <- c( "origMaxPercentCutoffManual","grabDataPercentManual","forceFirstDigPeakCopyNum","minPeriodManual","allowedTumorPercent","heterozygosityScoreThreshold",
                 "continueOnPloidyFail", "maxPeriodManual","minReasonableSegmentSize")
   return(columns)
 }
+
+
 

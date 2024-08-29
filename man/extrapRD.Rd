@@ -2,7 +2,7 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{extrapRD}
 \alias{extrapRD}
-\title{interpolate read depth for a give copy number}
+\title{extrapolate or interpolate read depth for a give copy number}
 \usage{
 extrapRD(cn, cn1, cn2, rd1, rd2)
 }
@@ -13,3 +13,4 @@ given read depth and copy number for two other positions
 extrapRD(cn=2,cn1=4,cn2=5,rd1=2,rd2=2.376)
 
 }
+\keyword{internal}

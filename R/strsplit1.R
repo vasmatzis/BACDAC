@@ -4,7 +4,6 @@
 #' @param split what to split on
 #'
 #' @return A character vector.
-#' @export
 #'
 #' @examples
 #' x <- "alfa,bravo,charlie,delta"

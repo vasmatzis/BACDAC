@@ -28,8 +28,7 @@
 #' @param allelicSegments            segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number
 #' @param peakInfo summary table of info for each peak found in \code{peaksByDensity}
 #' @param n00                       Precision for creating initial grid
-
-#' @param ideogram             The \link{ideogram} object. If not present, we attempt to use referenceGenomeDescriptor
+#' @param ideogram                  The ideogram object which is loaded with the package.
 
 commonParameters <- function(
  sampleId,

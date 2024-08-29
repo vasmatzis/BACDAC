@@ -87,7 +87,7 @@ commonParameters(
 
 \item{n00}{Precision for creating initial grid}
 
-\item{ideogram}{The \link{ideogram} object. If not present, we attempt to use referenceGenomeDescriptor}
+\item{ideogram}{The ideogram object which is loaded with the package.}
 }
 \description{
 A dummy function holding a list of all common parameters so
