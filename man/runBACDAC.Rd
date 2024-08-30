@@ -124,8 +124,8 @@ mySegmentation <- checkSegmentation(mySegmentation)
 
 mySegmentationBinSize=30000
 ## load two reference files
-myHsNormMat <- "./hetScoreNormMat.Rds"
-myTestVals <- "./testVals.Rds"
+hsNormMat <- "../referenceFiles/hetScoreNormMat.Rds"
+myTestVals <- "../referenceFiles/testVals.Rds"
 
 runBACDAC(sampleId=mySampleId,
           alternateId=myAlternateId,

@@ -12,8 +12,8 @@
   # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
 
   # NOTE: upload these files from Zenodo and specify your path here.
-  hsNormMat <- "./hetScoreNormMat.Rds"
-  testVals <-  "./testVals.Rds"
+  hsNormMat <- "../referenceFiles/hetScoreNormMat.Rds"
+  testVals <-  "../referenceFiles/testVals.Rds"
 
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 

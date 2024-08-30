@@ -10,7 +10,7 @@
 
   ### load data ###
   # NOTE: upload these files from Zenodo and specify your path here.
-  hsNormMat <- "./hetScoreNormMat.Rds"
+  hsNormMat <- "../referenceFiles/hetScoreNormMat.Rds"
   exampleDataDir <- system.file('extdata', package = "BACDAC")
   inputDir <- exampleDataDir
 

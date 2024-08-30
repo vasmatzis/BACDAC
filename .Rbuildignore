@@ -1,5 +1,6 @@
-^BACDAC\.Rproj$  # Designates the directory as an RStudio Project
-^\.Rproj\.user$  # Used by RStudio for temporary files
-^data-raw$       # Code used to create data included in the package
-^README\.Rmd$    # An Rmd file used to generate README.md
+^BACDAC\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^README\.Rmd$
 ^R/notes1\.R$
+^LICENSE$
