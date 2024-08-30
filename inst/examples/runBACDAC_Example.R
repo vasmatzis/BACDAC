@@ -21,9 +21,14 @@ mySegmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, e
 mySegmentation <- checkSegmentation(mySegmentation)
 
 mySegmentationBinSize=30000
-## load two reference files
-hsNormMat <- "../referenceFiles/hetScoreNormMat.Rds"
-myTestVals <- "../referenceFiles/testVals.Rds"
+
+## load two reference files  ---------------
+# NOTE: upload these files from Zenodo and edit to specify your path here.
+# https://zenodo.org/records/13619655
+hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
+myHsNormMat = readRDS(hsNormMatFile)
+testValsFile <-  "../referenceFiles/testVals.Rds"
+myTestVals = readRDS(testValsFile)
 
 runBACDAC(sampleId=mySampleId,
           alternateId=myAlternateId,
