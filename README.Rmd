@@ -18,12 +18,14 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-BACDAC is an R package for "Ploidy Analysis using the Binomial Allelic Content with Discretization Algorithm and Constellation plot"
+BACDAC is an R package for "Ploidy Analysis using the Binomial Allelic Content with 
+Discretization Algorithm and Constellation plot"
 
 Reports tumor ploidy and purity from whole-genome sequencing data including low-pass low-tumor NGS.
 
-Inputs include read-depth and segmentation data, and ref/alt counts for common single nucleutide polymorphisms (SNPs). Calculates 
-the "Heterozygosity Score" and produces the Constellation plot to visualize allele-specific copy-number as shown in publication xyz.
+Inputs include read-depth and segmentation data, and ref/alt counts for common single nucleutide 
+polymorphisms (SNPs). Calculates the "Heterozygosity Score" and produces the Constellation plot 
+to visualize allele-specific copy-number as shown in publication xyz.
 
 
 ## Installation
@@ -48,7 +50,8 @@ the publication:
   # inputDir: path to the package example data
   inputDir <- system.file('extdata', package = "BACDAC")
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= read.csv(segmentationFile, comment.char = '#', header = TRUE) # chr, start, end, rd per segment
+  segmentation= read.csv(segmentationFile, comment.char = '#', header = TRUE) 
+  # check for columns: chr, start, end, rd per segment
   segmentation=checkSegmentation(segmentation)
   thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
   readDepthPer30kbBin = readRDS(file=thirtyKbFile )
@@ -56,7 +59,8 @@ the publication:
 
   op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
  # default cnv color coding and annotations
- linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDepthBinSize, sampleId=sampleId,segmentation=segmentation)
+ linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDepthBinSize, 
+                  sampleId=sampleId,segmentation=segmentation)
 ```
 
 There are four main functions to be operated in this order:
@@ -66,29 +70,32 @@ There are four main functions to be operated in this order:
 3) `loadStarsInTheClouds()`
 4) `plotStarsInTheClouds()`
 
-The function `runBACDAC()` will run all steps sequentially. See the example for help running this function.
+The function `runBACDAC()` will run all steps sequentially. See the example for help running this 
+function. 
 
 ## Reference files
-Two reference files are also required. These are available at....  
-
+Two reference files are also required. These are available at https://zenodo.org/records/13619655  
 1) hsNormMat 
 2) testVals 
+When running the examples (as packaged with their current directory structure, if the files do not
+exist, they will be automatically downloaded and installed one level up from your current directory
+into `../referencefiles`
 
 
 ## Sample input Files
-There are four types of input files required for each sample you wish to test. The contents and
-any required file naming scheme are described below. Example data is included with the package for
+There are four types of input files required for each sample you wish to test. The contents and any
+required file naming scheme are described below. Example data is included with the package for
 testing and illustration of the expected structure and format of the data. This data also allows for
-full demonstration of the BACDAC features. The included data is from sample TCGA-14-1402-02A which was 
-down-sampled to a base coverage of 5x and then processed through our pipelines BIMA and svaTools. 
-We gave the sample the sampleId: `TCGA-14-1402-02A_ds`. All the input files are located in a single directory, 
-the `inputDir`. The required infput files are as follows:
+full demonstration of the BACDAC features. The included data is from sample TCGA-14-1402-02A which
+was down-sampled to a base coverage of 5x and then processed through our pipelines BIMA and
+svaTools. We gave the sample the sampleId: `TCGA-14-1402-02A_ds`. All the input files are located in
+a single directory, the `inputDir`. The required infput files are as follows:
 
 1) refAltCount data:
 
-23 files, one file for each chromosome 1-22 and X. The file is a matrix with four columns: chr pos ref alt.
-The file must be in `inputDir` and the file name is of the form `<sampleId>_1.Rds`, 
-saved using `saveRDS()`
+23 files, one file for each chromosome 1-22 and X. The file is a matrix with four columns: chr pos
+ref alt. The file must be in `inputDir` and the file name is of the form `<sampleId>_1.Rds`, saved
+using `saveRDS()`
 
 ```{r refAltCount}
 # example files in the package
@@ -106,8 +113,8 @@ str(segmentation)
 
 2) segmentation data:  
 One file with identified regions of the genome with constant read depth.   
-A data frame with required columns: chr, start, end, rd; where `rd` is the read depth or read count for 
-that segment. 
+A data frame with required columns: chr, start, end, rd; where `rd` is the read depth or read count
+for that segment. 
 optional column: cnvState (1=loss, 2=normal, 3=gain) for color coding the linear genome plot.  
 The bin size used for creating the segmentation file will also be needed.
 
@@ -135,7 +142,7 @@ A list with two equal length arrays and one item:
 
 4)  readDepthPer100kbBin       
 list with two equal length arrays and one item:
-  * `readDepthArray` read depth for 100 kb bins, normalized for GC content and other sequencing artifacts
+  * `readDepthArray` read depth for 100 kb bins, normalized for GC content and other artifacts
   * `goodWindowArray` linear genome position of each window (bin) (masked windows have been removed)
   * `readDepthBinSize` size of the bins in the read depth array, expecting 30000 or 100000
 
@@ -162,7 +169,8 @@ str(readDepthPer100kbBin)
 
 ## Linear Genome
 
-Linear genome coordinates are used throughout for ease of indexing. Helper functions are provided to help transform from single bp scale to a desired bin size.
+Linear genome coordinates are used throughout for ease of indexing. Helper functions are provided 
+to help transform from single bp scale to a desired bin size.
 
 ```{r}
 coords=BACDAC::getLinearCoordinates()
