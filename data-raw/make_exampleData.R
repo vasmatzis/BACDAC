@@ -51,7 +51,7 @@ if(FALSE){
   # hetScore data -----------
   # files made from bmdSvPipeline have different headers DO NOT USE
 
-  devPath='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  devPath=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Routput/BACDAC')
   outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata')
 
   oldLohPerArm <- file.path(devPath, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))

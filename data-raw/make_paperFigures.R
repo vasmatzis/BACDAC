@@ -24,7 +24,7 @@
   postProcessingDir=bmdSvPipeline::getPostProcessingDir(folder)
 
   # directory for output files:
-  outputDir=file.path('/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC',sampleId)
+  outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Routput/BACDAC',sampleId)
   # we will be writing to this path, make sure it exists
   if(!dir.exists(outputDir)){
     dir.create(path = outputDir)

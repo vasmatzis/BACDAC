@@ -90,12 +90,13 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
   # hsNormMat/lohMat: LOH analysis mask, used to look for places in 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
   # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
 
-  # NOTE: upload these files from Zenodo and edit to specify your path here.
-  # https://zenodo.org/records/13619655
-  hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
-  hsNormMat = readRDS(hsNormMatFile)
-  testValsFile <-  "../referenceFiles/testVals.Rds"
-  testVals = readRDS(testValsFile)
+  ## load two reference files  ---------------
+  # if these files do not exist, an attempt will be made to download them from Zenodo.
+  hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
+  hsNormMat = loadHsNormMat(hsNormMatFile, destfile=hsNormMatFile)
+
+  testValsFile <-  "../reference/testVals.Rds"
+  myTestVals = loadTestVals(testValsFile,destfile=testValsFile)
 
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 

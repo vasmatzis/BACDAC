@@ -106,9 +106,10 @@ If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   ### load data ###
-  # NOTE: upload these files from Zenodo and specify your path here.
-  hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
-  hsNormMat = readRDS(hsNormMatFile)
+
+  # if this file does not exist, an attempt will be made to download from Zenodo.
+  hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
+  hsNormMat = loadHsNormMat(hsNormMatFile, destfile=hsNormMatFile)
 
   exampleDataDir <- system.file('extdata', package = "BACDAC")
   inputDir <- exampleDataDir
