@@ -1,4 +1,5 @@
 if(FALSE){
+  build_readme() # very best way to render README.Rmd
 
   # convert from .Rdata to .Rds for better file management. To be loaded in to Zenodo
   myHsNormMat <- bmdTools::loadRdata(file.path(bmdTools::mainDir, 'NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata')) # aka lohMat
