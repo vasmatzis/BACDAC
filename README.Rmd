@@ -96,8 +96,6 @@ the publication:
   op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
  # default cnv color coding and annotations
  linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDepthBinSize, sampleId=sampleId,segmentation=segmentation)
-
-
 ```
 
 There are four main functions to be operated in this order:

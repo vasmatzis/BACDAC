@@ -3,7 +3,7 @@ library(BACDAC)
 library(logging)
 basicConfig("DEBUG")
 mySampleId='TCGA-14-1402-02A_ds'; myAlternateId=66301
-myOutputDir <- file.path('/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC', myAlternateId) # tempdir()
+myOutputDir <- tempdir()
 noPdf=TRUE                          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
 
 # inputDir is the path to the load package data
@@ -22,13 +22,8 @@ mySegmentation <- checkSegmentation(mySegmentation)
 
 mySegmentationBinSize=30000
 ## load two reference files
-# hsNormMat/lohMat: hetScores from 23 Normals,  101046 x 23 rows, one row for each 30kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment
-#                   used to look for places in 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
-# testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
-myHsNormMat <- readRDS(
-  '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/hetScoreNormMat.Rds')
-myTestVals <- readRDS(
-  '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rds')
+myHsNormMat <- "./hetScoreNormMat.Rds"
+myTestVals <- "./testVals.Rds"
 
 runBACDAC(sampleId=mySampleId,
           alternateId=myAlternateId,

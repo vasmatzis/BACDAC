@@ -22,6 +22,7 @@ if(FALSE){
     dir.create(file.path(outputDir))
   }
 
+  ### transfer files from one location to the package location ----------
   copyFileToNewLocation=function(oldFileNamePath, newFileNamePath){
     # cpCmd = paste('cp', oldFileNamePath, newFileNamePath)
     if(file.exists(oldFileNamePath)){
@@ -49,12 +50,13 @@ if(FALSE){
 
   # hetScore data -----------
   # files made from bmdSvPipeline have different headers DO NOT USE
+
   devPath='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
   outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata')
+
   oldLohPerArm <- file.path(devPath, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))
   newHetScorePerArm <- file.path(outputDir, paste0(sampleId, '_hetScorePerArm.csv'))
   copyFileToNewLocation(oldFileNamePath=oldLohPerArm, newFileNamePath=newHetScorePerArm)
-
 
   oldLohPerBin <- file.path(postProcessingDir, 'reports', paste0(sampleId, '_loh.wig.gz'))
   newHetScorePerBin <- file.path(outputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
@@ -86,14 +88,6 @@ if(FALSE){
   usethis::use_data(my_pkg_data)
 
 
-
-
-  # without chr column
-  # [m071478@mforgers3 data]$ du -hs
-  # 108M    .
-  # with chr column
-  # [m071478@mforgers3 data]$ du -hs
-  # 108M    .
 
   ### frequency array 1Kb, 30Kb, 100Kb ---------------
   folder=66301
@@ -128,3 +122,37 @@ if(FALSE){
 
 }
 
+numberOfBinsInEachChrom=function(){
+  # what is the number of bins for each chromosome
+  frq30 =readDepthPer30kbBin$readDepthArray
+  bin30 =readDepthPer30kbBin$goodWindowArray
+
+  frq100 =readDepthPer100kbBin$readDepthArray
+  bin100 =readDepthPer100kbBin$goodWindowArray
+
+  coords <- getLinearCoordinates(1:24)
+
+  start30=binnedPosStart(coords@chromStart, binSize = 30000)
+  start100=binnedPosStart(coords@chromStart, binSize = 100000)
+
+  bin30Sum=array(dim=24)
+  for(i in 1:24){
+    bin30Sum[i]=   sum( bin30>=start30[i] &
+                          bin30<start30[i+1])
+  }
+
+  bin100Sum=array(dim=24)
+  for(i in 1:24){
+    bin100Sum[i]=   sum( bin100>=start100[i] &
+                           bin100<start100[i+1])
+  }
+
+  sum(bin100Sum)
+  length(bin100)
+
+  sum(bin30Sum)
+  length(bin30)
+
+  cbind(bin30Sum, bin100Sum)
+
+}

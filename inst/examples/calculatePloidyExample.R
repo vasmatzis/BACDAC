@@ -9,11 +9,11 @@
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   ### load data ###
-  # TODO: upload to Zenodo file size= 18.6M
-  hsNormMat <- readRDS(
-    '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/hetScoreNormMat.Rds')
+  # NOTE: upload these files from Zenodo and specify your path here.
+  hsNormMat <- "./hetScoreNormMat.Rds"
   exampleDataDir <- system.file('extdata', package = "BACDAC")
   inputDir <- exampleDataDir
+
 
   # segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
@@ -33,7 +33,7 @@
   hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScoreData <- loadHetScoreFromWig(hetScorePerBinWigFile)
 
-  # defaults
+  ### defaults ###
   segmentationBinSize=30000; numChroms=24;
   omitAnnotations = FALSE;
   dPeaksCutoff=0.01;    penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;

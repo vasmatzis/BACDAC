@@ -107,10 +107,11 @@ If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
 
   ### load data ###
   # TODO: upload to Zenodo file size= 18.6M
-  hsNormMat <- readRDS(
-    '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/hetScoreNormMat.Rds')
+  hsNormMat <- "./referenceFiles/hetScoreNormMat.Rds"
   exampleDataDir <- system.file('extdata', package = "BACDAC")
   inputDir <- exampleDataDir
+
+  system.file('referenceFiles', package = "BACDAC")
 
   # segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))

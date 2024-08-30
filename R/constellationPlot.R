@@ -10,7 +10,7 @@
 #' @export
 loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile, hsNormMat, testVals, readDepthBinSize=30000,
                                  mainPeakNRD, expReadsIn2NPeak_1bp){
-  # TODO: testVals - not used, just passed out with the other data needed for the plot
+  # testVals - not used, just passed out with the other data needed for the plot
 
   yind=23
   mainChromsNoY <- 1:23
@@ -18,9 +18,8 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   autosomes= 1:22
   coords <- getLinearCoordinates(chromosomes = mainChroms)
 
-  ## load LOH wig file  ---------------
-  lohIn <- rtracklayer::import.wig(hetScorePerBinFile)
-
+  ## load hetScore wig file  ---------------
+  lohIn <- loadHetScoreFromWig(hetScorePerBinFile)
   # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
   inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
   loginfo('loading ref and alt counts from dir: %s', inputDir)
