@@ -11,7 +11,7 @@ linearGenomePlot(
   alternateId = NULL,
   segmentation = NULL,
   allelicSegments = NULL,
-  noDelAmpDetection = FALSE,
+  noDelGainCalls = FALSE,
   gainColor = "blue",
   lossColor = "red",
   zebraStrips = FALSE,
@@ -37,7 +37,7 @@ chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color cod
 
 \item{allelicSegments}{segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number}
 
-\item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
+\item{noDelGainCalls}{do not color code deletions and gains in genome plot}
 
 \item{gainColor}{color to use for gains in linear genome plot, default is blue}
 
@@ -45,7 +45,7 @@ chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color cod
 
 \item{zebraStrips}{option to have alternating gray/white background for chromosome delineation}
 
-\item{yAxisLimits}{option to set y axis to user specified limits}
+\item{yAxisLimits}{option to set y axis to user specified limits, e.g. to align with the constellation plot}
 
 \item{...}{Parameters passed onto the actual plot command}
 }
@@ -56,7 +56,6 @@ If sampleId is provided, title annotations will be added.
 \examples{
 sampleId='TCGA-14-1402-02A_ds'
 inputDir <- system.file('extdata', package = "BACDAC")
-outputDir=tempdir()
 segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
 segmentation <- checkSegmentation(segmentation)
@@ -65,10 +64,13 @@ readDepthPer30kbBin = readRDS(file=thirtyKbFile )
 
 op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
 # default copy number color coding
-linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,segmentation=segmentation)
+linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,
+    segmentation=segmentation)
 # example with no copy number color coding
-linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,noDelAmpDetection=TRUE,segmentation=segmentation)
+linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=sampleId,
+    noDelGainCalls=TRUE,segmentation=segmentation)
 # alternate copy number color coding, no sample id label
-linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=NULL,segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
+linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,sampleId=NULL,
+    segmentation=segmentation, gainColor = 'red', lossColor= 'blue' )
 
 }

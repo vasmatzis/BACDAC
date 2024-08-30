@@ -11,10 +11,31 @@ twoPanelReport(
   segmentation,
   sampleId = NULL,
   alternateId = NULL,
-  diploidPeakNRD = NULL,
   gainColor = "blue",
   lossColor = "red"
 )
+}
+\arguments{
+\item{starCloudPlotInputs}{object output from \link{loadStarsInTheClouds}}
+
+\item{calcPloidyResult}{object output from \link{calculatePloidy}}
+
+\item{readDepthPer30kbBin}{list with two equal length arrays:
+\itemize{
+\item \code{readDepthArray} read depth for 30 kb bins, normalized for GC content and other artifacts
+\item \code{goodWindowArray} linear genome position of each window (bin), masked windows have been removed
+}}
+
+\item{segmentation}{identified regions of the genome with constant read depth. Data.frame with required columns:
+chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color coded linear linear genome plot}
+
+\item{sampleId}{sample Identifier}
+
+\item{alternateId}{optional secondary sample identifier}
+
+\item{gainColor}{color for gains in the linear genome plot, default is blue}
+
+\item{lossColor}{color for losses in the linear genome plot, default is red}
 }
 \description{
 draw constellation plot left of the linear genome plot

@@ -1,6 +1,4 @@
-
-
-#' run all the steps in BACDAC, will output pdfs and intermediate files if outputDir is provided
+#' run all the steps in BACDAC, will output pdfs, intermediate and allele specific copy number data if outputDir is provided
 #' @inheritParams commonParameters
 #' @example inst/examples/runBACDAC_Example.R
 #' @export
@@ -16,13 +14,15 @@ runBACDAC=function(sampleId, alternateId,
                    minReasonableSegmentSize=5.5e6,
                    heterozygosityScoreThreshold=0.98,
                    allowedTumorPercent = 106){
+  # initialize
+  starCloudPlotInputs=NULL
 
   ### call calculateHetScore ---------
   # generate heterozygosity score by bin and by arm
   # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm
   loginfo('calculate heterozygosity score for %s ', sampleId)
 
-  listOfFiles=calculateHetScore(
+  listOfHetScoreFiles=calculateHetScore(
     sampleId=sampleId,
     inputDir=inputDir,
     outputDir=outputDir,
@@ -34,11 +34,11 @@ runBACDAC=function(sampleId, alternateId,
   )
 
   # hetScore data - the output from calculateHetScore()
-  hetScoreData <- as.data.frame(rtracklayer::import.wig(listOfFiles$hetScorePerBinFile))
+  hetScoreData <- as.data.frame(rtracklayer::import.wig(listOfHetScoreFiles$hetScorePerBinFile))
 
 
   ### call calculatePloidy ---------
-   loginfo('calculate ploidy for %s ', sampleId)
+  loginfo('calculate ploidy for %s ', sampleId)
   calcPloidyResult=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
                                    readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
                                    segmentation=segmentation, hetScoreData = hetScoreData,
@@ -53,30 +53,32 @@ runBACDAC=function(sampleId, alternateId,
                                    hsNormMat=hsNormMat
   )
 
-  calcPloidyResultOutputFile=file.path(outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
-
-
   loginfo('tumor Percent: %s',round(calcPloidyResult$percentTumor))
-  # segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
-  # loginfo('approximate ploidy: %s ',round(segmentPloidy,1) )
-
+  segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
+  loginfo('approximate ploidy: %s ',round(segmentPloidy,1) )
+  loginfo('will now create the contellation plot to confirm this result')
 
   mainPeakNRD=getMainPeakNRD(calcPloidyResult)
   expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
 
-  # initialize
-  starCloudResult=NULL
-  starCloudPlotInputs=NULL
+
 
 
   ### load and make input values for the constellation plot ----
-  if(is.null(starCloudPlotInputs)){     # run once only... it takes about 3-5 minutes
-    starCloudPlotInputs=loadStarsInTheClouds(sampleId=sampleId, inputDir=inputDir, readDepthPer30kbBin=readDepthPer30kbBin,hetScorePerBinFile=listOfFiles$hetScorePerBinFile,
-                                             hsNormMat=hsNormMat, testVals=testVals, wsz=30000, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
+  if(is.null(starCloudPlotInputs)){     #   takes about 3-5 minutes
+    starCloudPlotInputs=loadStarsInTheClouds(sampleId=sampleId, inputDir=inputDir, readDepthPer30kbBin=readDepthPer30kbBin,hetScorePerBinFile=listOfHetScoreFiles$hetScorePerBinFile,
+                                             hsNormMat=hsNormMat, testVals=testVals, readDepthBinSize=30000, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
   }
 
   ### draw constellation plot left of the linear genome plot ----
-  twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,gainColor=gainColor, lossColor= lossColor)
+  starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
+                 sampleId=sampleId,gainColor=gainColor, lossColor= lossColor)
 
+  loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
+  loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
+
+  # write segments to file
+  fileToWrite=file.path(outputDir, paste0(sampleId, '_BACDAC_allelic_segments.csv'))
+  write.csv(starCloudResult$allelicSegments,file =fileToWrite,row.names = FALSE )
 
 }

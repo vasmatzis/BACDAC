@@ -246,7 +246,7 @@ peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentat
   mtext(1, text='chr1-22 ',adj=1, line=-2)
   mtext(1, text=paste(round(sum(frqToUse)/1000000,1), 'mil') ,adj=1, line=-1)
 
-
+  par(op)
 
   # peakReadDepthList_per1bp = X positions of peaks (normalized as if window size was 1), this is so the output is consistent no matter what wsz was used, don't need to know what wsz was used later to use the values
   # normalize the peakHeightList so biggest peak has a height of one
@@ -877,7 +877,7 @@ digitalGrid <- function(peakInfo, gridHeights,
 #' Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
 #' Then find the expected number of reads in the 2N peak and normalize that value to one bp.
 #' Tumor percent is calculated from the two biggest digital peaks.
-#' If outputDir is provided and noPdf=FALSE, figures will saved to
+#' If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
 #'
 #' @param hetScoreData heterozygosity scores determined per 30 kb bin over a 1 Mb region
 #' @param minGridHeight minimum value that can be assigned to the gridHeights
@@ -925,13 +925,18 @@ calculatePloidy <- function(
 
   # TODO: consider moving this out of function, as part of set up etc.
   if (!noPdf) {
-    ploidyPdfFile <-file.path(dir=outputDir, paste0(sampleId, 'calculatePloidyFigures.pdf'))
-    if(!dir.exists(dirname(ploidyPdfFile@path))) {
-      loginfo("creating output directory: %s", dirname(ploidyPdfFile))
-      dir.create(path=file.path(dirname(ploidyPdfFile)),mode = "0775")
+    if(!is.null(outputDir)){
+      ploidyPdfFile <-file.path(dir=outputDir, paste0(sampleId, 'calculatePloidyFigures.pdf'))
+      if(!dir.exists(dirname(ploidyPdfFile@path))) {
+        loginfo("creating output directory: %s", dirname(ploidyPdfFile))
+        dir.create(path=file.path(dirname(ploidyPdfFile)),mode = "0775")
+      }
+      pdf(file = ploidyPdfFile, paper="a4r", width=8, height=10, title=paste0('calculatePloidy_',sampleId))
+      on.exit(dev.off(),add = TRUE)
+    }else{
+      logwarn('can not output pdf, outputDir=NULL, will print to plot window')
     }
-    pdf(file = ploidyPdfFile, paper="a4r", width=8, height=10, title=paste0('calculatePloidy_',sampleId))
-    on.exit(dev.off(),add = TRUE)
+
   }
 
 

@@ -7,9 +7,8 @@
 getDiploidPeakNRD(calcPloidyResult)
 }
 \arguments{
-\item{calcPloidyResult}{object returned from \code{calculatePloidy}}
+\item{calcPloidyResult}{object returned from \link{calculatePloidy}}
 }
 \description{
 Find the NRD of the diploid peak from the binned read depth data
 }
-\keyword{internal}

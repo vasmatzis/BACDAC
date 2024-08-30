@@ -2,7 +2,7 @@
 % Please edit documentation in R/runBACDAC.R
 \name{runBACDAC}
 \alias{runBACDAC}
-\title{run all the steps in BACDAC, will output pdfs and intermediate files if outputDir is provided}
+\title{run all the steps in BACDAC, will output pdfs, intermediate and allele specific copy number data if outputDir is provided}
 \usage{
 runBACDAC(
   sampleId,
@@ -97,7 +97,7 @@ but may vary depending on NGS library quality and preparation}
 \item{allowedTumorPercent}{allow some tolerance to go over 100 especially for PDXs which will very near 100}
 }
 \description{
-run all the steps in BACDAC, will output pdfs and intermediate files if outputDir is provided
+run all the steps in BACDAC, will output pdfs, intermediate and allele specific copy number data if outputDir is provided
 }
 \examples{
 \dontrun{
@@ -127,8 +127,10 @@ mySegmentationBinSize=30000
 # hsNormMat/lohMat: hetScores from 23 Normals,  101046 x 23 rows, one row for each 30kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment
 #                   used to look for places in 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
 # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
-myHsNormMat <- bmdTools::loadRdata('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata') # aka lohMat
-myTestVals <-  bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
+myHsNormMat <- readRDS(
+  '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/hetScoreNormMat.Rds')
+myTestVals <- readRDS(
+  '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rds')
 
 runBACDAC(sampleId=mySampleId,
           alternateId=myAlternateId,

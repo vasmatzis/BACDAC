@@ -1,6 +1,6 @@
 #' Combines ref/alt SNP data from each chromosome 1-22,X
 #'
-#' Calculate heterozygosity score by bin (.wig) and by chromosome arm (.csv). Save files to outputDir.
+#' Calculate heterozygosity score by bin (.wig) and by chromosome arm (.csv), save to outputDir.
 #'
 #' Will automatically create the the three panel plot, either to pdf or plot window.
 #' This three panel plot can also be called separately, see \link{makeHetScoreReportPdf}
@@ -17,7 +17,7 @@
 #' @param extraWindow Size of the window, how many bps to look at during each sampling step
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear geneome plot, default is red
-#' @param noDelAmpDetection do not color code deletions and gains in genome plot
+#' @param noDelGainCalls do not color code deletions and gains in genome plot
 #' @inheritParams commonParameters
 #'
 #' @example inst/examples/calculateHetScoreExample.R
@@ -43,7 +43,7 @@ calculateHetScore <- function(
     readDepthBinSize=30000,
     gainColor='blue',
     lossColor='red',
-    noDelAmpDetection=FALSE  # FALSE = gray plot, TRUE= use gain and loss info to color plot
+    noDelGainCalls=FALSE  # FALSE = gray plot, TRUE= use gain and loss info to color plot
 ) {
   # sysdata loaded automatically: rgdObject, ideogram
 
@@ -166,7 +166,7 @@ calculateHetScore <- function(
     readDepthBinSize=readDepthBinSize,
     sampleId=sampleId, alternateId = alternateId,
     outputDir=outputDir,
-    gainColor = gainColor, lossColor= lossColor,noDelAmpDetection=noDelAmpDetection,
+    gainColor = gainColor, lossColor= lossColor,noDelGainCalls=noDelGainCalls,
     noPdf=noPdf)
 
   return(list(hetScorePerBinFile=hetScorePerBinFile,
@@ -306,14 +306,13 @@ loadHetScoreFromWig <- function(wigFile) {
 #'   as created by \code{calculateHetScore}
 #' @param gainColor color to use for gains in linear genome plot, default is blue
 #' @param lossColor color to use for losses in linear geneome plot, default is red
-#' @param noDelAmpDetection do not color code deletions and gains in genome plot
+#' @param noDelGainCalls do not color code deletions and gains in genome plot
 #' @inheritParams commonParameters
 #' @examples
+#' library(BACDAC)
 #' sampleId='TCGA-14-1402-02A_ds'
-#' alternateId=NULL
-#' outputDir <- tempdir()
 #'
-#' # inputDir is the path to input data, here we point the example data provided in the package.
+#' # inputDir is the path to input data, here we use the example data provided in the package.
 #' inputDir <- system.file('extdata', package = "BACDAC")
 #' hetScorePerArmFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerArm.csv'))
 #' hetScorePerBinFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
@@ -329,7 +328,8 @@ loadHetScoreFromWig <- function(wigFile) {
 #' makeHetScoreReportPdf(
 #'    hetScorePerBinFile=hetScorePerBinFile,hetScorePerArmFile=hetScorePerArmFile,
 #'    segmentation=segmentation,readDepthPer30kbBin=readDepthPer30kbBin,
-#'    readDepthBinSize=readDepthPer30kbBin$windowSize,sampleId=sampleId,noPdf=TRUE)
+#'    readDepthBinSize=readDepthPer30kbBin$windowSize,sampleId=sampleId,
+#'    noPdf=TRUE, outputDir=NULL)
 #'
 #' @export
 makeHetScoreReportPdf <- function(hetScorePerBinFile,
@@ -340,7 +340,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinFile,
                                   sampleId,
                                   alternateId=NULL,
                                   outputDir,
-                                  gainColor = 'blue', lossColor= 'red', noDelAmpDetection=FALSE,
+                                  gainColor = 'blue', lossColor= 'red', noDelGainCalls=FALSE,
                                   noPdf=FALSE) {
 
   mainChroms <- 1:24
@@ -374,12 +374,11 @@ makeHetScoreReportPdf <- function(hetScorePerBinFile,
     hetScoreReportPdf=NULL
   }
 
-  op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0))  # define an outer margin for placing a title using mtext
-
+  op <- par(mfrow=c(3,1),oma=c(0, 1, 3, 1), mar=c(2, 4, 0.5, 0), mgp=c(2, .5, 0))  # define an outer margin for placing a title using mtext
   # Row 1: linear genome plot ----
   if(!is.null(readDepthPer30kbBin)){
     linearGenomePlot( readDepthPer30kbBin, wsz=readDepthBinSize, segmentation=segmentation,
-                      sampleId=NULL, noDelAmpDetection = noDelAmpDetection,
+                      sampleId=NULL, noDelGainCalls = noDelGainCalls,
                       gainColor = gainColor, lossColor= lossColor)
   }else{
     logwarn('no readDepthPer30kbBin provided so printing an empty linear Genome Plot')

@@ -4,7 +4,9 @@
   library(logging)
   # calculateHetScoreExample.R
   # generate heterozygosity score by bin and by chromosome arm and save to the output directory
-  # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm
+
+  # make a 3-panel plot, top panel is the segmentation data and the next two panels are the
+  # resulting hetscore by bin and by arm
 
   basicConfig("DEBUG")
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301

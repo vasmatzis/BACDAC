@@ -92,37 +92,30 @@ Fit the peaks from the read depth distributions to a digital grid.
 Evaluate the heterozygosity score to determine if first digital peak is 1N or 2N.
 Then find the expected number of reads in the 2N peak and normalize that value to one bp.
 Tumor percent is calculated from the two biggest digital peaks.
-If outputDir is provided and noPdf=FALSE, figures will saved to
+If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
 }
 \examples{
-\dontrun{
+
   library(BACDAC)
   library(logging)
   # calculatePloidyExample.R
   basicConfig("DEBUG")
-  noPdf=TRUE                          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
-  # outputDir = tempdir();              # output folder for pdfs etc.
-  # outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
-  outputDir = '/tmp/RtmpITBnDE'
+  noPdf=TRUE          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
+  outputDir = NULL    # output folder for pdfs, only needed if noPdf=FALSE
+
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   ### load data ###
-  inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
-
-  # hetScores from 23 Normals,  101046 x 23 rows, one row for each 30kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment
-  # TODO: can I also make this example data? or should it be downloaded separately? file size= 18.6M
-  hsNormMat <- bmdTools::loadRdata('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata') # aka lohMat
+  # TODO: upload to Zenodo file size= 18.6M
+  hsNormMat <- readRDS(
+    '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/hetScoreNormMat.Rds')
+  exampleDataDir <- system.file('extdata', package = "BACDAC")
+  inputDir <- exampleDataDir
 
   # segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
   segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
   segmentation <- checkSegmentation(segmentation)
-
-  # hetScore data - the output from calculateHetScore()
-  hetScoreDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC/reports'
-  hetScoreDir = file.path(outputDir,'reports')
-  hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
-  hetScoreData <- as.data.frame(rtracklayer::import.wig(hetScorePerBinWigFile))
 
   # read depth data
   thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
@@ -130,14 +123,21 @@ If outputDir is provided and noPdf=FALSE, figures will saved to
   hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
   readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
+  # hetScore data - the output from calculateHetScore()
+  # hetScoreDir is typically the outputDir specified in `calculateHetScore` but here we will load
+  # from the package example data.
+  hetScoreDir <- exampleDataDir
+  hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
+  hetScoreData <- loadHetScoreFromWig(hetScorePerBinWigFile)
 
   # defaults
   segmentationBinSize=30000; numChroms=24;
   omitAnnotations = FALSE;
-  dPeaksCutoff=0.01;    penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1; maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;   # digital peaks
-  grabDataPercentManual= -1; origMaxPercentCutoffManual=-1;  #  peaksByDensity
+  dPeaksCutoff=0.01;    penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;
+  maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;
+  grabDataPercentManual= -1; origMaxPercentCutoffManual=-1;
   minReasonableSegmentSize=5.5e6;
-  heterozygosityScoreThreshold=0.98;  # If segment hetScore is more than this, the segment is heterozygous
+  heterozygosityScoreThreshold=0.98;
   allowedTumorPercent = 106
 
 
@@ -157,13 +157,15 @@ If outputDir is provided and noPdf=FALSE, figures will saved to
                          hsNormMat=hsNormMat
   )
 
-  calcPloidyResultOutputFile=file.path(outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
-  loginfo('saving result to: \%s',calcPloidyResultOutputFile)
-  saveRDS(calcPloidyResult, file=calcPloidyResultOutputFile)
+  if(!is.null(outputDir)){
+    calcPloidyResultOutputFile=file.path(outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
+    loginfo('saving result to: \%s',calcPloidyResultOutputFile)
+    saveRDS(calcPloidyResult, file=calcPloidyResultOutputFile)
+  }
 
   loginfo('tumor percentage: \%s ',round(calcPloidyResult$percentTumor) )
   segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
   loginfo('approximate ploidy: \%s ',round(segmentPloidy,1) )
+  logwarn('now go create the contellation plot to confirm this result')
 
-}
 }

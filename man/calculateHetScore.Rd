@@ -22,7 +22,7 @@ calculateHetScore(
   readDepthBinSize = 30000,
   gainColor = "blue",
   lossColor = "red",
-  noDelAmpDetection = FALSE
+  noDelGainCalls = FALSE
 )
 }
 \arguments{
@@ -66,10 +66,10 @@ chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color cod
 
 \item{lossColor}{color to use for losses in linear geneome plot, default is red}
 
-\item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
+\item{noDelGainCalls}{do not color code deletions and gains in genome plot}
 }
 \description{
-Calculate heterozygosity score by bin (.wig) and by chromosome arm (.csv). Save files to outputDir.
+Calculate heterozygosity score by bin (.wig) and by chromosome arm (.csv), save to outputDir.
 }
 \details{
 Will automatically create the the three panel plot, either to pdf or plot window.
@@ -82,7 +82,9 @@ This three panel plot can also be called separately, see \link{makeHetScoreRepor
   library(logging)
   # calculateHetScoreExample.R
   # generate heterozygosity score by bin and by chromosome arm and save to the output directory
-  # make a 3-panel plot, top panel the segmentation data and the next two panels are the resulting hetscore by bin and by arm
+
+  # make a 3-panel plot, top panel is the segmentation data and the next two panels are the
+  # resulting hetscore by bin and by arm
 
   basicConfig("DEBUG")
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301

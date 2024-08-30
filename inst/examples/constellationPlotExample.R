@@ -1,126 +1,100 @@
 \dontrun{
-
   library(BACDAC)
   library(logging)
 
-  # intialize
-  starCloudResult=NULL;
+  # initialize
   starCloudPlotInputs=NULL
-  saveHetScoreRdata=FALSE
+
   noPdf=TRUE
 
   ## load two reference files  ---------------
   # hsNormMat/lohMat: LOH analysis mask, used to look for places in 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
   # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
-  hsNormMat <- bmdTools::loadRdata('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/lohMat.Rdata') # aka lohMat
-  testVals <-  bmdTools::loadRdata(file.path('/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rdata'))
+  hsNormMat <- readRDS(
+    '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/hetScoreNormMat.Rds')
+  testVals <- readRDS(
+    '/research/labs/experpath/vasm/shared/NextGen/Misc/pipelineInputs/hetScoreAnalysis/testVals.Rds')
 
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   # directory with input files:
-  inputDir <- system.file('extdata', package = "BACDAC") # or '/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata'
+  inputDir <- system.file('extdata', package = "BACDAC")
   readDepthPer30kbBin=  readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
+  readDepthBinSize=30000
 
   # directory for output files:
-  outputDir='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  outputDir=tempdir()
 
-  # result from heterozgygosityScore
-  hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
+  # result from calculateHetScore, but will use example data here
+  hetScorePerBinWigFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
 
-  # result from calculatePloidy
-  calcPloidyResultOutputFile=file.path(outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
+  # result from calculatePloidy, but will use example data here
+  calcPloidyResultOutputFile=file.path(inputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
   calcPloidyResult = readRDS(calcPloidyResultOutputFile)
   mainPeakNRD=getMainPeakNRD(calcPloidyResult)
   expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
 
   ### get the needed input values for the plot
   if(is.null(starCloudPlotInputs)){     # run once only... it takes about 3-5 minutes
-    starCloudPlotInputs=loadStarsInTheClouds(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinWigFile, hsNormMat, testVals, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
+    starCloudPlotInputs=loadStarsInTheClouds(
+      sampleId=sampleId, inputDir=inputDir, readDepthPer30kbBin=readDepthPer30kbBin,
+      hetScorePerBinWigFile=hetScorePerBinWigFile, readDepthBinSize=readDepthBinSize,
+      hsNormMat, testVals, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
   }
 
-  ### make the plot
+  ##### One Panel OPTION --------------------
   if (!noPdf) {
-    constellationPdfFile <- getTypedFile('constellationPlot',dir = outputDir, list(sampleId = sampleId))
-    pdf(file = constellationPdfFile@path, paper="a4r", width=8, height=10, title=paste0('hetScVsCN_',sampleId))
-    loginfo('writing pdf: %s', constellationPdfFile@path)
-    on.exit(dev.off(), add=TRUE)
+    # we will be writing to this path, make sure it exists
+    if(!dir.exists(file.path(outputDir))){
+      dir.create(path = file.path(outputDir))
+      loginfo('creating output directory for pdf: \n\t%s:', file.path(outputDir))
+    }
+    constellationPdfFile <- file.path(outputDir, paste0(sampleId, '_constellationPlot.pdf'))
+    pdf(file = constellationPdfFile, paper="a4r", width=8, height=10, title=paste0('constellationPlot_',sampleId))
+    loginfo('writing pdf: %s', constellationPdfFile)
   }
+
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
-  starCloudResult=plotStarsInTheClouds(sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
-                                       plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
-                                       segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
-                                       digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-                                       paperMode=TRUE)
+  starCloudResult=plotStarsInTheClouds(
+    sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+    plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
+    segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
+    digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
+    addAnnotations = TRUE)
+  par(op)
+
+  if (!noPdf) {
+    dev.off()
+  }
+
+  ##### One Panel OPTION with individual chromosome plots   --------------------
+  op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
+  starCloudResult=plotStarsInTheClouds(
+    sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+    plotEachChrom=TRUE, mainPeakNRD=mainPeakNRD,
+    segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
+    digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
+    addAnnotations = TRUE)
   par(op)
 
 
+  ##### Two Panel OPTION   --------------------
+  ### plot constellation plot with linear plot
 
-  ##### TWO PLOT OPTION ######
-  ### plot constellation plot with linear plot ----
-  # load read depth data
-  thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-  readDepthPer30kbBin = readRDS(file=thirtyKbFile )
   # load segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd
   segmentation <- checkSegmentation(segmentation)
 
-  hetScorePerBinWigFile <- file.path(outputDir, 'reports', paste0(sampleId, '_hetScorePerBin.wig.gz'))
-  hetScore <- loadHetScoreFromWig(hetScorePerBinWigFile)
+  ### draw constellation plot left of the linear genome plot ----
+  starCloudResult = twoPanelReport(
+    starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
+    readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
+    sampleId=sampleId, gainColor='blue', lossColor= 'red')
 
-
-
-  layout( matrix(c(1,2,2),
-                 nrow=1),
-          heights= c(1),
-          widths = c(1.5,2))   # Widths of the two columns
-  layout.show(2)
-
-  # left figure
-  op <- par(mar=c(5,3, 2,2.5),mgp=c(1.5, 0.5,0))
-  starCloudResult=plotStarsInTheClouds(sampleId=NULL, alternateId=NULL,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
-                                       plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
-                                       segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
-                                       digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-                                       paperMode=FALSE,plotCex=1.3)
-  par(op)
-
-  # right figure
-  op <- par(mar=c(5, 3, 2,1),mgp=c(1.5, 0.5,0))
-  linearGenomePlot( readDepthPer30kbBin=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
-                    allelicSegments=starCloudResult$allelicSegments,
-                    gainColor = 'blue', lossColor= 'red', yAxisLimits = yAxisLimits)
-  par(op)
-
-
-  ### save the results for future inspection ----
-  if(saveHetScoreRdata){
-    starLookUp=makeStarLookUpTable(starCloudResult,percentTumor=calcPloidyResult$percentTumor)
-
-    # TODO: maybe this should be moved inside plotStarsInTheClouds?
-    starCloudData <- list(
-      #outputs:
-      starLookUp=starLookUp,
-      expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp,
-      percentTumor=calcPloidyResult$percentTumor,
-      ploidyCN=starCloudResult$ploidyCN,
-      diploidPeakNRD=starCloudResult$diploidPeakNRD,
-      mainPeakNRD=mainPeakNRD,
-      ploidySegments=calcPloidyResult$segmentData,
-      lohContent=starCloudResult$lohContent,
-      plotAxisLimits=starCloudResult$plotAxisLimits,
-      # inputs:
-      forceFirstDigPeakCopyNum=forceFirstDigPeakCopyNum,
-      grabDataPercentManual=grabDataPercentManual,
-      minPeriodManual=minPeriodManual,
-      origMaxPercentCutoffManual=origMaxPercentCutoffManual,
-      allowedTumorPercent=allowedTumorPercent
-    )
-
-    starCloudResultFile=file.path(outputDir, paste0(sampleId, '_StarCloudResult.Rds'))
-    loginfo('saving result to: %s',starCloudResultFile)
-    saveRDS(starCloudData, file=starCloudResultFile)
-  }
-
+  # write segments to file
+  fileToWrite=file.path(outputDir, paste0(sampleId, '_bacdacAllelicSegments.csv'))
+  write.csv(starCloudResult$allelicSegments,file =fileToWrite,row.names = FALSE )
 
 }
+

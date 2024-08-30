@@ -4,10 +4,11 @@
 #' load all the data necessary to make the constellation plot
 #' @param mainPeakNRD the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak
 #' @param expReadsIn2NPeak_1bp expected number of reads in a 1 bp bin for the diploid peak
+#' @param hetScorePerBinFile full path to object output from \link{calculateHetScore}
 #' @inheritParams commonParameters
 #' @example inst/examples/constellationPlotExample.R
 #' @export
-loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile, hsNormMat, testVals, wsz=30000,
+loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScorePerBinFile, hsNormMat, testVals, readDepthBinSize=30000,
                                  mainPeakNRD, expReadsIn2NPeak_1bp){
   # TODO: testVals - not used, just passed out with the other data needed for the plot
 
@@ -16,7 +17,6 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   mainChroms <- 1:24
   autosomes= 1:22
   coords <- getLinearCoordinates(chromosomes = mainChroms)
-
 
   ## load LOH wig file  ---------------
   lohIn <- rtracklayer::import.wig(hetScorePerBinFile)
@@ -65,15 +65,15 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 
   ## make sure copy number chroms are the same as the hetScore chroms... remove Y from copy number data
   # otherwise you get errors in tabTemp when it gets to a Y chrom position; not likely to happen unless Y is gained as it is in SA43002
-  chrYStartWsz <- binnedPosStart(coords@chromStart[yind], binSize = wsz)
+  chrYStartWsz <- binnedPosStart(coords@chromStart[yind], binSize = readDepthBinSize)
   w23   <- which(readDepthPer30kbBin$goodWindowArray < chrYStartWsz)
-  frq23 <- readDepthPer30kbBin$readDepthArray[w23]  # number of fragments, in a 1kb window converted to wsz, for chrs 1-23
+  frq23 <- readDepthPer30kbBin$readDepthArray[w23]  # number of fragments, in a 1kb window converted to readDepthBinSize (wsz), for chrs 1-23
   wdnsMSK23 <- readDepthPer30kbBin$goodWindowArray[w23]
 
   chrStartKey <- array(0, coords@maxcn)
   for(ichr in coords@chroms){
     # Round the start coordinate to the new bin size
-    chrStartKey[ichr] <- 1+as.integer((coords@chromStart[ichr]-1)/wsz)
+    chrStartKey[ichr] <- 1+as.integer((coords@chromStart[ichr]-1)/readDepthBinSize)
   }
 
 
@@ -81,8 +81,8 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   ## masking and processing of some sort --------------
   # normalize cnv to NRD with normal peak = 2
   # LOH (hetScore) also on a 30K bin, masked.
-  cnvListFull <- 2*frq23/(wsz*expReadsIn2NPeak_1bp) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
-  # cnvListFull <- 2*frq23/(wsz*cnvBinnedData$expectedNormalBin) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
+  cnvListFull <- 2*frq23/(readDepthBinSize*expReadsIn2NPeak_1bp) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
+  # cnvListFull <- 2*frq23/(readDepthBinSize*cnvBinnedData$expectedNormalBin) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
   posListFull <- wdnsMSK23
   chrStart <- c(chrStartKey,max(wdnsMSK23))
   chrList <- as.character(lohIn@seqnames)
@@ -126,7 +126,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   sampLoc <- sample(x =  posListFull[(which(cnvListFull>= (mainPeakNRD-0.025) & cnvListFull<(mainPeakNRD+0.025)))],
                     size = min(length(which(cnvListFull>= (mainPeakNRD-0.025) & cnvListFull<(mainPeakNRD+0.025))),1000)) # take 1000 unless there aren't 1000 data points available
   ## get the chrom number of the sampled positions
-  chrNumList <-linearToBima(globalPos = sampLoc, binSize =wsz )$svaNumber
+  chrNumList <-linearToBima(globalPos = sampLoc, binSize =readDepthBinSize )$svaNumber
   posValTemp <- (sampLoc-chrStart[chrNumList]+1)*30000-15000
 
   # hist of the coverage you've sampled
@@ -158,20 +158,28 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 
 #' plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 #'
-#' @param diploidPeakNRD the NRD of the diploid peak, don't assume it is 2, may be choosing a different peak than from a previous calculation
+#' @param diploidPeakNRD the NRD of the diploid peak, don't assume it is 2, may be
+#'    choosing a different peak than from a previous calculation
 #' @param mainPeakNRD the NRD of the main Peak
 #' @param tau tumor ratio
+#' @param digitalPeakZone size of the shaded pink boxes, hetScores in this areas were used to
+#'  compute the hetScore mode of the peak
+#' @param paperMode logical if TRUE do not include some of the extra annotations
+#' @param starCloudPlotInputs object returned from \link{loadStarsInTheClouds}
+#' @param plotEachChrom show each chromosome in a separate plot
+#' @param plotCex factor to alter the cex for plots
+#' @param addAnnotations add additional annotations to the plot
 #' @inheritParams commonParameters
 #' @example inst/examples/constellationPlotExample.R
 #' @export
-plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, diploidPeakNRD, tau, plotEachChrom=FALSE, mainPeakNRD,
-                                 segmentData=NULL, peakInfo=NULL, # add the ploidy inputs
-                                 forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,minReasonableSegmentSize=5.5e6, # plot annotations
-                                 digitalPeakZone = 0.05,heterozygosityScoreThreshold = 0.98,
-                                 paperMode=FALSE,  # without all the extra fluff, crisp and clean for papers and presentations
+plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plotEachChrom=FALSE,
+                                 mainPeakNRD,  diploidPeakNRD, tau, segmentData=NULL, peakInfo=NULL,
+                                 forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,
+                                 minReasonableSegmentSize=5.5e6,
+                                 digitalPeakZone = 0.05, heterozygosityScoreThreshold = 0.98,
+                                 paperMode=FALSE,  # without all the extra fluff
                                  plotCex=1,addAnnotations=FALSE
 ){
-
 
   # forceFirstDigPeakCopyNum=-1;grabDataPercentManual=-1; origMaxPercentCutoffManual=-1;minPeriodManual=-1;maxPeriodManual=-1;minReasonableSegmentSize=5.5e6; # plot annotations
   # digitalPeakZone = 0.05;heterozygosityScoreThreshold = 0.98; paperMode=FALSE  # without all the extra fluff, crisp and clean for papers and presentations
@@ -403,7 +411,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
 
   # plot each chromosome individually -----
   if(plotEachChrom){
-    op=par(mfrow=c(2,2), mgp=c(2, 0.5, 0),mar=c(4.1, 4.1, 3.1, 2.5) ,oma=c(0,0,2,0))
+    op=par(mfrow=c(3,3), mgp=c(2, 0.5, 0),mar=c(3.5, 3.5,2, 2.5) ,oma=c(0,0,2,0))
     for(chrNum in autosomes) {
       plot(lohChrOutFull[(chrEnd[chrNum]+1):chrEnd[chrNum+1]],cnvListChrFull[(chrEnd[chrNum]+1):chrEnd[chrNum+1]],
            pch='.',
@@ -426,9 +434,11 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
 
       # print once for each page
       if(chrNum %% 1==0){
-        mtext(side=3, paste0('tumor: ',round(tau*100), '%'),    adj=0.05, outer = TRUE, line=-2)
-        mtext(side=3, text=paste('ploidy: ',round(ploidyCN,1)), adj=0.05,  outer = TRUE,line=-1)
-        mtext(c(sampleId, alternateId), side=3, line=0, adj=c(.05,.95), outer = TRUE)
+        # mtext(side=3, paste0('tumor: ',round(tau*100), '%'),    adj=0.05, outer = TRUE, line=-2)
+        # mtext(side=3, text=paste('ploidy: ',round(ploidyCN,1)), adj=0.05,  outer = TRUE,line=-1)
+        # mtext(c(sampleId, alternateId), side=3, line=0, adj=c(.05,.95), outer = TRUE)
+        mtext(paste0(sampleId, ' tumor:',round(tau*100), '% ',' ploidy:',round(ploidyCN,1) ), side=3, line=0, adj=c(.05), outer = TRUE)
+
       }
     }
     par(op)
@@ -451,37 +461,45 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, dip
 
 
 #' draw constellation plot left of the linear genome plot
+#'
+#' @param starCloudPlotInputs object output from \link{loadStarsInTheClouds}
+#' @param calcPloidyResult object output from \link{calculatePloidy}
+#' @inheritParams commonParameters
 #' @export
-twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbBin,segmentation, sampleId=NULL, alternateId=NULL,  diploidPeakNRD=NULL,
-                        gainColor='blue', lossColor= 'red'){
+twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbBin, segmentation,
+                        sampleId=NULL, alternateId=NULL, gainColor='blue', lossColor= 'red'){
 
   graphics::layout( matrix(c(1,2,2),nrow=1),
                     heights= c(1),
                     widths = c(1.5,2))   # Widths of the two columns
   labelCex=1.5
   leftFigLabel=NULL;rightFigLabel=NULL
-
+  diploidPeakNRD=getDiploidPeakNRD(calcPloidyResult)
   # left figure
-  op <- par(mar=c(5,3,2,3),mgp=c(1.5, 0.5,0))
-  starCloudResult=plotStarsInTheClouds(sampleId=NULL, alternateId=NULL,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+  op <- par(mar=c(5,3,3,3),mgp=c(1.5, 0.5,0))
+  starCloudResult=plotStarsInTheClouds(sampleId=sampleId, alternateId=alternateId,starCloudPlotInputs, diploidPeakNRD=diploidPeakNRD, tau=min(1,calcPloidyResult$percentTumor/100),
                                        plotEachChrom=FALSE, mainPeakNRD=getMainPeakNRD(calcPloidyResult),
                                        segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
                                        digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
                                        paperMode=FALSE,plotCex=1.3)
   myAt=starCloudResult$plotAxisLimits$nrdAxisLims[2]
   mtext(leftFigLabel, side=2, at=myAt,cex=labelCex,las=1,line=1.5)
+  mtext(sampleId, side=3, adj=0)
   par(op)
 
   # right figure
-  op <- par(mar=c(5,3,2,1),mgp=c(1.5, 0.5,0))
+  op <- par(mar=c(5,3,3,1),mgp=c(1.5, 0.5,0))
   # convert the nrd axis limits in the constellation plot to rd, so the linear genome plot can be on the same scale
   rdAxisLimits= calcRD(nrd=starCloudResult$plotAxisLimits$nrdAxisLims, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
-  linearGenomePlot( readDepthBinnedData=readDepthPer30kbBin, wsz=readDepthPer30kbBin$windowSize, segmentation=segmentation,
+  linearGenomePlot( readDepthPer30kbBin=readDepthPer30kbBin, readDepthBinSize=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
                     gainColor = gainColor, lossColor= lossColor, yAxisLimits = rdAxisLimits)
   myAt=rdAxisLimits[2]
   mtext(rightFigLabel, side=2, cex=labelCex,at =myAt,las=1,line=1.5)
+  mtext(alternateId, side=3, adj=1)
   par(op)
+
+  return(starCloudResult)
 }
 
 

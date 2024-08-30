@@ -15,7 +15,7 @@ makeHetScoreReportPdf(
   outputDir,
   gainColor = "blue",
   lossColor = "red",
-  noDelAmpDetection = FALSE,
+  noDelGainCalls = FALSE,
   noPdf = FALSE
 )
 }
@@ -47,7 +47,7 @@ chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color cod
 
 \item{lossColor}{color to use for losses in linear geneome plot, default is red}
 
-\item{noDelAmpDetection}{do not color code deletions and gains in genome plot}
+\item{noDelGainCalls}{do not color code deletions and gains in genome plot}
 
 \item{noPdf}{if present (TRUE), pdf files will not be generated, instead plots are drawn on default device}
 }
@@ -60,11 +60,10 @@ Will print to plot window if \code{noPdf=TRUE}. Use \code{noPdf=FALSE} and provi
 to file.
 }
 \examples{
+library(BACDAC)
 sampleId='TCGA-14-1402-02A_ds'
-alternateId=NULL
-outputDir <- tempdir()
 
-# inputDir is the path to input data, here we point the example data provided in the package.
+# inputDir is the path to input data, here we use the example data provided in the package.
 inputDir <- system.file('extdata', package = "BACDAC")
 hetScorePerArmFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerArm.csv'))
 hetScorePerBinFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
@@ -80,6 +79,7 @@ readDepthPer30kbBin <- readRDS(file=thirtyKbFile )
 makeHetScoreReportPdf(
    hetScorePerBinFile=hetScorePerBinFile,hetScorePerArmFile=hetScorePerArmFile,
    segmentation=segmentation,readDepthPer30kbBin=readDepthPer30kbBin,
-   readDepthBinSize=readDepthPer30kbBin$windowSize,sampleId=sampleId,noPdf=TRUE)
+   readDepthBinSize=readDepthPer30kbBin$windowSize,sampleId=sampleId,
+   noPdf=TRUE, outputDir=NULL)
 
 }

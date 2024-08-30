@@ -31,6 +31,8 @@ if(FALSE){
       if(ret!=0) {
         stop(sprintf("cp '%s' returned nonzero value %d\nPlease review ", paste(params, collapse = " "), ret))
       }
+    }else{
+      logwarn('file does not exist: %s',oldFileNamePath)
     }
   }
 
@@ -38,22 +40,23 @@ if(FALSE){
   ### segmentation data ----
   # convert <sampleId>_cnvIntervals.csv to <sampleId>_segmentation.csv
   #      file.path(bmdTools::mainDir, 'NextGen/Projects/MethodDev/MD66301/GRCh38/svar-1/cnv/TCGA-14-1402-02A_ds_cnvIntervals.csv')
-  outputDir = system.file('extdata', package = "BACDAC")
+  # outputDir = system.file('extdata', package = "BACDAC")
   outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata')
   newFileNamePath=file.path(outputDir,  paste0(sampleId,'_segmentation.csv'))
   oldFileNamePath=file.path(postProcessingDir, 'cnv', paste0(sampleId,'_cnvIntervals.csv'))
-
   copyFileToNewLocation(oldFileNamePath, newFileNamePath)
 
   # hetScore data -----------
-
-  oldLohPerArm <- file.path(postProcessingDir, 'reports', paste0(sampleId, '_lohPerArm.csv'))
+  # files made from bmdSvPipeline have different headers DO NOT USE
+  devPath='/research/labs/experpath/vasm/shared/NextGen/johnsonsh/Routput/BACDAC'
+  outputDir=file.path(bmdTools::mainDir, 'NextGen/johnsonsh/Rprojects/BACDAC/inst/extdata')
+  oldLohPerArm <- file.path(devPath, 'reports', paste0(sampleId, '_hetScorePerArm.csv'))
   newHetScorePerArm <- file.path(outputDir, paste0(sampleId, '_hetScorePerArm.csv'))
+  copyFileToNewLocation(oldFileNamePath=oldLohPerArm, newFileNamePath=newHetScorePerArm)
+
 
   oldLohPerBin <- file.path(postProcessingDir, 'reports', paste0(sampleId, '_loh.wig.gz'))
   newHetScorePerBin <- file.path(outputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
-
-  copyFileToNewLocation(oldFileNamePath=oldLohPerArm, newFileNamePath=newHetScorePerArm)
   copyFileToNewLocation(oldFileNamePath=oldLohPerBin, newFileNamePath=newHetScorePerBin)
 
 

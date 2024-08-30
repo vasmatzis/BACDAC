@@ -28,6 +28,7 @@ commonParameters(
   minReasonableSegmentSize,
   heterozygosityScoreThreshold,
   hsNormMat,
+  testVals,
   segmentData,
   allelicSegments,
   peakInfo,
@@ -99,6 +100,8 @@ but may vary depending on NGS library quality and preparation}
 \item columns: one column for each of the 23 normal samples
 }}
 
+\item{testVals}{pre-built array to assist finding each possible heterozygosity value for each copy number level}
+
 \item{segmentData}{segments from segmentation that are longer than minReasonableSegmentSize and then broken up into segments no smaller than 3 Mbs}
 
 \item{allelicSegments}{segmentData from \code{calculatePloidy} then augmented in \code{plotStarsInTheClouds} with major_copy_number and minor_copy_number}
@@ -114,8 +117,6 @@ but may vary depending on NGS library quality and preparation}
 \item{gainColor}{color for gains in the linear genome plot, default is blue}
 
 \item{allowedTumorPercent}{allow some tolerance to go over 100 especially for PDXs which will very near 100}
-
-\item{testVals}{pre-built array to assist finding each possible heterozygosity value for each copy number level}
 }
 \description{
 A dummy function holding a list of all common parameters so

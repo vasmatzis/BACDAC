@@ -1,7 +1,7 @@
 #' Find the NRD of the main Peak in the ---cnvBinned data---
 #' Will equal 2 if main peak is the normal peak
-#' @param calcPloidyResult object returned from \code{calculatePloidy}
-#' @keywords internal
+#' @param calcPloidyResult object returned from \link{calculatePloidy}
+#' @export
 getMainPeakNRD=function(calcPloidyResult){
   expReadsIn2NPeak_1bp= calcPloidyResult$expReadsIn2NPeak_1bp
   mainPeakKey=which(calcPloidyResult$peakInfo$rankByHeight==1)
@@ -12,8 +12,8 @@ getMainPeakNRD=function(calcPloidyResult){
 }
 
 #' Find the NRD of the diploid peak from the binned read depth data
-#' @param calcPloidyResult object returned from \code{calculatePloidy}
-#' @keywords internal
+#' @param calcPloidyResult object returned from \link{calculatePloidy}
+#' @export
 getDiploidPeakNRD=function(calcPloidyResult){
   mainPeakKey=which(calcPloidyResult$peakInfo$rankByHeight==1)
   rdNormX_Mainpeak = calcPloidyResult$peakInfo[mainPeakKey,'peakReadDepth_normX']
@@ -398,7 +398,7 @@ calcRD=function(nrd, wsz, expReadsIn2NPeak_1bp){
 #' converts pkmod rather than rd to nrd, normalized read depth
 #' @param rdNormX_2Npeak read depth of the diploid peak normalized by the x axis
 #' @inheritParams commonParameters
-#'
+#' @keywords internal
 pkmodToNRD <- function(segmentData, peakInfo, rdNormX_2Npeak){
   firstDigPeakIndex <- which.min(peakInfo$dPeaks) # may not be 1 if the grid is not forced to start at the first peak
   rdNormX_firstDigPeak <- peakInfo[firstDigPeakIndex, 'peakReadDepth_normX']   #

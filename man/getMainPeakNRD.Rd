@@ -8,10 +8,9 @@ Will equal 2 if main peak is the normal peak}
 getMainPeakNRD(calcPloidyResult)
 }
 \arguments{
-\item{calcPloidyResult}{object returned from \code{calculatePloidy}}
+\item{calcPloidyResult}{object returned from \link{calculatePloidy}}
 }
 \description{
 Find the NRD of the main Peak in the ---cnvBinned data---
 Will equal 2 if main peak is the normal peak
 }
-\keyword{internal}
