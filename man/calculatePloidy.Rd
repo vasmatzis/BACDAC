@@ -107,7 +107,9 @@ If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
 
   ### load data ###
   # NOTE: upload these files from Zenodo and specify your path here.
-  hsNormMat <- "../referenceFiles/hetScoreNormMat.Rds"
+  hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
+  hsNormMat = readRDS(hsNormMatFile)
+
   exampleDataDir <- system.file('extdata', package = "BACDAC")
   inputDir <- exampleDataDir
 

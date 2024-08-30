@@ -81,10 +81,9 @@ calculateHetScore <- function(
 
     if(inputDirIsNextGenProjects){
       # loading .Rdata output from bmdSvPipeline using bmdSvPipeline functions
-      snpFull= bmdTools::loadRdata(file.path(inputDir,    paste0(sampleId, '_snpVals_',i,'.Rdata')), verbose = TRUE) # snpFull
-      countBPFull = bmdTools::loadRdata(file.path(inputDir,paste0(sampleId, '_countBP_',i,'.Rdata')), verbose = TRUE) # countBPFull
-
-      iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
+      # snpFull= bmdTools::loadRdata(file.path(inputDir,    paste0(sampleId, '_snpVals_',i,'.Rdata')), verbose = TRUE) # snpFull
+      # countBPFull = bmdTools::loadRdata(file.path(inputDir,paste0(sampleId, '_countBP_',i,'.Rdata')), verbose = TRUE) # countBPFull
+      # iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
     }else{
       # loading BACDAC .Rds inputs
       iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))

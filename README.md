@@ -19,48 +19,7 @@ allele-specific copy-number as shown in publication xyz.
 
 ## Installation
 
-You can install the development version of BACDAC by cloning the
-repository from the Mayo Clinic dev.azure.com (will be moved to github
-eventually):
-
-<https://dev.azure.com/mclm/GBS%20GSU/_git/bmd-bacdac>
-
-look at the clone button and copy the SSH url.
-
-RStudio instructions:
-
-1)  Open RStudio: File -\> New Project -\> New repository -\> git
-
-2)  Fill in the pop up window as follows:
-
-- Repository URL: <git@ssh.dev.azure.com>:v3/mclm/GBS%20GSU/bmd-bacdac
-- Project directory name: bacdac
-- Create project as subdirectory of: <path/to/your>/Rprojects/
-
-3)  Hit ‘create project’ and smile while RStudio does all the git clone
-    stuff.
-
-4)  Build. You can Build in Rstudio or on command line, see ‘Updating
-    source code’. You will be directed to install any necessary package
-    dependancies at this time.
-
-## Updating source code
-
-need to pull updates and build regularly during development, you can do
-this on the command line or in Rstudio
-
-### on command line:
-
-``` r
-cd <path/to/your>/Rprojects/bacdac
-git pull
-R CMD INSTALL --build .
-```
-
-### in Rstudio:
-
-- go to “git” tab, click on “git pull”
-- go to “Build” tab, click on “Install”
+install BACDAC using R: `devtools::install_github('vasmatzis/BACDAC')`
 
 ## Example
 
@@ -240,8 +199,7 @@ inputDir <- system.file('extdata', package = "BACDAC")
 sampleId='TCGA-14-1402-02A_ds';
 dir(inputDir, pattern = 'readDepthPer')
 #> [1] "TCGA-14-1402-02A_ds_readDepthPer100kbBin.Rds"
-#> [2] "TCGA-14-1402-02A_ds_readDepthPer1kbBin.Rds"  
-#> [3] "TCGA-14-1402-02A_ds_readDepthPer30kbBin.Rds"
+#> [2] "TCGA-14-1402-02A_ds_readDepthPer30kbBin.Rds"
 
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 #load

@@ -36,13 +36,9 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
     # lohData/countBPFull/countBP: Counts of ref/alt occurrences for SNP position for each sva
     if(inputDirIsNextGenProjects){
       # loading .Rdata output from bmdSvPipeline using bmdSvPipeline functions
-      snpFull= bmdTools::loadRdata(file.path(inputDir,'loh',    paste0(sampleId, '_snpVals_',chrNum,'.Rdata'))) # snpFull
-      #snpData <- loadRdata(getTypedFile("lohSnpFull",    postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path)
-
-      countBPFull = bmdTools::loadRdata(file.path(inputDir,'loh',paste0(sampleId, '_countBP_',chrNum,'.Rdata'))) # countBPFull
-      # lohData <- loadRdata(getTypedFile("lohCountBpFull",postProcessingDir,values=list(sampleId=sampleId, svaNumber=chrNum), legacy = TRUE)@path)
-
-      iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
+      # snpFull= bmdTools::loadRdata(file.path(inputDir,'loh',    paste0(sampleId, '_snpVals_',chrNum,'.Rdata'))) # snpFull
+      # countBPFull = bmdTools::loadRdata(file.path(inputDir,'loh',paste0(sampleId, '_countBP_',chrNum,'.Rdata'))) # countBPFull
+      # iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
     }else{
       # loading BACDAC .Rds inputs
       iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))

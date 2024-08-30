@@ -60,9 +60,12 @@ load all the data necessary to make the constellation plot
   # hsNormMat/lohMat: LOH analysis mask, used to look for places in 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
   # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
 
-  # NOTE: upload these files from Zenodo and specify your path here.
-  hsNormMat <- "../referenceFiles/hetScoreNormMat.Rds"
-  testVals <-  "../referenceFiles/testVals.Rds"
+  # NOTE: upload these files from Zenodo and edit to specify your path here.
+  # https://zenodo.org/records/13619655
+  hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
+  hsNormMat = readRDS(hsNormMatFile)
+  testValsFile <-  "../referenceFiles/testVals.Rds"
+  testVals = readRDS(testValsFile)
 
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
