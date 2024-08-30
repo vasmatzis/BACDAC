@@ -16,3 +16,4 @@ pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
 \description{
 converts pkmod rather than rd to nrd, normalized read depth
 }
+\keyword{internal}

@@ -14,3 +14,4 @@ makeLegacyDelAmp(segmentation, coords)
 \description{
 for compatibility with genomePlot. Make old array from new structure: 1=normal, -1=loss, 2=gain
 }
+\keyword{internal}

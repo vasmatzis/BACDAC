@@ -75,7 +75,7 @@ ideal, cor.gc cor.map, copy
 The “valid” column is the mask.
 
 HMMcopy has a built in program for segmentation also, though it tends to
-overcall. But primarily you want the segments. Good be better for using
+overcall. But primarily you want the segments. Could be better for using
 on the larger of the two windows, 100Kb.
 
 ### Segmentation

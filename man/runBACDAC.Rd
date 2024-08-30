@@ -119,11 +119,11 @@ readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
 # segmentation data
 segmentationFile <- file.path(myInputDir, paste0(mySampleId, '_segmentation.csv'))
-segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
-segmentation <- checkSegmentation(segmentation)
+mySegmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
+mySegmentation <- checkSegmentation(mySegmentation)
 
 mySegmentationBinSize=30000
-## load two reference files  ---------------
+## load two reference files
 # hsNormMat/lohMat: hetScores from 23 Normals,  101046 x 23 rows, one row for each 30kb segment of the genome, 1-22, X and a part of Y. Columns are values for each of the 23 Normals for each segment
 #                   used to look for places in 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
 # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
