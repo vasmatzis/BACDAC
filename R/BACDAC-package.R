@@ -40,6 +40,7 @@
 #' @importFrom stats dpois
 #' @importFrom stats median
 #' @importFrom stats quantile
+#' @importFrom utils download.file
 #' @importFrom utils read.csv
 #' @importFrom utils write.csv
 ## usethis namespace: end

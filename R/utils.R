@@ -44,7 +44,7 @@ loadHsNormMat=function(hsNormMatFile){
     if(!dir.exists(dirname(hsNormMatFile))){
       dir.create(dirname(hsNormMatFile))
     }
-    download.file(url='https://zenodo.org/records/13619655/files/hetScoreNormMat.Rds?download=1',
+    utils::download.file(url='https://zenodo.org/records/13619655/files/hetScoreNormMat.Rds?download=1',
                   destfile = hsNormMatFile)
   }
 
@@ -75,7 +75,7 @@ loadTestVals=function(testValsFile){
     if(!dir.exists(dirname(testValsFile))){
       dir.create(dirname(testValsFile))
     }
-    download.file(url='https://zenodo.org/records/13619655/files/testVals.Rds?download=1',
+    utils::download.file(url='https://zenodo.org/records/13619655/files/testVals.Rds?download=1',
                   destfile = testValsFile)
   }
 
