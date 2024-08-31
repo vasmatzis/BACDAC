@@ -109,7 +109,7 @@ If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
 
   # if this file does not exist, an attempt will be made to download from Zenodo.
   hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
-  hsNormMat = loadHsNormMat(hsNormMatFile, destfile=hsNormMatFile)
+  hsNormMat = loadHsNormMat(hsNormMatFile)
 
   exampleDataDir <- system.file('extdata', package = "BACDAC")
   inputDir <- exampleDataDir

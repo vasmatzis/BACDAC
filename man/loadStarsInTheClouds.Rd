@@ -63,10 +63,10 @@ load all the data necessary to make the constellation plot
   ## load two reference files  ---------------
   # if these files do not exist, an attempt will be made to download them from Zenodo.
   hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
-  hsNormMat = loadHsNormMat(hsNormMatFile, destfile=hsNormMatFile)
+  hsNormMat = loadHsNormMat(hsNormMatFile)
 
   testValsFile <-  "../reference/testVals.Rds"
-  myTestVals = loadTestVals(testValsFile,destfile=testValsFile)
+  myTestVals = loadTestVals(testValsFile)
 
   sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
