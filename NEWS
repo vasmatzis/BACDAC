@@ -15,3 +15,5 @@ Changes in BACDAC 0.0.7
   o progress on the read-me files
 Changes in BACDAC 0.0.8
   o add license and readme files
+Changes in BACDAC 0.0.9
+  o gitignore includes data-raw
