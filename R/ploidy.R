@@ -1474,7 +1474,7 @@ calculatePloidy <- function(
 
       ### assign nCopyPeaks_seg by checking het score of the first digital peak ------------------
       if(TRUE){
-        ## multiple methods:
+        ## multiple methods tried:
 
         hetTestScoreFor1stDigPeak <- NA
 
@@ -1483,63 +1483,8 @@ calculatePloidy <- function(
         ## should only have to check the first digital peak, but there are cases where the first digital peak does not have valid LOH scores,
         ##    then go to the next digital peak i.e. 58024,82012 ? or just assign this peak as 1N?
 
-
-        ## method 1) for looking at multiple digital peaks to find a valid digital peak
-        if(FALSE){
-          dPeak_forMaxLOHscore <- 0
-          while(is.na(hetTestScoreFor1stDigPeak)){
-            dPeak_forMaxLOHscore <- dPeak_forMaxLOHscore+1  # the digital peak used to get the maxLOHscore, look at the first and then move up as needed
-            # check for runaway while loop
-            if(dPeak_forMaxLOHscore>numDigPeaks){
-              stop("something went screwy with getting the max LOH score from a non-digital peak")
-            }
-            hetTestScoreFor1stDigPeak <- keyHetScoresPerPeak[which(digitalPeakIndex==dPeak_forMaxLOHscore) ,'q1'] # use which() to eliminate NAs
-          }
-
-          if(dPeak_forMaxLOHscore==1){
-            ## STANDARD, most of the time the first digital peak will be the evaluated peak
-            if(sum(segmentsCloseToPeak[,dPeak_forMaxLOHscore], na.rm=TRUE) > 0 && hetTestScoreFor1stDigPeak >= heterozygosityScoreThreshold) {
-              # if TRUE, then the digital peak does not have LOH and cannot correspond to deletion, therefore it must be a 2N peak (or 4N or 6N...)
-              nCopyPeaks_seg <- nCopyPeaks_dig + 1
-            }else{
-              nCopyPeaks_seg <- nCopyPeaks_dig
-            }
-          }else{
-            ## could not use first digital peak because there were no valid het. scores.
-            # logwarn('using hetScores of digital peak number %i to determine copy number', dPeak_forMaxLOHscore)
-            if(sum(segmentsCloseToPeak[,dPeak_forMaxLOHscore], na.rm=TRUE) > 0 && hetTestScoreFor1stDigPeak >= heterozygosityScoreThreshold) {
-              # if TRUE, then the digital peak does not have LOH and cannot correspond to deletion, therefore it must be a 2N peak (or 4N or 6N...)
-
-              if((nCopyPeaks_dig[dPeak_forMaxLOHscore]%%2)==0){ # if it was previously labeled 2N, 4N, 6N etc.
-                nCopyPeaks_seg <- nCopyPeaks_dig
-              }else {
-                nCopyPeaks_seg <- nCopyPeaks_dig-(dPeak_forMaxLOHscore-1)
-              }
-            }else{
-              # if FALSE, then the digital peak does have LOH or is a deletion, therefore it must be a 1N peak
-              if((nCopyPeaks_dig[dPeak_forMaxLOHscore]%%2)==0){ # if it was previously labeled 2N, 4N, 6N etc.
-                nCopyPeaks_seg <- nCopyPeaks_dig-(dPeak_forMaxLOHscore-1)
-              }else {
-                nCopyPeaks_seg <- nCopyPeaks_dig
-              }
-            }
-          }
-        }else if(FALSE){
-          ## method 2: for looking at only the first digital peak, if it doesn't have valid scores, assume it is LOH or AOH.
-          ## using max scoredPeak_maxLOHscore <- 1  # the digital peak used to get the maxLOHscore, look at the first only
-          hetTestScoreFor1stDigPeak <- keyHetScoresPerPeak[which(digitalPeakIndex==dPeak_forMaxLOHscore) ,'q1'] # use which() to eliminate NAs
-
-          if(is.na(hetTestScoreFor1stDigPeak)){
-            nCopyPeaks_seg <- nCopyPeaks_dig
-            ## STANDARD, most of the time the first digital peak will be the evaluated peak
-          }else if(sum(segmentsCloseToPeak[,dPeak_forMaxLOHscore], na.rm=TRUE) > 0 && hetTestScoreFor1stDigPeak >= heterozygosityScoreThreshold) {
-            # if TRUE, then the digital peak does not have LOH and cannot correspond to deletion, therefore it must be a 2N peak (or 4N or 6N...)
-            nCopyPeaks_seg <- nCopyPeaks_dig + 1
-          }else{
-            nCopyPeaks_seg <- nCopyPeaks_dig
-          }
-        }else if(TRUE){
-          ### method 3: check the max MODE from het score density of the first digital peak ------------------
+        ### method 3: check the max MODE from het score density of the first digital peak ------------------
+       if(TRUE){
           op <- par(mfrow=c(2,1),mar=c(2.75, 3.5, 2, 1.5),mgp=c(1.5, 0.5,0))
 
           densityFirstDigPeak <- hetScoreDensity(segmentsCloseToPeak,segmentData, index=firstDigPeakIndex,sampleId,alternateId, skipPlot = skipExtras, plotTextPrefix='1st digital peak:',

@@ -1,7 +1,8 @@
-# code and example to Constellation Plot - the actual and theoretical heterozygosity scores vs NRD for a given tumor ratio
-
-
 #' load all the data necessary to make the constellation plot
+#'
+#' object created is a required input to \link{linkplotStarsInTheClouds} and be can be save to file
+#' for future reference
+#'
 #' @param mainPeakNRD the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak
 #' @param expReadsIn2NPeak_1bp expected number of reads in a 1 bp bin for the diploid peak
 #' @param hetScorePerBinFile full path to object output from \link{calculateHetScore}
@@ -107,12 +108,14 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   }
   chrEnd <- c(0,chrEnd)
 
-  # logdebug('calculating theoretical lambda, the poisson that best fits the coverage')
-  # crux of the algorithm, where it determines the theoretical lambda based on the assumption of a poisson for extrapolation to higher or lower copy number
+  # logdebug('calculating theoretical lambda, the poisson that best fits the coverage') crux of the
+  # algorithm, where it determines the theoretical lambda based on the assumption of a poisson for
+  # extrapolation to higher or lower copy number
   #
-  # Sample data from the mainPeak (not the 2N peak) to be sure to get a good sampling, in case the 2N peak is small ie. 26273
-  # then find the poisson that best matches the sample data and save the lambda that corresponds to that poisson.
-  # TODO: could this ever break for really low coverage samples? possibly so there might be modifications needed
+  # Sample data from the mainPeak (not the 2N peak) to be sure to get a good sampling, in case the
+  # 2N peak is small ie. 26273 then find the poisson that best matches the sample data and save the
+  # lambda that corresponds to that poisson. TODO: could this ever break for really low coverage
+  # samples? possibly so there might be modifications needed
 
   ### sample data in main peak
   ### find lambdaMain, the poisson that best fits the coverage

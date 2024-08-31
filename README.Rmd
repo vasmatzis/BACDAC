@@ -103,8 +103,10 @@ inputDir <- system.file('extdata', package = "BACDAC")
 sampleId='TCGA-14-1402-02A_ds';
 
 dir(inputDir, pattern = 'refAltCount')
+
 # load
 refAltCountchr1=readRDS(file.path(inputDir, paste0(sampleId, '_refAltCount_1.Rds')))
+
 # preview
 head(refAltCountchr1)
 str(segmentation)
@@ -152,15 +154,19 @@ sampleId='TCGA-14-1402-02A_ds';
 dir(inputDir, pattern = 'readDepthPer')
 
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+
 #load
 readDepthPer30kbBin = readRDS(file=thirtyKbFile )
+
 # preview
 names(readDepthPer30kbBin)
 str(readDepthPer30kbBin)
 
 hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
+
 #load
 readDepthPer100kbBin = readRDS(file=hundredKbFile )
+
 # preview
 names(readDepthPer100kbBin)
 str(readDepthPer100kbBin)
@@ -174,6 +180,7 @@ to help transform from single bp scale to a desired bin size.
 
 ```{r}
 coords=BACDAC::getLinearCoordinates()
+
 # linear coordinate for the start of each chromosome where 23=X, 24=Y
 coords@chromStart[1:24]
 

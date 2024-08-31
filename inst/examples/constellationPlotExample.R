@@ -8,10 +8,6 @@
   noPdf=TRUE
 
   ## load two reference files  ---------------
-  # hsNormMat/lohMat: LOH analysis mask, used to look for places in 23 TCGA normals where more than half dropped below the a (i.e. 0.975) cutoff.
-  # testVals: used to find each possible heterozygosity value for each copy number level (find the right spots for the stars)
-
-  ## load two reference files  ---------------
   # if these files do not exist, an attempt will be made to download them from Zenodo.
   hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
   hsNormMat = loadHsNormMat(hsNormMatFile)
