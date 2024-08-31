@@ -44,7 +44,7 @@ loadStarsInTheClouds(
 \item{expReadsIn2NPeak_1bp}{expected number of reads in a 1 bp bin for the diploid peak}
 }
 \description{
-object created is a required input to \link{linkplotStarsInTheClouds} and be can be save to file
+object created is a required input to \link{plotStarsInTheClouds} and be can be save to file
 for future reference
 }
 \examples{
@@ -100,13 +100,15 @@ for future reference
       loginfo('creating output directory for pdf: \n\t\%s:', file.path(outputDir))
     }
     constellationPdfFile <- file.path(outputDir, paste0(sampleId, '_constellationPlot.pdf'))
-    pdf(file = constellationPdfFile, paper="a4r", width=8, height=10, title=paste0('constellationPlot_',sampleId))
+    pdf(file = constellationPdfFile, paper="a4r", width=8, height=10,
+        title=paste0('constellationPlot_',sampleId))
     loginfo('writing pdf: \%s', constellationPdfFile)
   }
 
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
   starCloudResult=plotStarsInTheClouds(
-    sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+    sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL,
+    tau=min(1,calcPloidyResult$percentTumor/100),
     plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
     segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
     digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
@@ -120,7 +122,8 @@ for future reference
   ##### One Panel OPTION with individual chromosome plots   --------------------
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
   starCloudResult=plotStarsInTheClouds(
-    sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL, tau=min(1,calcPloidyResult$percentTumor/100),
+    sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL,
+    tau=min(1,calcPloidyResult$percentTumor/100),
     plotEachChrom=TRUE, mainPeakNRD=mainPeakNRD,
     segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
     digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],

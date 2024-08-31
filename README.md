@@ -38,7 +38,8 @@ generate a linear genome plot similar to figure 3 of the publication:
   # inputDir: path to the package example data
   inputDir <- system.file('extdata', package = "BACDAC")
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= read.csv(segmentationFile, comment.char = '#', header = TRUE) # chr, start, end, rd per segment
+  segmentation= read.csv(segmentationFile, comment.char = '#', header = TRUE) 
+  # check for columns: chr, start, end, rd per segment
   segmentation=checkSegmentation(segmentation)
   thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
   readDepthPer30kbBin = readRDS(file=thirtyKbFile )
@@ -46,7 +47,8 @@ generate a linear genome plot similar to figure 3 of the publication:
 
   op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
  # default cnv color coding and annotations
- linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDepthBinSize, sampleId=sampleId,segmentation=segmentation)
+ linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDepthBinSize, 
+                  sampleId=sampleId,segmentation=segmentation)
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
@@ -58,15 +60,19 @@ There are four main functions to be operated in this order:
 3)  `loadStarsInTheClouds()`
 4)  `plotStarsInTheClouds()`
 
-The function `runBACDAC()` will run all steps sequentially. See the
-example for help running this function.
+The function `runBACDAC()` will run all steps sequentially. The example
+for `runBACDAC()` provides full details for running this function. The
+example is available in the package help and also at
+`inst/examples/runBACDAC_Examples.R`
 
 ## Reference files
 
-Two reference files are also required. These are available at….
-
-1)  hsNormMat
-2)  testVals
+Two reference files are also required. These are available at
+<https://zenodo.org/records/13619655>  
+1) hsNormMat 2) testVals When running the examples (as packaged with
+their current directory structure, if the files do not exist, they will
+be automatically downloaded and installed one level up from your current
+directory into `../referencefiles`
 
 ## Sample input Files
 
@@ -116,8 +122,10 @@ dir(inputDir, pattern = 'refAltCount')
 #> [21] "TCGA-14-1402-02A_ds_refAltCount_8.Rds" 
 #> [22] "TCGA-14-1402-02A_ds_refAltCount_9.Rds" 
 #> [23] "TCGA-14-1402-02A_ds_refAltCount_X.Rds"
+
 # load
 refAltCountchr1=readRDS(file.path(inputDir, paste0(sampleId, '_refAltCount_1.Rds')))
+
 # preview
 head(refAltCountchr1)
 #>   chr   pos ref alt
@@ -188,7 +196,7 @@ str(segmentation)
     list with two equal length arrays and one item:
 
 - `readDepthArray` read depth for 100 kb bins, normalized for GC content
-  and other sequencing artifacts
+  and other artifacts
 - `goodWindowArray` linear genome position of each window (bin) (masked
   windows have been removed)
 - `readDepthBinSize` size of the bins in the read depth array, expecting
@@ -202,8 +210,10 @@ dir(inputDir, pattern = 'readDepthPer')
 #> [2] "TCGA-14-1402-02A_ds_readDepthPer30kbBin.Rds"
 
 thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+
 #load
 readDepthPer30kbBin = readRDS(file=thirtyKbFile )
+
 # preview
 names(readDepthPer30kbBin)
 #> [1] "readDepthArray"  "goodWindowArray" "windowSize"
@@ -214,8 +224,10 @@ str(readDepthPer30kbBin)
 #>  $ windowSize     : num 30000
 
 hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
+
 #load
 readDepthPer100kbBin = readRDS(file=hundredKbFile )
+
 # preview
 names(readDepthPer100kbBin)
 #> [1] "readDepthArray"  "goodWindowArray" "windowSize"
@@ -234,6 +246,7 @@ a desired bin size.
 
 ``` r
 coords=BACDAC::getLinearCoordinates()
+
 # linear coordinate for the start of each chromosome where 23=X, 24=Y
 coords@chromStart[1:24]
 #>          1          2          3          4          5          6          7 

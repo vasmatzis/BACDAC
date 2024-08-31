@@ -1,6 +1,6 @@
 #' load all the data necessary to make the constellation plot
 #'
-#' object created is a required input to \link{linkplotStarsInTheClouds} and be can be save to file
+#' object created is a required input to \link{plotStarsInTheClouds} and be can be save to file
 #' for future reference
 #'
 #' @param mainPeakNRD the NRD of the main Peak in the cnvBinned data.  Will equal 2 if main peak is the normal peak

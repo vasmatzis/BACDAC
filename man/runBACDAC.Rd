@@ -106,7 +106,7 @@ library(logging)
 basicConfig("DEBUG")
 mySampleId='TCGA-14-1402-02A_ds'; myAlternateId=66301
 myOutputDir <- tempdir()
-noPdf=TRUE                          # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
+noPdf=TRUE      # TRUE= print to screen, FALSE=print to pdf (i e. outputDir/dev/ploidy)
 
 # inputDir is the path to the load package data
 myInputDir <- system.file('extdata', package = "BACDAC")

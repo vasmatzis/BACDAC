@@ -146,18 +146,23 @@ If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
 
   ### call calculatePloidy, the function to do all the ploidy work ---------
   loginfo('calculate ploidy for \%s ', sampleId)
-  calcPloidyResult=calculatePloidy(sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
-                         readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
-                         segmentation=segmentation, hetScoreData = hetScoreData,
-                         segmentationBinSize=segmentationBinSize,
+  calcPloidyResult=calculatePloidy(
+    sampleId=sampleId, outputDir = outputDir, noPdf=noPdf, alternateId=alternateId,
+    readDepthPer30kbBin = readDepthPer30kbBin, readDepthPer100kbBin= readDepthPer100kbBin,
+    segmentation=segmentation, hetScoreData = hetScoreData,
+    segmentationBinSize=segmentationBinSize,
+    # digital peaks
+    dPeaksCutoff=dPeaksCutoff, penaltyCoefForAddingGrids=penaltyCoefForAddingGrids,
+    minGridHeight=minGridHeight, minPeriodManual=minPeriodManual, maxPeriodManual=maxPeriodManual,
+    forceFirstDigPeakCopyNum=forceFirstDigPeakCopyNum,
+    #  peaksByDensity
+    grabDataPercentManual= grabDataPercentManual,
+    origMaxPercentCutoffManual=origMaxPercentCutoffManual,
 
-                         dPeaksCutoff=dPeaksCutoff,    penaltyCoefForAddingGrids=penaltyCoefForAddingGrids, minGridHeight=minGridHeight, minPeriodManual=minPeriodManual, maxPeriodManual=maxPeriodManual, forceFirstDigPeakCopyNum=forceFirstDigPeakCopyNum,   # digital peaks
-                         grabDataPercentManual= grabDataPercentManual,  origMaxPercentCutoffManual=origMaxPercentCutoffManual,  #  peaksByDensity
-
-                         minReasonableSegmentSize=minReasonableSegmentSize,
-                         heterozygosityScoreThreshold=heterozygosityScoreThreshold,  # If segment hetScore is more than this, the segment is heterozygous
-                         allowedTumorPercent = allowedTumorPercent,
-                         hsNormMat=hsNormMat
+    minReasonableSegmentSize=minReasonableSegmentSize,
+    heterozygosityScoreThreshold=heterozygosityScoreThreshold,
+    allowedTumorPercent = allowedTumorPercent,
+    hsNormMat=hsNormMat
   )
 
   if(!is.null(outputDir)){
@@ -167,7 +172,9 @@ If outputDir is provided and noPdf=FALSE, figures will saved to outputDir
   }
 
   loginfo('tumor percentage: \%s ',round(calcPloidyResult$percentTumor) )
-  segmentPloidy <- sum(calcPloidyResult$segmentData$size * calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size) # weighted by length of segment
+  segmentPloidy <-   # weighted by length of segment
+    sum(calcPloidyResult$segmentData$size *
+          calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size)
   loginfo('approximate ploidy: \%s ',round(segmentPloidy,1) )
   logwarn('now go create the contellation plot to confirm this result')
 
