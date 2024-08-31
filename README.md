@@ -28,37 +28,37 @@ package and use one of the simple functions. A successful attempt will
 generate a linear genome plot similar to figure 3 of the publication:
 
 ``` r
-## try to run this example:
-  library(BACDAC)
-  library(logging)
+## run this example:
+library(BACDAC)
+library(logging)
 
-  basicConfig("DEBUG")
-  sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
+basicConfig("DEBUG")
+sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
-  # inputDir: path to the package example data
-  inputDir <- system.file('extdata', package = "BACDAC")
-  segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation= read.csv(segmentationFile, comment.char = '#', header = TRUE) 
-  # check for columns: chr, start, end, rd per segment
-  segmentation=checkSegmentation(segmentation)
-  thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-  readDepthPer30kbBin = readRDS(file=thirtyKbFile )
-  readDepthBinSize=readDepthPer30kbBin$windowSize
+# inputDir: path to the package example data
+inputDir <- system.file('extdata', package = "BACDAC")
+segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+segmentation= read.csv(segmentationFile, comment.char = '#', header = TRUE) 
+# check for columns: chr, start, end, rd per segment
+segmentation=checkSegmentation(segmentation)
+thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+readDepthPer30kbBin = readRDS(file=thirtyKbFile )
+readDepthBinSize=readDepthPer30kbBin$windowSize
 
-  op <- par(mfrow=c(3,1),mai=c(.25,0.5, 0.3,0.25), mgp=c(2, .5, 0))
- # default cnv color coding and annotations
- linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDepthBinSize, 
-                  sampleId=sampleId,segmentation=segmentation)
+op <- par(mar=c(2, 4, 0.5, 0), mgp=c(2, .5, 0))
+# default cnv color coding and annotations
+linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDepthBinSize, 
+                sampleId=sampleId,segmentation=segmentation)
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
 
 There are four main functions to be operated in this order:
 
-1)  `calculateHetScore()`
-2)  `calculatePloidy()`
-3)  `loadStarsInTheClouds()`
-4)  `plotStarsInTheClouds()`
+1.  `calculateHetScore()`
+2.  `calculatePloidy()`
+3.  `loadStarsInTheClouds()`
+4.  `plotStarsInTheClouds()`
 
 The function `runBACDAC()` will run all steps sequentially. The example
 for `runBACDAC()` provides full details for running this function. The
@@ -68,11 +68,15 @@ example is available in the package help and also at
 ## Reference files
 
 Two reference files are also required. These are available at
-<https://zenodo.org/records/13619655>  
-1) hsNormMat 2) testVals When running the examples (as packaged with
-their current directory structure, if the files do not exist, they will
-be automatically downloaded and installed one level up from your current
-directory into `../referencefiles`
+<https://zenodo.org/records/13619655>
+
+1.  hsNormMat
+2.  testVals
+
+When running the examples (as packaged with their current directory
+structure, if the files do not exist, they will be automatically
+downloaded and installed one level up from your current directory into
+`../referencefiles`
 
 ## Sample input Files
 
@@ -85,7 +89,7 @@ data is from sample TCGA-14-1402-02A which was down-sampled to a base
 coverage of 5x and then processed through our pipelines BIMA and
 svaTools. We gave the sample the sampleId: `TCGA-14-1402-02A_ds`. All
 the input files are located in a single directory, the `inputDir`. The
-required infput files are as follows:
+required input files are as follows:
 
 1)  refAltCount data:
 
@@ -237,6 +241,10 @@ str(readDepthPer100kbBin)
 #>  $ goodWindowArray: int [1:26606] 1 2 5 7 8 9 10 11 12 13 ...
 #>  $ windowSize     : num 1e+05
 ```
+
+## Producing input data
+
+See `inst/producing_input_data.md` for more assistance.
 
 ## Linear Genome
 
