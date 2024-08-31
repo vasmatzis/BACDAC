@@ -22,7 +22,6 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   ## load hetScore wig file  ---------------
   lohIn <- loadHetScoreFromWig(hetScorePerBinFile)
   # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
-  inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
   loginfo('loading ref and alt counts from dir: %s', inputDir)
 
   lohTot <- list()
@@ -35,20 +34,14 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 
     # snpData/snpFull/snpVals: SNP information for the matching lohCountBpFull for sva
     # lohData/countBPFull/countBP: Counts of ref/alt occurrences for SNP position for each sva
-    if(inputDirIsNextGenProjects){
-      # loading .Rdata output from bmdSvPipeline using bmdSvPipeline functions
-      # snpFull= bmdTools::loadRdata(file.path(inputDir,'loh',    paste0(sampleId, '_snpVals_',chrNum,'.Rdata'))) # snpFull
-      # countBPFull = bmdTools::loadRdata(file.path(inputDir,'loh',paste0(sampleId, '_countBP_',chrNum,'.Rdata'))) # countBPFull
-      # iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
-    }else{
       # loading BACDAC .Rds inputs
-      iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
-      # logdebug('loading %s',iFile)
+    iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
+    # logdebug('loading %s',iFile)
 
-      iRefAltCount = readRDS(file=iFile )
-      countBPFull=iRefAltCount[,c('ref', 'alt')]
-      snpFull=iRefAltCount[,'pos']
-    }
+    iRefAltCount = readRDS(file=iFile )
+    countBPFull=iRefAltCount[,c('ref', 'alt')]
+    snpFull=iRefAltCount[,'pos']
+
 
     lohTot[[chrNum]] <- countBPFull #lohData
     covTot[[chrNum]] <- apply(countBPFull,1,sum) # coverage of all the SNPS, in each chrom

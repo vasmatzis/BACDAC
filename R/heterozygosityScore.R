@@ -70,29 +70,19 @@ calculateHetScore <- function(
 
 
   # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
-  # TODO: remove?
-  inputDirIsNextGenProjects=ifelse(grepl('shared/NextGen/Projects', x=inputDir), TRUE, FALSE)
   loginfo('loading ref and alt counts from inputDir: %s', inputDir)
 
   for (i in mainChromsNoY) {
     ichrChar=convertChromToCharacter(i)
     loginfo('calculating chrom %s',ichrChar)
 
+    # loading BACDAC .Rds inputs
+    iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
+    # logdebug('%i loading %s',i, iFile)
 
-    if(inputDirIsNextGenProjects){
-      # loading .Rdata output from bmdSvPipeline using bmdSvPipeline functions
-      # snpFull= bmdTools::loadRdata(file.path(inputDir,    paste0(sampleId, '_snpVals_',i,'.Rdata')), verbose = TRUE) # snpFull
-      # countBPFull = bmdTools::loadRdata(file.path(inputDir,paste0(sampleId, '_countBP_',i,'.Rdata')), verbose = TRUE) # countBPFull
-      # iRefAltCount=data.frame('chr'=ichrChar, 'pos'=snpFull, 'ref'=countBPFull$ref, 'alt'=countBPFull$alt)
-    }else{
-      # loading BACDAC .Rds inputs
-      iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
-      # logdebug('%i loading %s',i, iFile)
-
-      iRefAltCount = readRDS(file=iFile )
-      countBPFull=iRefAltCount[,c('ref', 'alt')]
-      snpFull=iRefAltCount[,'pos']
-    }
+    iRefAltCount = readRDS(file=iFile )
+    countBPFull=iRefAltCount[,c('ref', 'alt')]
+    snpFull=iRefAltCount[,'pos']
 
     # Determine total coverage (how many times we see the ref/alt alleles)
     covVals <- countBPFull[['ref']] + countBPFull[['alt']]
