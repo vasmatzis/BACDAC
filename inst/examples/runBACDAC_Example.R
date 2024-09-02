@@ -28,7 +28,7 @@ hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
 hsNormMat = loadHsNormMat(hsNormMatFile)
 
 testValsFile <-  "../referenceFiles/testVals.Rds"
-myTestVals = loadTestVals(testValsFile,destfile=testValsFile)
+testVals = loadTestVals(testValsFile)
 
 runBACDAC(sampleId=mySampleId,
           alternateId=myAlternateId,
@@ -38,6 +38,6 @@ runBACDAC(sampleId=mySampleId,
           readDepthPer30kbBin, readDepthPer100kbBin,
           segmentation=mySegmentation,
           segmentationBinSize=mySegmentationBinSize,
-          hsNormMat=myHsNormMat,
-          testVals=myTestVals)
+          hsNormMat=hsNormMat,
+          testVals=hsNormMat)
 }

@@ -74,7 +74,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   # cnvListFull <- 2*frq23/(readDepthBinSize*cnvBinnedData$expectedNormalBin) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
   posListFull <- wdnsMSK23
   chrStart <- c(chrStartKey,max(wdnsMSK23))
-  chrList <- as.character(lohIn@seqnames)
+  chrList <- as.character(lohIn$seqnames)
   lohChrOutFull <- NULL
   cnvListChrFull <- NULL
   chrEnd <- NULL
@@ -177,7 +177,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
 
 
   autosomes=1:22
-  testVals <- starCloudPlotInputs$testVals;
+  testValsSt <- starCloudPlotInputs$testVals;
   lambdaMainOrig <- starCloudPlotInputs$lambdaMainOrig;
   cnvListChrFullOrig <- starCloudPlotInputs$cnvListChrFullOrig;
   lohChrOutFull <- starCloudPlotInputs$lohChrOutFull
@@ -242,9 +242,9 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
 
   # renormalize all of the probabilities by the sum of the probabilities
   shiftVals <- sapply(1:length(plotRange),
-                      function(x) sum(((dpois(4:1000,lambdaMain*(plotRange[x]/2)))/sum(dpois(4:1000,lambdaMain*(plotRange[x]/2))))*testVals[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-pPlot[x]))]))
+                      function(x) sum(((dpois(4:1000,lambdaMain*(plotRange[x]/2)))/sum(dpois(4:1000,lambdaMain*(plotRange[x]/2))))*testValsSt[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-pPlot[x]))]))
   medVals   <- sapply(1:length(plotRange),
-                      function(x) sum(((dpois(4:1000,lambdaMain*(plotRange[x]/2)))/sum(dpois(4:1000,lambdaMain*(plotRange[x]/2))))*testVals[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-0.5))]))
+                      function(x) sum(((dpois(4:1000,lambdaMain*(plotRange[x]/2)))/sum(dpois(4:1000,lambdaMain*(plotRange[x]/2))))*testValsSt[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-0.5))]))
 
   seqRange <- seq(1,plotMaxCN,1) # draw stars just for the CN levels
   plotStarRange <- unlist(sapply(seqRange,function(x) sapply(1:(1+floor(x/2)),function(y) x*tau+2*(1-tau))))
@@ -257,10 +257,10 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
   # 3 or less reads is not informative (possibility of mis-sequencing, we don't know if there is an actual snp, etc), so start with 4
   # het score value for each allele fraction, for each coverage level
   starVals <- sapply(1:length(plotStarRange),
-                     function(x) sum(((dpois(4:1000,lambdaMain*(plotStarRange[x]/2)) )/sum(dpois(4:1000,lambdaMain*(plotStarRange[x]/2))))*testVals[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-pPlot[x]))]))
+                     function(x) sum(((dpois(4:1000,lambdaMain*(plotStarRange[x]/2)) )/sum(dpois(4:1000,lambdaMain*(plotStarRange[x]/2))))*testValsSt[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-pPlot[x]))]))
   # perfect het score value, for each coverage level
   medStarVals <- sapply(1:length(plotStarRange),
-                        function(x) sum(((dpois(4:1000,lambdaMain*(plotStarRange[x]/2)))/sum(dpois(4:1000,lambdaMain*(plotStarRange[x]/2))))*testVals[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-0.5))]))
+                        function(x) sum(((dpois(4:1000,lambdaMain*(plotStarRange[x]/2)))/sum(dpois(4:1000,lambdaMain*(plotStarRange[x]/2))))*testValsSt[(4:1000)-3,which.min(abs(seq(0.001,0.5,0.001)-0.5))]))
 
   # define "ploidy" for the sample
   ploidyNRD <- mean(cnvListChrFull)

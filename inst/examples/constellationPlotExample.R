@@ -38,8 +38,8 @@
   if(is.null(starCloudPlotInputs)){     # run once only... it takes about 3-5 minutes
     starCloudPlotInputs=loadStarsInTheClouds(
       sampleId=sampleId, inputDir=inputDir, readDepthPer30kbBin=readDepthPer30kbBin,
-      hetScorePerBinWigFile=hetScorePerBinWigFile, readDepthBinSize=readDepthBinSize,
-      hsNormMat, testVals, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
+      hetScorePerBinFile=hetScorePerBinWigFile, readDepthBinSize=readDepthBinSize,
+      hsNormMat, testVals=myTestVals, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
   }
 
   ##### One Panel OPTION --------------------
@@ -89,6 +89,8 @@
   segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd
   segmentation <- checkSegmentation(segmentation)
 
+# added the below because rgdObject couldn't be found
+  rgdObject = BACDAC:::rgdObject
   ### draw constellation plot left of the linear genome plot ----
   starCloudResult = twoPanelReport(
     starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,

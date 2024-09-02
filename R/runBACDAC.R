@@ -66,12 +66,15 @@ runBACDAC=function(sampleId, alternateId,
 
   ### load and make input values for the constellation plot ----
   if(is.null(starCloudPlotInputs)){     #   takes about 3-5 minutes
-    starCloudPlotInputs=loadStarsInTheClouds(sampleId=sampleId, inputDir=inputDir, readDepthPer30kbBin=readDepthPer30kbBin,hetScorePerBinFile=listOfHetScoreFiles$hetScorePerBinFile,
-                                             hsNormMat=hsNormMat, testVals=testVals, readDepthBinSize=30000, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
+    starCloudPlotInputs=loadStarsInTheClouds(sampleId=sampleId, inputDir=inputDir, readDepthPer30kbBin=readDepthPer30kbBin,
+                                             hetScorePerBinFile=listOfHetScoreFiles$hetScorePerBinFile,
+                                             hsNormMat=hsNormMat, testVals=testVals, readDepthBinSize=30000,
+                                             mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
   }
 
   ### draw constellation plot left of the linear genome plot ----
-  starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
+  starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
+                                  readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
                  sampleId=sampleId,gainColor=gainColor, lossColor= lossColor)
 
   loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
