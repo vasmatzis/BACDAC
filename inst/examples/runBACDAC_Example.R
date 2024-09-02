@@ -39,5 +39,5 @@ runBACDAC(sampleId=mySampleId,
           segmentation=mySegmentation,
           segmentationBinSize=mySegmentationBinSize,
           hsNormMat=hsNormMat,
-          testVals=hsNormMat)
+          testVals=testVals)
 }

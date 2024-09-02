@@ -172,12 +172,12 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
                                  plotCex=1,addAnnotations=FALSE
 ){
 
-  # forceFirstDigPeakCopyNum=-1;grabDataPercentManual=-1; origMaxPercentCutoffManual=-1;minPeriodManual=-1;maxPeriodManual=-1;minReasonableSegmentSize=5.5e6; # plot annotations
+  # plotEachChrom=FALSE;forceFirstDigPeakCopyNum=-1;grabDataPercentManual=-1; origMaxPercentCutoffManual=-1;minPeriodManual=-1;maxPeriodManual=-1;minReasonableSegmentSize=5.5e6; # plot annotations
   # digitalPeakZone = 0.05;heterozygosityScoreThreshold = 0.98; paperMode=FALSE  # without all the extra fluff, crisp and clean for papers and presentations
 
 
   autosomes=1:22
-  testValsSt <- starCloudPlotInputs$testVals;
+  testValsSt <- starCloudPlotInputs$testVals; print(paste("testValsSt DIM", dim(testValsSt)))
   lambdaMainOrig <- starCloudPlotInputs$lambdaMainOrig;
   cnvListChrFullOrig <- starCloudPlotInputs$cnvListChrFullOrig;
   lohChrOutFull <- starCloudPlotInputs$lohChrOutFull
@@ -459,6 +459,8 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
 #' @export
 twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbBin, segmentation,
                         sampleId=NULL, alternateId=NULL, gainColor='blue', lossColor= 'red'){
+# gainColor='blue'; lossColor= 'red'
+
 
   graphics::layout( matrix(c(1,2,2),nrow=1),
                     heights= c(1),
@@ -468,7 +470,8 @@ twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbB
   diploidPeakNRD=getDiploidPeakNRD(calcPloidyResult)
   # left figure
   op <- par(mar=c(5,3,3,3),mgp=c(1.5, 0.5,0))
-  starCloudResult=plotStarsInTheClouds(sampleId=sampleId, alternateId=alternateId,starCloudPlotInputs, diploidPeakNRD=diploidPeakNRD, tau=min(1,calcPloidyResult$percentTumor/100),
+  starCloudResult=plotStarsInTheClouds(sampleId=sampleId, alternateId=alternateId,starCloudPlotInputs, diploidPeakNRD=diploidPeakNRD,
+                                       tau=min(1,calcPloidyResult$percentTumor/100),
                                        plotEachChrom=FALSE, mainPeakNRD=getMainPeakNRD(calcPloidyResult),
                                        segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
                                        digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],

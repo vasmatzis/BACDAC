@@ -9,11 +9,15 @@ runBACDAC=function(sampleId, alternateId,
                    readDepthPer30kbBin, readDepthPer100kbBin,segmentation,segmentationBinSize,
                    hsNormMat,testVals,
                    gainColor='blue', lossColor= 'red',
-                   dPeaksCutoff=0.01,penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1, maxPeriodManual=-1, forceFirstDigPeakCopyNum=-1,   # digital peaks
+                   dPeaksCutoff=0.01,penaltyCoefForAddingGrids=0.49, minGridHeight=0.2, minPeriodManual=-1,
+                   maxPeriodManual=-1, forceFirstDigPeakCopyNum=-1,   # digital peaks
                    grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,  #  peaksByDensity
                    minReasonableSegmentSize=5.5e6,
                    heterozygosityScoreThreshold=0.98,
                    allowedTumorPercent = 106){
+# sampleId=mySampleId;alternateId=myAlternateId;outputDir=myOutputDir;inputDir=myInputDir;noPdf=TRUE;segmentation=mySegmentation;segmentationBinSize=mySegmentationBinSize
+#  dPeaksCutoff=0.01;penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1
+#  minReasonableSegmentSize=5.5e6;heterozygosityScoreThreshold=0.98;allowedTumorPercent = 106
   # initialize
   starCloudPlotInputs=NULL
 
@@ -62,7 +66,7 @@ runBACDAC=function(sampleId, alternateId,
   expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
 
 
-
+print("GOING IN loadStarsInTheClouds")
 
   ### load and make input values for the constellation plot ----
   if(is.null(starCloudPlotInputs)){     #   takes about 3-5 minutes
@@ -73,7 +77,8 @@ runBACDAC=function(sampleId, alternateId,
   }
 
   ### draw constellation plot left of the linear genome plot ----
-  starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
+print("GOING IN twoPanelReport")
+starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
                                   readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
                  sampleId=sampleId,gainColor=gainColor, lossColor= lossColor)
 
