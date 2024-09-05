@@ -2,47 +2,57 @@
   library(BACDAC)
   library(logging)
 
-  # initialize
-  starCloudPlotInputs=NULL
+  # This example first loads the inputs for plotting, then shows three options for
+  # creating the constellation plot. Lastly, output allelic segments to file.
 
-  noPdf=TRUE
+  noPdf <- TRUE      # TRUE= print to screen, FALSE=print to pdf in outputDir
+
+  # directory for output files:
+  outputDir <- tempdir()
+
+  sampleId <- 'TCGA-14-1402-02A_ds';
+  alternateId <- 66301
+
 
   ## load two reference files  ---------------
-  # if these files do not exist, an attempt will be made to download them from Zenodo.
+  # NOTE/WARNING: if these files do not exist, an attempt will be made to download from Zenodo.
   hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
-  hsNormMat = loadHsNormMat(hsNormMatFile)
+  hsNormMat <- loadHsNormMat(hsNormMatFile)
 
   testValsFile <-  "../reference/testVals.Rds"
-  myTestVals = loadTestVals(testValsFile)
+  testVals <- loadTestVals(testValsFile)
 
-  sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
 
   # directory with input files:
   inputDir <- system.file('extdata', package = "BACDAC")
-  readDepthPer30kbBin=  readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
-  readDepthBinSize=30000
+  readDepthPer30kbBin <-readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
+  readDepthBinSize  <- 30000
 
-  # directory for output files:
-  outputDir=tempdir()
+
+  # initialize
+  starCloudPlotInputs <- NULL
 
   # result from calculateHetScore, but will use example data here
   hetScorePerBinWigFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
 
   # result from calculatePloidy, but will use example data here
-  calcPloidyResultOutputFile=file.path(inputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
-  calcPloidyResult = readRDS(calcPloidyResultOutputFile)
-  mainPeakNRD=getMainPeakNRD(calcPloidyResult)
-  expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
+  calcPloidyResultOutputFile <- file.path(inputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
+  calcPloidyResult <- readRDS(calcPloidyResultOutputFile)
+  mainPeakNRD <- getMainPeakNRD(calcPloidyResult)
+  expReadsIn2NPeak_1bp <- calcPloidyResult$expReadsIn2NPeak_1bp
 
   ### get the needed input values for the plot
   if(is.null(starCloudPlotInputs)){     # run once only... it takes about 3-5 minutes
-    starCloudPlotInputs=loadStarsInTheClouds(
+    starCloudPlotInputs <- loadStarsInTheClouds(
       sampleId=sampleId, inputDir=inputDir, readDepthPer30kbBin=readDepthPer30kbBin,
       hetScorePerBinFile=hetScorePerBinWigFile, readDepthBinSize=readDepthBinSize,
-      hsNormMat, testVals=myTestVals, mainPeakNRD=mainPeakNRD, expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
+      hsNormMat, testVals=testVals, mainPeakNRD=mainPeakNRD,
+      expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
   }
 
-  ##### One Panel OPTION --------------------
+  ### OPTION 1
+  ##### One Panel OPTION    --------------------
+  ### constellation plot only
   if (!noPdf) {
     # we will be writing to this path, make sure it exists
     if(!dir.exists(file.path(outputDir))){
@@ -56,7 +66,7 @@
   }
 
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
-  starCloudResult=plotStarsInTheClouds(
+  starCloudResult <- plotStarsInTheClouds(
     sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL,
     tau=min(1,calcPloidyResult$percentTumor/100),
     plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
@@ -65,13 +75,12 @@
     addAnnotations = TRUE)
   par(op)
 
-  if (!noPdf) {
-    dev.off()
-  }
 
-  ##### One Panel OPTION with individual chromosome plots   --------------------
+  ### OPTION 2
+  ##### One Panel OPTION plus individual chromosome plot    --------------------
+  ### constellation plot then chromosomes 1-22 plotted individually
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
-  starCloudResult=plotStarsInTheClouds(
+  starCloudResult <- plotStarsInTheClouds(
     sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL,
     tau=min(1,calcPloidyResult$percentTumor/100),
     plotEachChrom=TRUE, mainPeakNRD=mainPeakNRD,
@@ -81,25 +90,33 @@
   par(op)
 
 
+  ### OPTION 3
   ##### Two Panel OPTION   --------------------
-  ### plot constellation plot with linear plot
+  ### constellation plot with linear genome plot to the right
 
   # load segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
-  segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd
+  segmentation <- read.csv(segmentationFile, comment.char = '#')
+  # check for required columns: # chr, start, end, rd and optionally cnvState
   segmentation <- checkSegmentation(segmentation)
 
 # added the below because rgdObject couldn't be found
-  rgdObject = BACDAC:::rgdObject
+#  rgdObject = BACDAC:::rgdObject
+
   ### draw constellation plot left of the linear genome plot ----
-  starCloudResult = twoPanelReport(
+  starCloudResult <- twoPanelReport(
     starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
     readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
     sampleId=sampleId, gainColor='blue', lossColor= 'red')
 
+
   # write segments to file
-  fileToWrite=file.path(outputDir, paste0(sampleId, '_bacdacAllelicSegments.csv'))
+  fileToWrite=file.path(outputDir, paste0(sampleId, '_BACDAC_allelic_segments.csv'))
+  loginfo('writing allelic segments to file: \n\t%s', fileToWrite)
   write.csv(starCloudResult$allelicSegments,file =fileToWrite,row.names = FALSE )
 
+  if (!noPdf) {
+    dev.off()  # CLOSE the pdf file
+  }
 }
 

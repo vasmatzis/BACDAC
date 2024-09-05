@@ -76,13 +76,12 @@ full details for running this function. The example is available in the package 
 
 ## Reference files
 Two reference files are also required. These are available at https://zenodo.org/records/13619655
-
 1. hsNormMat 
 2. testVals 
 
-When running the examples (as packaged with their current directory structure, if the files do not
-exist, they will be automatically downloaded and installed one level up from your current directory
-into `../referencefiles`
+NOTE/WARNING: When running the examples (as packaged with their current directory structure, if the
+files do not exist, they will be automatically downloaded and installed one level up from your
+current directory into `../referencefiles`
 
 
 ## Sample input Files
@@ -97,8 +96,8 @@ a single directory, the `inputDir`. The required input files are as follows:
 1) refAltCount data:
 
 23 files, one file for each chromosome 1-22 and X. The file is a matrix with four columns: chr pos
-ref alt. The file must be in `inputDir` and the file name is of the form `<sampleId>_1.Rds`, saved
-using `saveRDS()`
+ref alt. The file must be in `inputDir`, the file name must be in the form 
+`<sampleId>_refAltCount_<chr>.Rds`, and saved using `base::saveRDS()`.
 
 ```{r refAltCount}
 # example files in the package
@@ -112,7 +111,7 @@ refAltCountchr1=readRDS(file.path(inputDir, paste0(sampleId, '_refAltCount_1.Rds
 
 # preview
 head(refAltCountchr1)
-str(segmentation)
+str(refAltCountchr1)
 
 ```
 
@@ -156,18 +155,18 @@ inputDir <- system.file('extdata', package = "BACDAC")
 sampleId='TCGA-14-1402-02A_ds';
 dir(inputDir, pattern = 'readDepthPer')
 
-thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 
-#load
+#load 30 kb file
+thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 readDepthPer30kbBin = readRDS(file=thirtyKbFile )
 
 # preview
 names(readDepthPer30kbBin)
 str(readDepthPer30kbBin)
 
-hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
 
-#load
+#load 100kb file
+hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
 readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
 # preview

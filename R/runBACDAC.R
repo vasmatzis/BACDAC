@@ -15,9 +15,6 @@ runBACDAC=function(sampleId, alternateId,
                    minReasonableSegmentSize=5.5e6,
                    heterozygosityScoreThreshold=0.98,
                    allowedTumorPercent = 106){
-# sampleId=mySampleId;alternateId=myAlternateId;outputDir=myOutputDir;inputDir=myInputDir;noPdf=TRUE;segmentation=mySegmentation;segmentationBinSize=mySegmentationBinSize
-#  dPeaksCutoff=0.01;penaltyCoefForAddingGrids=0.49; minGridHeight=0.2; minPeriodManual=-1;maxPeriodManual=-1; forceFirstDigPeakCopyNum=-1;grabDataPercentManual= -1; origMaxPercentCutoffManual=-1
-#  minReasonableSegmentSize=5.5e6;heterozygosityScoreThreshold=0.98;allowedTumorPercent = 106
   # initialize
   starCloudPlotInputs=NULL
 
@@ -66,7 +63,7 @@ runBACDAC=function(sampleId, alternateId,
   expReadsIn2NPeak_1bp=calcPloidyResult$expReadsIn2NPeak_1bp
 
 
-print("GOING IN loadStarsInTheClouds")
+  loginfo("loadStarsInTheClouds")
 
   ### load and make input values for the constellation plot ----
   if(is.null(starCloudPlotInputs)){     #   takes about 3-5 minutes
@@ -77,16 +74,19 @@ print("GOING IN loadStarsInTheClouds")
   }
 
   ### draw constellation plot left of the linear genome plot ----
-print("GOING IN twoPanelReport")
-starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
+  loginfo('twoPanelReport')
+  starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
                                   readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
-                 sampleId=sampleId,gainColor=gainColor, lossColor= lossColor)
+                                  sampleId=sampleId,gainColor=gainColor, lossColor= lossColor)
 
   loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
   loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
 
   # write segments to file
   fileToWrite=file.path(outputDir, paste0(sampleId, '_BACDAC_allelic_segments.csv'))
+  loginfo('writing allelic segments to file: \n\t%s', fileToWrite)
   write.csv(starCloudResult$allelicSegments,file =fileToWrite,row.names = FALSE )
+
+  return(starCloudResult)
 
 }

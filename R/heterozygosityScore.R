@@ -52,7 +52,7 @@ calculateHetScore <- function(
   mainChromsNoY <- 1:23
   coords <- getLinearCoordinates(mainChroms)
 
-  # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
+  # we will be writing to this path, make sure it exists
   if(!dir.exists(file.path(outputDir))){
     dir.create(path = file.path(outputDir))
     loginfo('creating output directory: \n\t%s:', file.path(outputDir))
@@ -351,7 +351,7 @@ makeHetScoreReportPdf <- function(hetScorePerBinFile,
 
   # set up/open pdf
   if(!noPdf) {
-    # we will be writing to this path, make sure it exists # TODO: do we need to check that the path is writable?
+    # we will be writing to this path, make sure it exists
     if(!dir.exists(file.path(outputDir))){
       dir.create(path = file.path(outputDir))
       loginfo('creating output directory for hetScoreReport PDF: \n\t%s:', file.path(outputDir))
@@ -483,7 +483,7 @@ plotHetScorePerBin <- function(hetScore,  sampleId=NULL,
 
 
   # add purple lines for LOH segments
-  # load allelicSegments TODO:  check for "minor" and "major"
+  # load allelicSegments
   if(!is.null(allelicSegments)){
     # we don't want to include the 1N segments
     minorZeroSegments <- allelicSegments[which(allelicSegments$minor_copy_number==0 & allelicSegments$major_copy_number>=2),]

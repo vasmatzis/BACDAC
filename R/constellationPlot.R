@@ -21,7 +21,6 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 
   ## load hetScore wig file  ---------------
   lohIn <- loadHetScoreFromWig(hetScorePerBinFile)
-  # check to see if we are loading inputs from internal bmdSvPipeline users or from external BACDAC users
   loginfo('loading ref and alt counts from dir: %s', inputDir)
 
   lohTot <- list()
@@ -32,16 +31,15 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
     ichrChar=convertChromToCharacter(chrNum)
     loginfo('chrom %s',ichrChar)
 
-    # snpData/snpFull/snpVals: SNP information for the matching lohCountBpFull for sva
-    # lohData/countBPFull/countBP: Counts of ref/alt occurrences for SNP position for each sva
-      # loading BACDAC .Rds inputs
+    # snpFull: SNP information for the matching lohCountBpFull for sva
+    # countBPFull: Counts of ref/alt occurrences for SNP position for each sva
+    # loading BACDAC .Rds inputs
     iFile=file.path(inputDir, paste0(sampleId,'_','refAltCount_', ichrChar,'.Rds'))
     # logdebug('loading %s',iFile)
 
     iRefAltCount = readRDS(file=iFile )
     countBPFull=iRefAltCount[,c('ref', 'alt')]
     snpFull=iRefAltCount[,'pos']
-
 
     lohTot[[chrNum]] <- countBPFull #lohData
     covTot[[chrNum]] <- apply(countBPFull,1,sum) # coverage of all the SNPS, in each chrom
@@ -53,7 +51,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   # need two arrays - count(freq count) and array indexes (after masking)
 
   ## make sure copy number chroms are the same as the hetScore chroms... remove Y from copy number data
-  # otherwise you get errors in tabTemp when it gets to a Y chrom position; not likely to happen unless Y is gained as it is in SA43002
+  # otherwise you get errors when it gets to a Y chrom position;
   chrYStartWsz <- binnedPosStart(coords@chromStart[yind], binSize = readDepthBinSize)
   w23   <- which(readDepthPer30kbBin$goodWindowArray < chrYStartWsz)
   frq23 <- readDepthPer30kbBin$readDepthArray[w23]  # number of fragments, in a 1kb window converted to readDepthBinSize (wsz), for chrs 1-23
@@ -68,17 +66,16 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 
 
   ## masking and processing of some sort --------------
-  # normalize cnv to NRD with normal peak = 2
-  # LOH (hetScore) also on a 30K bin, masked.
-  cnvListFull <- 2*frq23/(readDepthBinSize*expReadsIn2NPeak_1bp) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
-  # cnvListFull <- 2*frq23/(readDepthBinSize*cnvBinnedData$expectedNormalBin) # all the CNV data (except for chrY), normalized to normal CNV=2, NRD=2, normal might be ploidy based or main peak based
+  # normalize read depth (rd) to NRD with normal peak = 2
+  # hetScore also on a 30K bin, masked.
+  cnvListFull <- 2*frq23/(readDepthBinSize*expReadsIn2NPeak_1bp) # all the rd data (except for chrY), normalized to normal rd=2, NRD=2
   posListFull <- wdnsMSK23
   chrStart <- c(chrStartKey,max(wdnsMSK23))
   chrList <- as.character(lohIn$seqnames)
   lohChrOutFull <- NULL
   cnvListChrFull <- NULL
   chrEnd <- NULL
-  # colList <- colors()[seq(1,length(colors()),length.out=24)[2:23]]
+
   for(chrNum in autosomes) {
     # logdebug('process chrom %i',chrNum)
     lohSeqname <- convertChromToCharacter(chrNum, withChrPrefix=TRUE)
@@ -86,7 +83,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
     posListChr <- posListFull[which(posListFull%in%c(chrStart[chrNum]:(chrStart[chrNum+1]-1)))]
     cnvListChr <- cnvListFull[which(posListFull%in%c(chrStart[chrNum]:(chrStart[chrNum+1]-1)))]
     lohChrOut <- lohChr[posListChr-chrStart[chrNum]+1]
-    #Use the mask to look for places where the hetScore in more than half of the 23 TCGA normals dropped below the 0.975 cutoff.
+    #Use the mask to find places where the hetScore, in more than half of 23 TCGA normals, dropped below the 0.975 cutoff.
     lohMean <-0.9875 #
     oneSD <-0.0125
     cutoff <-lohMean-oneSD
@@ -106,9 +103,8 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
   # extrapolation to higher or lower copy number
   #
   # Sample data from the mainPeak (not the 2N peak) to be sure to get a good sampling, in case the
-  # 2N peak is small ie. 26273 then find the poisson that best matches the sample data and save the
-  # lambda that corresponds to that poisson. TODO: could this ever break for really low coverage
-  # samples? possibly so there might be modifications needed
+  # 2N peak is small. Then find the poisson that best matches the sample data and save the
+  # lambda that corresponds to that poisson.
 
   ### sample data in main peak
   ### find lambdaMain, the poisson that best fits the coverage
@@ -142,7 +138,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
                               cnvListChrFullOrig=cnvListChrFullOrig,
                               lohChrOutFull=lohChrOutFull,
                               chrEnd=chrEnd))
-  loginfo('finished loading constellation plot inputs')
+  loginfo('END OF FUNCTION: loadStarsInTheClouds')
   return(starCloudPlotInputs)
 }
 
@@ -172,12 +168,12 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
                                  plotCex=1,addAnnotations=FALSE
 ){
 
-  # plotEachChrom=FALSE;forceFirstDigPeakCopyNum=-1;grabDataPercentManual=-1; origMaxPercentCutoffManual=-1;minPeriodManual=-1;maxPeriodManual=-1;minReasonableSegmentSize=5.5e6; # plot annotations
-  # digitalPeakZone = 0.05;heterozygosityScoreThreshold = 0.98; paperMode=FALSE  # without all the extra fluff, crisp and clean for papers and presentations
+
 
 
   autosomes=1:22
-  testValsSt <- starCloudPlotInputs$testVals; print(paste("testValsSt DIM", dim(testValsSt)))
+  testValsSt <- starCloudPlotInputs$testVals;
+  loginfo("testValsSt DIM %s", dim(testValsSt))
   lambdaMainOrig <- starCloudPlotInputs$lambdaMainOrig;
   cnvListChrFullOrig <- starCloudPlotInputs$cnvListChrFullOrig;
   lohChrOutFull <- starCloudPlotInputs$lohChrOutFull
@@ -186,11 +182,10 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
   # find the normalized read depth for the diploid peak (do not assume it is 2)
   if(!is.null(peakInfo)){
 
-    # get mainPeak info,  mainPeak may not be normalized to a read depth of 2
-    # cnvBinned, if run in pipeline with other ploidy output may not be the same as the ploidy output here.
+    # get mainPeak info,  mainPeak may not be the normal peak
     rdNormX_Mainpeak    <- peakInfo[which(peakInfo$rankByHeight==1),        'peakReadDepth_normX']
 
-    twoNexists <-any(peakInfo$nCopy==2,na.rm = TRUE) # just in case it doesn't exist, i.e. ME26265
+    twoNexists <-any(peakInfo$nCopy==2,na.rm = TRUE) # in case it doesn't exist
     if(twoNexists){
       rdNormX_2Npeak      <- peakInfo[which(peakInfo$nCopy==2),               'peakReadDepth_normX']
     }else{
@@ -225,13 +220,11 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
   }else{
     if(!'nrd' %in% names(segmentData)){
       stop('nrd is missing from segmentData')
-      # NRD <- pkmodToNRD(segmentData, peakInfo, rdNormX_2Npeak)
-      # segmentData[,'nrd'] <-  NRD
     }
 
     nearMaxNRD <- quantile(segmentData$nrd,probs = .99)
     nearMaxCN <- 2+(nearMaxNRD-2)/tau
-    plotMaxCN  <- round(min(12, nearMaxCN+1.5)) # add 1.5 to expand the plot just a bit but not too much
+    plotMaxCN  <- round(min(12, nearMaxCN+1.5)) # add 1.5 to expand the plot just a bit
     ylimMinTemp <- quantile(segmentData$nrd,probs = .01)
   }
 
@@ -459,7 +452,6 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
 #' @export
 twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbBin, segmentation,
                         sampleId=NULL, alternateId=NULL, gainColor='blue', lossColor= 'red'){
-# gainColor='blue'; lossColor= 'red'
 
 
   graphics::layout( matrix(c(1,2,2),nrow=1),

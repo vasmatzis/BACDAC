@@ -40,7 +40,7 @@ hasNorMoreClusters <- function(hetScoreDensityResult, N, heterozygosityScoreThre
   if(hetScoreDensityResult$observ > minObservations){
     if(!is.na(hetScoreDensityResult$numHetClusters) && hetScoreDensityResult$numHetClusters >= N){
       if(N==2){
-        if(hetScoreDensityResult$testScore < .45){  #19063 =.508 because there is a clone at .508  TODO: what is the 2:0 value when tu% is 99% - it is close to .45 but is .51 too much?
+        if(hetScoreDensityResult$testScore < .45){
           test <- FALSE # the max testScore is too low, if there are multiple clusters, they are subclones
         }else{
           test <- TRUE
@@ -69,26 +69,27 @@ hetScoreDensity <- function(segmentsCloseToPeak,segmentData, index,sampleId,fold
   # plotTextPrefix=NULL;skipPlot=FALSE; minObserv=15
   validPeakIndexes <- which(segmentsCloseToPeak[,index] &
                               segmentData$valid==1)
-  lohScores <- segmentData[validPeakIndexes,'lohScoreMedian']
+  hetScores <- segmentData[validPeakIndexes,'lohScoreMedian']
   if(is.null(plotTextPrefix)){
     plotTextPrefix  <-  paste('peak',index)
   }else{
     plotTextPrefix <- paste(plotTextPrefix, ' peak',index)
   }
-  # use max score if not enough data points, otherwise use mode # TODO: what is 'enough'
-  densityResult <- getModeOrMaxScore(dataIn = lohScores,plotTextPrefix = plotTextPrefix, sampleId=sampleId,folderId=folderId,skipPlot=skipPlot,
+  # use max score if not enough data points, otherwise use mode
+  densityResult <- getModeOrMaxScore(dataIn = hetScores,plotTextPrefix = plotTextPrefix, sampleId=sampleId,folderId=folderId,skipPlot=skipPlot,
                                      minObserv=minObserv, heterozygosityScoreThreshold=heterozygosityScoreThreshold  )
   return(densityResult)
 }
 
 
-#' Calculate density of loh scores
+#' Calculate density of heterozygosity scores
 #'
 #' If enough data ( >minObserv ) return testScore=right-most mode that is big enough (> consider PeakCutoff * max peak) and numHetClusters > 20% max peak
-#' If not enough data return max loh score and numHetClusters =NA
+#' If not enough data return max heterozygosity score and numHetClusters =NA
+#'
 #' @keywords internal
 #' @param dataIn hetScores mean hetScores for selected copy number segments
-#' @param considerPeakCutoff peaks must be bigger than this percentage of maxPeak to be considered # TODO: should this be adjusted higher when there are more data points, ie >100 or 125? 26297 requires >=0.06 not 0.05 which is what I've done all my testing on
+#' @param considerPeakCutoff peaks must be bigger than this percentage of maxPeak to be considered
 #' @param countPeakCutoff peaks must be bigger than this percentage of maxPeak to be counted for numClusters
 #' @param plotTextPrefix text to add to front of plot title
 #' @param default default return value
@@ -99,9 +100,7 @@ hetScoreDensity <- function(segmentsCloseToPeak,segmentData, index,sampleId,fold
 #'
 getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0.25, plotTextPrefix=NULL,
                               folderId=NULL, sampleId=NULL, skipPlot=FALSE, minObserv=15,default=0, heterozygosityScoreThreshold) {
-  # dataIn=lohScores; considerPeakCutoff=0.06; countPeakCutoff=0.25; minObserv=15;skipPlot=FALSE;default=0
 
-  # TODO: what is the minimum for minObserv 10? 15? 20?
   data <- dataIn[dataIn <= 1] # do not take density with data greater than 1 aka noisy data
   observ <- length(data)
 
@@ -109,15 +108,6 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
     xlimMin  <-  min( min(dataIn)*0.98, 0.6) # make sure the scale isn't too zoomed in which can be distracting and misleading
     xlimits  <-  c(xlimMin, max(1,dataIn)) # specify max to make sure the plot includes the data that was removed
 
-    #  bw.SJ(data) : need at least 2 data points
-
-    # which bandwidth to use?
-    # bandwidth <- bw.ucv(data); bwMethod <- 'bw.ucv'                  # this option seems to do the least smoothing
-    # bandwidth <- bw.nrd(data); bwMethod <- 'bw.nrd' # PT58126 with nrd first peak only has 1 density peak but with nrd0 first peak has 2 which is not good
-    # bandwidth <- bw.nrd0(data); bwMethod <- 'bw.nrd0'
-    # bandwidth <- bw.bcv(data); bwMethod <- 'bw.bcv'                    # this option seems to do the MOST smoothing
-    # bandwidth <- bw.SJ(data); bwMethod <- 'bw.SJ' # defaults to 'bw.SJ-ste'
-    # bandwidth <- bw.SJ(data,method='ste'); bwMethod <- 'bw.SJ-ste' # this option seems to do the 2nd least smoothing
     bandwidth <- bw.SJ(data,method='dpi'); bwMethod <- 'bw.SJ-dpi'
 
     hetDen <- density(data,bw=bandwidth)
@@ -165,16 +155,16 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
     if(length(topCountX)>1){
       for(i in 2:length(topCountX)){
         peakToPeakDistance <- topCountX[i]-topCountX[i-1]
-        if(peakToPeakDistance>0.028){  # 26243 needs >0.0177; 19019>=0.023; 19033>0.027 # TODO: what is the correct value? don't go smaller than 3:1 and 2:2 clusters for 4N at low tumor which is probably around .04
+        if(peakToPeakDistance>0.028){
           # find all the pits between two top peaks
           pitsBetween <- pitScoresX[data.table::between(pitScoresX,topCountX[i-1],topCountX[i])]
           if(length(pitsBetween)>0){
             # get the min (y) pit
             testPitY <- min(pitScoresY[(pitScoresX %in% pitsBetween)])
             # test the y value
-            if(abs(topCountY[i-1] - testPitY) > topCountY[i-1]*0.27 &  # TODO: what is the correct value, 26% too small: 66291,58149;58172
+            if(abs(topCountY[i-1] - testPitY) > topCountY[i-1]*0.27 &
                abs(topCountY[i]   - testPitY) > topCountY[i]*0.27){
-              iValidPits <- pitScoresX[which(pitScoresY== testPitY)][1] # take just the first one if there are multiple # ie LU19091 peak 3
+              iValidPits <- pitScoresX[which(pitScoresY== testPitY)][1] # take just the first one if there are multiple
               validPits <- c(validPits,iValidPits)
             }
           }else{
@@ -212,8 +202,6 @@ getModeOrMaxScore <- function(dataIn, considerPeakCutoff=0.06, countPeakCutoff=0
     #plot density, modes
     if(!skipPlot){
       plot(hetDen,xlim=xlimits, main=paste(plotTextPrefix,'het score density via', bwMethod),type='l')
-      # points(hetDen$x[tp$tppos],hetDen$y[tp$tppos],pch='*', col=ifelse(hetDen$x[tp$tppos] %in% pitScoresX, 'red','blue') )
-      # polygon(hetDen$x, hetDen$y, col='gray92',border='gray92')
       rug(dataIn)
       abline(v=heterozygosityScoreThreshold, col='gray', lwd=0.5)
 

@@ -84,10 +84,11 @@ This three panel plot can also be called separately, see \link{makeHetScoreRepor
   # generate heterozygosity score by bin and by chromosome arm and save to the output directory
 
   # make a 3-panel plot, top panel is the segmentation data and the next two panels are the
-  # resulting hetscore by bin and by arm
+  # resulting hetscore by bin and by arm.
 
   basicConfig("DEBUG")
-  sampleId='TCGA-14-1402-02A_ds'; alternateId=66301
+  sampleId <- 'TCGA-14-1402-02A_ds';
+  alternateId <- 66301
   outputDir <- tempdir()
 
   # inputDir is the path to the load package data
@@ -96,8 +97,8 @@ This three panel plot can also be called separately, see \link{makeHetScoreRepor
   segmentation <- read.csv(segmentationFile, comment.char = '#') # chr, start, end, rd per
   segmentation <- checkSegmentation(segmentation)
 
-  thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
-  readDepthPer30kbBin = readRDS(file=thirtyKbFile )
+  thirtyKbFile <- file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
+  readDepthPer30kbBin <- readRDS(file=thirtyKbFile )
 
   calculateHetScore(
     sampleId=sampleId,

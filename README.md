@@ -68,15 +68,12 @@ example is available in the package help and also at
 ## Reference files
 
 Two reference files are also required. These are available at
-<https://zenodo.org/records/13619655>
+<https://zenodo.org/records/13619655> 1. hsNormMat 2. testVals
 
-1.  hsNormMat
-2.  testVals
-
-When running the examples (as packaged with their current directory
-structure, if the files do not exist, they will be automatically
-downloaded and installed one level up from your current directory into
-`../referencefiles`
+NOTE/WARNING: When running the examples (as packaged with their current
+directory structure, if the files do not exist, they will be
+automatically downloaded and installed one level up from your current
+directory into `../referencefiles`
 
 ## Sample input Files
 
@@ -94,8 +91,9 @@ required input files are as follows:
 1)  refAltCount data:
 
 23 files, one file for each chromosome 1-22 and X. The file is a matrix
-with four columns: chr pos ref alt. The file must be in `inputDir` and
-the file name is of the form `<sampleId>_1.Rds`, saved using `saveRDS()`
+with four columns: chr pos ref alt. The file must be in `inputDir`, the
+file name must be in the form `<sampleId>_refAltCount_<chr>.Rds`, and
+saved using `base::saveRDS()`.
 
 ``` r
 # example files in the package
@@ -139,13 +137,12 @@ head(refAltCountchr1)
 #> 4   1 13116   2   0
 #> 5   1 13118   1   0
 #> 6   1 13273  10   0
-str(segmentation)
-#> 'data.frame':    690 obs. of  5 variables:
-#>  $ chr     : int  1 1 1 1 1 1 1 1 1 1 ...
-#>  $ start   : num  1 515000 709000 818000 919000 ...
-#>  $ end     : num  515000 709000 818000 919000 1021000 ...
-#>  $ cnvState: int  3 3 3 3 2 2 2 2 2 2 ...
-#>  $ rd      : num  1658 872 950 863 811 ...
+str(refAltCountchr1)
+#> 'data.frame':    2404135 obs. of  4 variables:
+#>  $ chr: chr  "1" "1" "1" "1" ...
+#>  $ pos: int  11012 11063 13110 13116 13118 13273 13284 13380 13445 13453 ...
+#>  $ ref: num  4 3 2 2 1 10 8 7 18 20 ...
+#>  $ alt: num  0 0 0 0 0 0 0 0 0 0 ...
 ```
 
 2)  segmentation data:  
@@ -213,9 +210,9 @@ dir(inputDir, pattern = 'readDepthPer')
 #> [1] "TCGA-14-1402-02A_ds_readDepthPer100kbBin.Rds"
 #> [2] "TCGA-14-1402-02A_ds_readDepthPer30kbBin.Rds"
 
-thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 
-#load
+#load 30 kb file
+thirtyKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds'))
 readDepthPer30kbBin = readRDS(file=thirtyKbFile )
 
 # preview
@@ -227,9 +224,9 @@ str(readDepthPer30kbBin)
 #>  $ goodWindowArray: int [1:93963] 2 3 4 7 10 13 14 16 17 18 ...
 #>  $ windowSize     : num 30000
 
-hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
 
-#load
+#load 100kb file
+hundredKbFile=file.path(inputDir, paste0(sampleId,'_','readDepthPer100kbBin.Rds'))
 readDepthPer100kbBin = readRDS(file=hundredKbFile )
 
 # preview

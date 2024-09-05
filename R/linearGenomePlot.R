@@ -107,7 +107,7 @@ linearGenomePlot <- function( readDepthPer30kbBin, readDepthBinSize=30000, sampl
 
 
     # add purple lines for LOH segments
-    # load segmentation TODO:  check for "minor" and "major" in segmentation file?
+    # load segmentation
     if(!is.null(allelicSegments)){
       # we don't want to include the 1N segments
       minorZeroSegments <- allelicSegments[which(allelicSegments$minor_copy_number==0 & allelicSegments$major_copy_number>=2),]

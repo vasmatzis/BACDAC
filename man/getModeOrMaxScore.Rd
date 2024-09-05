@@ -2,7 +2,7 @@
 % Please edit documentation in R/ploidyUtils.R
 \name{getModeOrMaxScore}
 \alias{getModeOrMaxScore}
-\title{Calculate density of loh scores}
+\title{Calculate density of heterozygosity scores}
 \usage{
 getModeOrMaxScore(
   dataIn,
@@ -20,7 +20,7 @@ getModeOrMaxScore(
 \arguments{
 \item{dataIn}{hetScores mean hetScores for selected copy number segments}
 
-\item{considerPeakCutoff}{peaks must be bigger than this percentage of maxPeak to be considered # TODO: should this be adjusted higher when there are more data points, ie >100 or 125? 26297 requires >=0.06 not 0.05 which is what I've done all my testing on}
+\item{considerPeakCutoff}{peaks must be bigger than this percentage of maxPeak to be considered}
 
 \item{countPeakCutoff}{peaks must be bigger than this percentage of maxPeak to be counted for numClusters}
 
@@ -41,6 +41,6 @@ but may vary depending on NGS library quality and preparation}
 }
 \description{
 If enough data ( >minObserv ) return testScore=right-most mode that is big enough (> consider PeakCutoff * max peak) and numHetClusters > 20\% max peak
-If not enough data return max loh score and numHetClusters =NA
+If not enough data return max heterozygosity score and numHetClusters =NA
 }
 \keyword{internal}
