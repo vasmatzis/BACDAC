@@ -76,7 +76,7 @@ Two reference files are also required. These are available at
 NOTE/WARNING: When running the examples (as packaged with their current
 directory structure, if the files do not exist, they will be
 automatically downloaded and installed one level up from your current
-directory into `../referencefiles`
+directory into `./referencefiles`
 
 ## Sample input Files
 

@@ -82,7 +82,7 @@ Two reference files are also required. These are available at https://zenodo.org
 
 NOTE/WARNING: When running the examples (as packaged with their current directory structure, if the
 files do not exist, they will be automatically downloaded and installed one level up from your
-current directory into `../referencefiles`
+current directory into `./referencefiles`
 
 
 ## Sample input Files
