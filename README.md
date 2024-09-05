@@ -60,10 +60,10 @@ There are four main functions to be operated in this order:
 3.  `loadStarsInTheClouds()`
 4.  `plotStarsInTheClouds()`
 
-The function `runBACDAC()` will run all steps sequentially. The example
-for `runBACDAC()` provides full details for running this function. The
-example is available in the package help and also at
-`inst/examples/runBACDAC_Examples.R`
+To facilitate ease of operation, the function `runBACDAC()` will run all
+four steps sequentially. The example for `runBACDAC()` provides full
+details for running this function. The example is available in the
+package help and also at `inst/examples/runBACDAC_Examples.R`
 
 ## Reference files
 
@@ -75,8 +75,8 @@ Two reference files are also required. These are available at
 
 NOTE/WARNING: When running the examples (as packaged with their current
 directory structure, if the files do not exist, they will be
-automatically downloaded and installed one level up from your current
-directory into `../referencefiles`
+automatically downloaded and installed into a folder in your current
+directory at `./referencefiles`
 
 ## Sample input Files
 
