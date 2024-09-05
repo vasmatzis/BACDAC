@@ -159,7 +159,7 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 #' @inheritParams commonParameters
 #' @example inst/examples/constellationPlotExample.R
 #' @export
-plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plotEachChrom=FALSE,
+plotStarsInTheClouds <- function(sampleId, alternateId=NULL, starCloudPlotInputs, plotEachChrom=FALSE,
                                  mainPeakNRD,  diploidPeakNRD, tau, segmentData=NULL, peakInfo=NULL,
                                  forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,
                                  minReasonableSegmentSize=5.5e6,
@@ -348,7 +348,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
     # stars for each heterozygosity ratio for each cn level - make sure this layers on top the segment data
     points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
 
-    legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green', 'black'),
+    legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green2', 'black'),
            lty=c(1,NA,NA), pch=c(NA, "*", "."), cex=.95*plotCex, pt.cex=2)
 
     # plot annotations
@@ -356,7 +356,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
     mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
     mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
     if(!is.na(lohContentA_maj2_min0)){
-      mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.5, cex=.9, col='gray40')
+      mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.1, cex=.9, col='gray30')
     }
 
     if(addSegmentLegend){
@@ -397,7 +397,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
            xlab="Heterozygosity Score",
            ylab="NRD",
            col=scales::alpha('black',0.3),
-           cex.lab=1.3)
+           cex.lab=1.2)
       lines(shiftVals/medVals,plotRange,type='l',xlim=c(0,1),col='purple')
       points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
       title(paste0("chr=",chrNum))
@@ -415,7 +415,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
         # mtext(side=3, text=paste('ploidy: ',round(ploidyCN,1)), adj=0.05,  outer = TRUE,line=-1)
         # mtext(c(sampleId, alternateId), side=3, line=0, adj=c(.05,.95), outer = TRUE)
         mtext(paste(sampleId, alternateId), side=3, line=0, adj=c(.05), outer = TRUE)
-        mtext(paste0(' tumor:',round(tau*100), '% ',' ploidy:',round(ploidyCN,1) ), side=3, line=0, adj=c(.95), outer = TRUE)
+        mtext(paste(' tumor:',round(tau*100), '% ',' ploidy:',round(ploidyCN,1) ), side=3, line=0, adj=c(.95), outer = TRUE)
       }
     }
     par(op)
@@ -455,7 +455,7 @@ twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbB
   diploidPeakNRD=getDiploidPeakNRD(calcPloidyResult)
   # left panel
   op <- par(mar=c(5,3,3,3),mgp=c(1.5, 0.5,0))
-  starCloudResult=plotStarsInTheClouds(sampleId=sampleId, alternateId=alternateId,starCloudPlotInputs, diploidPeakNRD=diploidPeakNRD,
+  starCloudResult=plotStarsInTheClouds(sampleId=sampleId, starCloudPlotInputs=starCloudPlotInputs, diploidPeakNRD=diploidPeakNRD,
                                        tau=min(1,calcPloidyResult$percentTumor/100),
                                        plotEachChrom=FALSE, mainPeakNRD=getMainPeakNRD(calcPloidyResult),
                                        segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,

@@ -125,13 +125,13 @@ run all the steps in BACDAC, will output pdfs, intermediate and allele specific 
   # inputDir is the path to the loaded package data
   myInputDir <- system.file('extdata', package = "BACDAC")
 
-  ### 2 - read depth data
+  ### 2 - load read depth data
   thirtyKbFile <- file.path(myInputDir, paste0(mySampleId,'_','readDepthPer30kbBin.Rds'))
   readDepthPer30kbBin <- readRDS(file=thirtyKbFile )
   hundredKbFile <- file.path(myInputDir, paste0(mySampleId,'_','readDepthPer100kbBin.Rds'))
   readDepthPer100kbBin <- readRDS(file=hundredKbFile )
 
-  ### 3 - segmentation data
+  ### 3 - load segmentation data
   segmentationFile <- file.path(myInputDir, paste0(mySampleId, '_segmentation.csv'))
   mySegmentation <- read.csv(segmentationFile, comment.char = '#')
   # check for required columns: # chr, start, end, rd and optionally cnvState

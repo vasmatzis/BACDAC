@@ -66,7 +66,7 @@
     constellationPdfFile <- file.path(outputDir, paste0(sampleId, '_constellationPlot.pdf'))
     pdf(file = constellationPdfFile, paper="a4r", width=8, height=10,
         title=paste0('constellationPlot_',sampleId))
-    loginfo('writing pdf: %s', constellationPdfFile)
+    loginfo('opening pdf: %s', constellationPdfFile)
   }
 
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
@@ -110,6 +110,7 @@
     sampleId=sampleId, alternateId=alternateId, gainColor='blue', lossColor= 'red')
 
   if (!noPdf) {
+    loginfo('closing pdf: %s', constellationPdfFile)
     dev.off()  # CLOSE the pdf file
   }
 

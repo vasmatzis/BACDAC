@@ -80,11 +80,11 @@ This three panel plot can also be called separately, see \link{makeHetScoreRepor
 
   library(BACDAC)
   library(logging)
-  # calculateHetScoreExample.R
-  # generate heterozygosity score by bin and by chromosome arm and save to the output directory
 
-  # make a 3-panel plot, top panel is the segmentation data and the next two panels are the
-  # resulting hetscore by bin and by arm.
+  # 1. generate heterozygosity score (hetScore) by bin and by chromosome arm,
+  # 2. save to the output directory
+  # 3. make a 3-panel plot, top panel is the segmentation data and the next two panels are the
+  # resulting hetScore by bin and by arm.
 
   basicConfig("DEBUG")
   sampleId <- 'TCGA-14-1402-02A_ds';

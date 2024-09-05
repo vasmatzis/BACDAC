@@ -1,7 +1,9 @@
 
   library(BACDAC)
   library(logging)
-  # calculatePloidyExample.R
+  # 1. load needed data
+  # 2. run calculatePloidy
+  # 3. save the returned object to outputDir
 
   noPdf <- TRUE          # TRUE= print to screen, FALSE=print to pdf in outputDir
   outputDir  <-  NULL    # output folder for pdfs, only needed if noPdf=FALSE
@@ -42,7 +44,7 @@
   hetScorePerBinWigFile <- file.path(hetScoreDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
   hetScoreData <- loadHetScoreFromWig(hetScorePerBinWigFile)
 
-  ### defaults --------
+  ### defaults
   omitAnnotations <- FALSE;
   dPeaksCutoff <- 0.01; penaltyCoefForAddingGrids <- 0.49; minGridHeight <- 0.2;
   minPeriodManual <- -1;
@@ -53,7 +55,8 @@
   allowedTumorPercent <- 106
 
 
-  ### call calculatePloidy, the function to do the initial ploidy configurations ---------
+  ### call calculatePloidy  ---------
+  ### the function to do the ploidy configurations
   loginfo('calculate ploidy for %s ', sampleId)
   calcPloidyResult <- calculatePloidy(
     sampleId=sampleId, outputDir=outputDir, noPdf=noPdf, alternateId=alternateId,
@@ -74,6 +77,15 @@
     hsNormMat=hsNormMat
   )
 
+  loginfo('tumor percentage: %s ',round(calcPloidyResult$percentTumor) )
+  segmentPloidy <-  # weighted by length of segment
+    sum(calcPloidyResult$segmentData$size *
+          calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size)
+  loginfo('approximate ploidy: %s ',round(segmentPloidy,1) )
+  logwarn('create the contellation plot to confirm this result')
+
+
+  ### save returned object to outputDir ----
   if(!is.null(outputDir)){
     calcPloidyResultOutputFile <- file.path(
       outputDir, paste0(sampleId, '_calculatePloidyResult.Rds'))
@@ -81,10 +93,5 @@
     saveRDS(calcPloidyResult, file=calcPloidyResultOutputFile)
   }
 
-  loginfo('tumor percentage: %s ',round(calcPloidyResult$percentTumor) )
-  segmentPloidy <-  # weighted by length of segment
-    sum(calcPloidyResult$segmentData$size *
-          calcPloidyResult$segmentData$cnLevel)/sum(calcPloidyResult$segmentData$size)
-  loginfo('approximate ploidy: %s ',round(segmentPloidy,1) )
-  logwarn('now go create the contellation plot to confirm this result')
+
 

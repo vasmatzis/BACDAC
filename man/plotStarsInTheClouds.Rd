@@ -6,7 +6,7 @@
 \usage{
 plotStarsInTheClouds(
   sampleId,
-  alternateId,
+  alternateId = NULL,
   starCloudPlotInputs,
   plotEachChrom = FALSE,
   mainPeakNRD,
@@ -92,8 +92,8 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
   sampleId <- 'TCGA-14-1402-02A_ds';
   alternateId <- 66301
 
-
-  ## load two reference files  ---------------
+  ## LOAD DATA ------------------
+  ### 1 - load two reference files
   # NOTE/WARNING: if these files do not exist, an attempt will be made to download from Zenodo.
   hsNormMatFile <- "./referenceFiles/hetScoreNormMat.Rds"
   hsNormMat <- loadHsNormMat(hsNormMatFile)
@@ -104,6 +104,7 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 
   # directory with input files:
   inputDir <- system.file('extdata', package = "BACDAC")
+  ### 2 - load read depth data
   readDepthPer30kbBin <-readRDS(file.path(inputDir, paste0(sampleId,'_','readDepthPer30kbBin.Rds')))
   readDepthBinSize  <- 30000
 
@@ -111,7 +112,8 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
   # initialize
   starCloudPlotInputs <- NULL
 
-  # result from calculateHetScore, but will use example data here
+  ### load hetScore data
+  # this is the result from calculateHetScore, but will load example data here
   hetScorePerBinWigFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
 
   # result from calculatePloidy, but will use example data here
@@ -129,8 +131,10 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
       expReadsIn2NPeak_1bp=expReadsIn2NPeak_1bp)
   }
 
+  # MULTIPLE PLOTTING OPTIONS -----------
+
   ### OPTION 1
-  ##### One Panel OPTION    --------------------
+  ### One Panel --------------------
   ### constellation plot only
   if (!noPdf) {
     # we will be writing to this path, make sure it exists
@@ -141,7 +145,7 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
     constellationPdfFile <- file.path(outputDir, paste0(sampleId, '_constellationPlot.pdf'))
     pdf(file = constellationPdfFile, paper="a4r", width=8, height=10,
         title=paste0('constellationPlot_',sampleId))
-    loginfo('writing pdf: \%s', constellationPdfFile)
+    loginfo('opening pdf: \%s', constellationPdfFile)
   }
 
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
@@ -156,8 +160,8 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 
 
   ### OPTION 2
-  ##### One Panel OPTION plus individual chromosome plot    --------------------
-  ### constellation plot then chromosomes 1-22 plotted individually
+  ### One Panel plus individual chromosome plot    --------------------
+  ### constellation plot then chromosomes 1-22 plotted in a 4x4 matrix of individual plots
   op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
   starCloudResult <- plotStarsInTheClouds(
     sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL,
@@ -170,8 +174,8 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 
 
   ### OPTION 3
-  ##### Two Panel OPTION   --------------------
-  ### constellation plot with linear genome plot to the right
+  ### Two Panel --------------------
+  ### constellation plot in left panel, linear genome plot in right panel
 
   # load segmentation data
   segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
@@ -179,24 +183,23 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
   # check for required columns: # chr, start, end, rd and optionally cnvState
   segmentation <- checkSegmentation(segmentation)
 
-# added the below because rgdObject couldn't be found
-#  rgdObject = BACDAC:::rgdObject
-
-  ### draw constellation plot left of the linear genome plot ----
   starCloudResult <- twoPanelReport(
     starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
     readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
-    sampleId=sampleId, gainColor='blue', lossColor= 'red')
+    sampleId=sampleId, alternateId=alternateId, gainColor='blue', lossColor= 'red')
+
+  if (!noPdf) {
+    loginfo('closing pdf: \%s', constellationPdfFile)
+    dev.off()  # CLOSE the pdf file
+  }
 
 
-  # write segments to file
+  # WRITE TO FILE --------
+  # write segments in constellation plot to file
   fileToWrite=file.path(outputDir, paste0(sampleId, '_BACDAC_allelic_segments.csv'))
   loginfo('writing allelic segments to file: \n\t\%s', fileToWrite)
   write.csv(starCloudResult$allelicSegments,file =fileToWrite,row.names = FALSE )
 
-  if (!noPdf) {
-    dev.off()  # CLOSE the pdf file
-  }
 }
 
 }
