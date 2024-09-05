@@ -80,10 +80,9 @@ Two reference files are also required. These are available at https://zenodo.org
 1. hsNormMat 
 2. testVals 
 
-NOTE/WARNING: When running the examples (as packaged with their current directory structure, if the
-files do not exist, they will be automatically downloaded and installed into a folder in your
+NOTE/WARNING: When running the examples (as packaged with their current directory structure) if the
+files do not exist they will be automatically downloaded and installed into a folder in your
 current directory at `./referencefiles`
-
 
 ## Sample input Files
 There are four types of input files required for each sample you wish to test. The contents and any
@@ -126,13 +125,13 @@ The bin size used for creating the segmentation file will also be needed.
 ```{r segmentation}
 # example files in the package
 inputDir <- system.file('extdata', package = "BACDAC")
-sampleId='TCGA-14-1402-02A_ds';
+sampleId <-'TCGA-14-1402-02A_ds';
 # file name
-segmentationFile= file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 # load
-segmentation_org=read.csv(segmentationFile, comment.char = "#", header=TRUE)
+segmentation_org <- read.csv(segmentationFile, comment.char = "#", header=TRUE)
 # checks for and returns the required columns
-segmentation=BACDAC::checkSegmentation(segmentation_org)
+segmentation <- BACDAC::checkSegmentation(segmentation_org)
 # preview
 head(segmentation)
 str(segmentation)

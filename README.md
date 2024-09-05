@@ -74,7 +74,7 @@ Two reference files are also required. These are available at
 2.  testVals
 
 NOTE/WARNING: When running the examples (as packaged with their current
-directory structure, if the files do not exist, they will be
+directory structure) if the files do not exist they will be
 automatically downloaded and installed into a folder in your current
 directory at `./referencefiles`
 
@@ -161,13 +161,13 @@ str(refAltCountchr1)
 ``` r
 # example files in the package
 inputDir <- system.file('extdata', package = "BACDAC")
-sampleId='TCGA-14-1402-02A_ds';
+sampleId <-'TCGA-14-1402-02A_ds';
 # file name
-segmentationFile= file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
+segmentationFile <- file.path(inputDir, paste0(sampleId, '_segmentation.csv'))
 # load
-segmentation_org=read.csv(segmentationFile, comment.char = "#", header=TRUE)
+segmentation_org <- read.csv(segmentationFile, comment.char = "#", header=TRUE)
 # checks for and returns the required columns
-segmentation=BACDAC::checkSegmentation(segmentation_org)
+segmentation <- BACDAC::checkSegmentation(segmentation_org)
 # preview
 head(segmentation)
 #>   chr   start     end cnvState        rd
