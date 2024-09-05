@@ -72,7 +72,7 @@
     plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
     segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
     digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-    addAnnotations = TRUE)
+    addSegmentLegend = TRUE)
   par(op)
 
 
@@ -86,7 +86,7 @@
     plotEachChrom=TRUE, mainPeakNRD=mainPeakNRD,
     segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
     digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-    addAnnotations = TRUE)
+    addSegmentLegend = TRUE)
   par(op)
 
 

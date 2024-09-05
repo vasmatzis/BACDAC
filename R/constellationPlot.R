@@ -151,11 +151,11 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 #' @param tau tumor ratio
 #' @param digitalPeakZone size of the shaded pink boxes, hetScores in this areas were used to
 #'  compute the hetScore mode of the peak
-#' @param paperMode logical if TRUE do not include some of the extra annotations
+#' @param cleanMode logical if TRUE do not include extra annotations
 #' @param starCloudPlotInputs object returned from \link{loadStarsInTheClouds}
-#' @param plotEachChrom show each chromosome in a separate plot
+#' @param plotEachChrom logical if TRUE show each chromosome in a separate plot
 #' @param plotCex factor to alter the cex for plots
-#' @param addAnnotations add additional annotations to the plot
+#' @param addSegmentLegend logical if TRUE color code segments by chromosome and add corresponding legend to the plot
 #' @inheritParams commonParameters
 #' @example inst/examples/constellationPlotExample.R
 #' @export
@@ -164,16 +164,12 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
                                  forceFirstDigPeakCopyNum=-1,grabDataPercentManual=-1, origMaxPercentCutoffManual=-1,minPeriodManual=-1,maxPeriodManual=-1,
                                  minReasonableSegmentSize=5.5e6,
                                  digitalPeakZone = 0.05, heterozygosityScoreThreshold = 0.98,
-                                 paperMode=FALSE,  # without all the extra fluff
-                                 plotCex=1,addAnnotations=FALSE
+                                 cleanMode=FALSE,
+                                 plotCex=1,addSegmentLegend=FALSE
 ){
-
-
-
 
   autosomes=1:22
   testValsSt <- starCloudPlotInputs$testVals;
-  loginfo("testValsSt DIM %s", dim(testValsSt))
   lambdaMainOrig <- starCloudPlotInputs$lambdaMainOrig;
   cnvListChrFullOrig <- starCloudPlotInputs$cnvListChrFullOrig;
   lohChrOutFull <- starCloudPlotInputs$lohChrOutFull
@@ -264,7 +260,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
   ylimMinTemp <- min(ylimMinTemp, min(plotStarRange))
 
   ### one color for each chromosome 1-22
-  if(addAnnotations){
+  if(addSegmentLegend){
     segColors = getSegmentColors()
   }else{
     segColors = rep('gray30', length(autosomes) )
@@ -299,7 +295,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
          cex.lab=plotCex,cex.axis=plotCex
     )
 
-    if(!paperMode){
+    if(!cleanMode){
       # annotate peak locations with boxes to show the zones around the peaks
       # draw first so everything else can be layered on top
 
@@ -334,7 +330,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
 
 
       # peak rank labels
-      if(!paperMode){
+      if(!cleanMode){
         ymax <- par('usr')[4]
         colorCodeRank <- ifelse(is.na(peakInfo$dPeaks),'gray80', 'gray50')
         mtext(text=peakInfo$rankByHeight, side=4, at=peakInfo$peakReadDepth_normX*2/rdNormX_2Npeak, las=2, line=-.5, col=colorCodeRank, adj=1, cex=.7)
@@ -358,21 +354,20 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
            lty=c(1,NA,NA), pch=c(NA, "*", "."), cex=.95*plotCex, pt.cex=2)
 
     # plot annotations
-    if(addAnnotations){
+    mtext(c(sampleId, alternateId), side=3, adj=c(0,1))
+    mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
+    mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
+    if(!is.na(lohContentA_maj2_min0)){
+      mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.5, cex=.9, col='gray40')
+    }
+
+    if(addSegmentLegend){
       # chrom symbol legends
       legend("topleft", legend=c(1:22), col=segColors, pch=1:22, cex=.95*plotCex)
-
-      mtext(c(sampleId, alternateId), side=3, adj=c(0,1))
-      mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
-      mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
-      if(!is.na(lohContentA_maj2_min0)){
-        mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.5, cex=.9, col='gray40')
-      }
     }
 
 
-    if(!paperMode){
-
+    if(!cleanMode){
       # manual input annotations
       if(forceFirstDigPeakCopyNum > 0){
         mtext(1, text=paste0('manual 1st digital Peak: ', forceFirstDigPeakCopyNum, 'N'),adj=1, line=2.5, cex=.7, col=2)
@@ -467,7 +462,7 @@ twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbB
                                        plotEachChrom=FALSE, mainPeakNRD=getMainPeakNRD(calcPloidyResult),
                                        segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
                                        digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-                                       paperMode=FALSE,plotCex=1.3)
+                                       plotCex=1.3)
   myAt=starCloudResult$plotAxisLimits$nrdAxisLims[2]
   mtext(leftFigLabel, side=2, at=myAt,cex=labelCex,las=1,line=1.5)
   mtext(sampleId, side=3, adj=0)

@@ -80,7 +80,7 @@ runBACDAC=function(sampleId, alternateId,
                                   sampleId=sampleId,gainColor=gainColor, lossColor= lossColor)
 
   loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
-  loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
+  loginfo('%s tumor Percent: %s',sampleId, round(calcPloidyResult$percentTumor))
 
   # write segments to file
   fileToWrite=file.path(outputDir, paste0(sampleId, '_BACDAC_allelic_segments.csv'))

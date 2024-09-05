@@ -68,7 +68,10 @@ example is available in the package help and also at
 ## Reference files
 
 Two reference files are also required. These are available at
-<https://zenodo.org/records/13619655> 1. hsNormMat 2. testVals
+<https://zenodo.org/records/13619655>
+
+1.  hsNormMat
+2.  testVals
 
 NOTE/WARNING: When running the examples (as packaged with their current
 directory structure, if the files do not exist, they will be

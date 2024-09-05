@@ -22,9 +22,9 @@ plotStarsInTheClouds(
   minReasonableSegmentSize = 5500000,
   digitalPeakZone = 0.05,
   heterozygosityScoreThreshold = 0.98,
-  paperMode = FALSE,
+  cleanMode = FALSE,
   plotCex = 1,
-  addAnnotations = FALSE
+  addSegmentLegend = FALSE
 )
 }
 \arguments{
@@ -34,7 +34,7 @@ plotStarsInTheClouds(
 
 \item{starCloudPlotInputs}{object returned from \link{loadStarsInTheClouds}}
 
-\item{plotEachChrom}{show each chromosome in a separate plot}
+\item{plotEachChrom}{logical if TRUE show each chromosome in a separate plot}
 
 \item{mainPeakNRD}{the NRD of the main Peak}
 
@@ -67,11 +67,11 @@ compute the hetScore mode of the peak}
 \item{heterozygosityScoreThreshold}{peaks with a hetScore mode above this value are considered heterozygous, typically 0.98,
 but may vary depending on NGS library quality and preparation}
 
-\item{paperMode}{logical if TRUE do not include some of the extra annotations}
+\item{cleanMode}{logical if TRUE do not include extra annotations}
 
 \item{plotCex}{factor to alter the cex for plots}
 
-\item{addAnnotations}{add additional annotations to the plot}
+\item{addSegmentLegend}{logical if TRUE color code segments by chromosome and add corresponding legend to the plot}
 }
 \description{
 plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
@@ -95,10 +95,10 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
 
   ## load two reference files  ---------------
   # NOTE/WARNING: if these files do not exist, an attempt will be made to download from Zenodo.
-  hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
+  hsNormMatFile <- "./referenceFiles/hetScoreNormMat.Rds"
   hsNormMat <- loadHsNormMat(hsNormMatFile)
 
-  testValsFile <-  "../reference/testVals.Rds"
+  testValsFile <-  "./referenceFiles/testVals.Rds"
   testVals <- loadTestVals(testValsFile)
 
 
@@ -151,7 +151,7 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
     plotEachChrom=FALSE, mainPeakNRD=mainPeakNRD,
     segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
     digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-    addAnnotations = TRUE)
+    addSegmentLegend = TRUE)
   par(op)
 
 
@@ -165,7 +165,7 @@ plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
     plotEachChrom=TRUE, mainPeakNRD=mainPeakNRD,
     segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
     digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-    addAnnotations = TRUE)
+    addSegmentLegend = TRUE)
   par(op)
 
 
