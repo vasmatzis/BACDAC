@@ -12,7 +12,7 @@
   ### load data ###
 
   # NOTE/WARNING: if this file does not exist, an attempt will be made to download from Zenodo.
-  hsNormMatFile <- "../reference/hetScoreNormMat.Rds"
+  hsNormMatFile <- "./referenceFiles/hetScoreNormMat.Rds"
   hsNormMat  <-  loadHsNormMat(hsNormMatFile)
 
   exampleDataDir <- system.file('extdata', package = "BACDAC")

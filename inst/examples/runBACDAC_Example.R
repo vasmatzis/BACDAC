@@ -12,10 +12,10 @@
 
   ### 1 - load two reference files
   # NOTE/WARNING: if these files do not exist, an attempt will be made to download from Zenodo.
-  hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
+  hsNormMatFile <- "./referenceFiles/hetScoreNormMat.Rds"
   myHsNormMat <- loadHsNormMat(hsNormMatFile)
 
-  testValsFile <-  "../referenceFiles/testVals.Rds"
+  testValsFile <-  "./referenceFiles/testVals.Rds"
   myTestVals <- loadTestVals(testValsFile)
 
 

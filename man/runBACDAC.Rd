@@ -114,11 +114,12 @@ run all the steps in BACDAC, will output pdfs, intermediate and allele specific 
 
   ### 1 - load two reference files
   # NOTE/WARNING: if these files do not exist, an attempt will be made to download from Zenodo.
-  hsNormMatFile <- "../referenceFiles/hetScoreNormMat.Rds"
+  hsNormMatFile <- "./referenceFiles/hetScoreNormMat.Rds"
   myHsNormMat <- loadHsNormMat(hsNormMatFile)
 
-  testValsFile <-  "../referenceFiles/testVals.Rds"
+  testValsFile <-  "./referenceFiles/testVals.Rds"
   myTestVals <- loadTestVals(testValsFile)
+
 
 
   # inputDir is the path to the loaded package data

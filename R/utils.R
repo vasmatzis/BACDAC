@@ -42,6 +42,7 @@ checkSegmentation=function(segmentation){
 loadHsNormMat=function(hsNormMatFile){
   if(!file.exists(hsNormMatFile)){
     if(!dir.exists(dirname(hsNormMatFile))){
+      loginfo('creating directory %s', dirname(hsNormMatFile))
       dir.create(dirname(hsNormMatFile))
     }
     utils::download.file(url='https://zenodo.org/records/13619655/files/hetScoreNormMat.Rds?download=1',
@@ -54,7 +55,7 @@ loadHsNormMat=function(hsNormMatFile){
   }else{
     hsNormMat = readRDS(hsNormMatFile)
     if(nrow(hsNormMat)==101046){
-      loginfo('%s loaded',basename(hsNormMatFile))
+      loginfo('loaded file %s', hsNormMatFile)
     }else{
       logwarn('expecting matrix with 101046 rows but found %i, file not loaded properly',
               nrow(hsNormMat))
@@ -73,6 +74,7 @@ loadHsNormMat=function(hsNormMatFile){
 loadTestVals=function(testValsFile){
   if(!file.exists(testValsFile)){
     if(!dir.exists(dirname(testValsFile))){
+      loginfo('creating directory %s', dirname(testValsFile))
       dir.create(dirname(testValsFile))
     }
     utils::download.file(url='https://zenodo.org/records/13619655/files/testVals.Rds?download=1',
@@ -85,7 +87,7 @@ loadTestVals=function(testValsFile){
   }else{
     testVals = readRDS(testValsFile)
     if(nrow(testVals)==997){
-      loginfo('%s loaded',basename(testValsFile))
+      loginfo('loaded file %s', testValsFile)
     }else{
       logwarn('expecting matrix with 997 rows but found %i, file not loaded properly',
               nrow(testVals))
