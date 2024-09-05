@@ -296,9 +296,8 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
     )
 
     if(!cleanMode){
-      # annotate peak locations with boxes to show the zones around the peaks
+      # annotate discretized peak locations with boxes to show the zones around the peaks
       # draw first so everything else can be layered on top
-
       if(!is.null(segmentData) && !is.null(peakInfo)){
         xMax <-par('usr')[2]
         rect(xleft  = 0, xright = xMax,
@@ -314,19 +313,24 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
       mtext(text=heterozygosityScoreThreshold, side=1, at = heterozygosityScoreThreshold, cex=.8, col='red', line= -1)
     }
 
-    # add -actual- hetScore data
+    # CN level annotations
+    iCN <-0:plotMaxCN
+    abline(h=2+((iCN-2)*tau), lty=2, col='gray85')
+    # mtext(text='CN', side=4, col='black', las=1, line = 1.5)
+    axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1, cex.axis=plotCex)
+
+
+    # add -actual- hetScore binned data
     points(lohChrOutFull, cnvListChrFull,
            pch='.',
            col=scales::alpha('black', 0.25))
 
 
-    # add -median- hetScore PER test segment
+    # add -median- hetScore PER segment
     if(!is.null(segmentData) && !is.null(peakInfo)){
-      # add median loh per test segment
       points(segmentData$lohScoreMedian, segmentData$nrd,
              pch=segmentData$chr,cex=0.9,
              col=scales::alpha(segColors[segmentData$chr],0.75))
-
 
 
       # peak rank labels
@@ -343,12 +347,6 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
     lines(shiftVals/medVals,plotRange,type='l',xlim=c(0,1),col='purple')
     # stars for each heterozygosity ratio for each cn level - make sure this layers on top the segment data
     points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
-
-    # CN level annotations
-    iCN <-0:plotMaxCN
-    abline(h=2+((iCN-2)*tau), lty=2, col='gray85')
-    # mtext(text='CN', side=4, col='black', las=1, line = 1.5)
-    axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1, cex.axis=plotCex)
 
     legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green', 'black'),
            lty=c(1,NA,NA), pch=c(NA, "*", "."), cex=.95*plotCex, pt.cex=2)
@@ -399,7 +397,7 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
            xlab="Heterozygosity Score",
            ylab="NRD",
            col=scales::alpha('black',0.3),
-           cex=2)
+           cex.lab=1.3)
       lines(shiftVals/medVals,plotRange,type='l',xlim=c(0,1),col='purple')
       points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
       title(paste0("chr=",chrNum))
@@ -412,12 +410,12 @@ plotStarsInTheClouds <- function(sampleId, alternateId, starCloudPlotInputs, plo
       axis(side=4, at=2+((iCN-2)*tau), labels=paste0(iCN,'N'), tick=TRUE, las=1)
 
       # print once for each page
-      if(chrNum %% 1==0){
+      if(chrNum %in% c(1, 10, 19)){
         # mtext(side=3, paste0('tumor: ',round(tau*100), '%'),    adj=0.05, outer = TRUE, line=-2)
         # mtext(side=3, text=paste('ploidy: ',round(ploidyCN,1)), adj=0.05,  outer = TRUE,line=-1)
         # mtext(c(sampleId, alternateId), side=3, line=0, adj=c(.05,.95), outer = TRUE)
-        mtext(paste0(sampleId, ' tumor:',round(tau*100), '% ',' ploidy:',round(ploidyCN,1) ), side=3, line=0, adj=c(.05), outer = TRUE)
-
+        mtext(paste(sampleId, alternateId), side=3, line=0, adj=c(.05), outer = TRUE)
+        mtext(paste0(' tumor:',round(tau*100), '% ',' ploidy:',round(ploidyCN,1) ), side=3, line=0, adj=c(.95), outer = TRUE)
       }
     }
     par(op)
@@ -455,7 +453,7 @@ twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbB
   labelCex=1.5
   leftFigLabel=NULL;rightFigLabel=NULL
   diploidPeakNRD=getDiploidPeakNRD(calcPloidyResult)
-  # left figure
+  # left panel
   op <- par(mar=c(5,3,3,3),mgp=c(1.5, 0.5,0))
   starCloudResult=plotStarsInTheClouds(sampleId=sampleId, alternateId=alternateId,starCloudPlotInputs, diploidPeakNRD=diploidPeakNRD,
                                        tau=min(1,calcPloidyResult$percentTumor/100),
@@ -468,7 +466,7 @@ twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbB
   mtext(sampleId, side=3, adj=0)
   par(op)
 
-  # right figure
+  # right panel
   op <- par(mar=c(5,3,3,1),mgp=c(1.5, 0.5,0))
   # convert the nrd axis limits in the constellation plot to rd, so the linear genome plot can be on the same scale
   rdAxisLimits= calcRD(nrd=starCloudResult$plotAxisLimits$nrdAxisLims, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
