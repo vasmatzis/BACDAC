@@ -12,7 +12,9 @@ twoPanelReport(
   sampleId = NULL,
   alternateId = NULL,
   gainColor = "blue",
-  lossColor = "red"
+  lossColor = "red",
+  noPdf = FALSE,
+  outputDir = NULL
 )
 }
 \arguments{
@@ -36,6 +38,10 @@ chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color cod
 \item{gainColor}{color for gains in the linear genome plot, default is blue}
 
 \item{lossColor}{color for losses in the linear genome plot, default is red}
+
+\item{noPdf}{if present (TRUE), pdf files will not be generated, instead plots are drawn on default device}
+
+\item{outputDir}{full path to directory to output all files and intermediate objects created}
 }
 \description{
 draw constellation plot left of the linear genome plot

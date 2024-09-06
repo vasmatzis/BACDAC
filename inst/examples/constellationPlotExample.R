@@ -34,7 +34,7 @@
   starCloudPlotInputs <- NULL
 
   ### load hetScore data
-  # this is the result from calculateHetScore, but will load example data here
+  # hetScorePerBinWigFile is the result from calculateHetScore, but will load from example data here
   hetScorePerBinWigFile <- file.path(inputDir, paste0(sampleId, '_hetScorePerBin.wig.gz'))
 
   # result from calculatePloidy, but will use example data here
@@ -54,22 +54,23 @@
 
   # MULTIPLE PLOTTING OPTIONS -----------
 
-  ### OPTION 1
-  ### One Panel --------------------
-  ### constellation plot only
   if (!noPdf) {
     # we will be writing to this path, make sure it exists
     if(!dir.exists(file.path(outputDir))){
       dir.create(path = file.path(outputDir))
       loginfo('creating output directory for pdf: \n\t%s:', file.path(outputDir))
     }
-    constellationPdfFile <- file.path(outputDir, paste0(sampleId, '_constellationPlot.pdf'))
+    constellationPdfFile <- file.path(outputDir, paste0(sampleId, '_BACDAC_ConstellationPlot.pdf'))
     pdf(file = constellationPdfFile, paper="a4r", width=8, height=10,
         title=paste0('constellationPlot_',sampleId))
-    loginfo('opening pdf: %s', constellationPdfFile)
+    loginfo('opening constellation plot pdf: %s', constellationPdfFile)
   }
 
-  op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
+  ### OPTION 1
+  ### One Panel --------------------
+  ### constellation plot only
+
+  op <- par(mfrow=c(1,1),mar=c(3.5,3.5,1,2),mgp=c(1.5,0.5,0),oma=c(0,0,2,0)+.2)
   starCloudResult <- plotStarsInTheClouds(
     sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL,
     tau=min(1,calcPloidyResult$percentTumor/100),
@@ -83,7 +84,8 @@
   ### OPTION 2
   ### One Panel plus individual chromosome plot    --------------------
   ### constellation plot then chromosomes 1-22 plotted in a 4x4 matrix of individual plots
-  op <- par(mfrow=c(1,1),mar=c(5,4,3.5,3.5),mgp=c(1.5, 0.5,0))
+  op <- par(mfrow=c(1,1),mar=c(3.5,3.5,1,2),mgp=c(1.5,0.5,0),oma=c(0,0,2,0)+.2)
+
   starCloudResult <- plotStarsInTheClouds(
     sampleId, alternateId,starCloudPlotInputs, diploidPeakNRD=NULL,
     tau=min(1,calcPloidyResult$percentTumor/100),
@@ -93,6 +95,10 @@
     addSegmentLegend = TRUE)
   par(op)
 
+  if (!noPdf) {
+    loginfo('closing pdf: %s', constellationPdfFile)
+    dev.off()  # CLOSE the pdf file for option 1 and 2, option 3 will have a separate file
+  }
 
   ### OPTION 3
   ### Two Panel --------------------
@@ -107,12 +113,10 @@
   starCloudResult <- twoPanelReport(
     starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
     readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
-    sampleId=sampleId, alternateId=alternateId, gainColor='blue', lossColor= 'red')
+    sampleId=sampleId, alternateId=alternateId, gainColor='blue', lossColor= 'red',
+    noPdf=noPdf,outputDir=outputDir)
 
-  if (!noPdf) {
-    loginfo('closing pdf: %s', constellationPdfFile)
-    dev.off()  # CLOSE the pdf file
-  }
+
 
 
   # WRITE TO FILE --------

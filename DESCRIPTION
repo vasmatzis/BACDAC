@@ -1,6 +1,6 @@
 Package: BACDAC
 Title: Ploidy Analysis using Binomial Allelic Content with Discretization Algorithm and Constellation plot
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
   person("George", "Vasmatzis",    role = c("aut"),       email = "vasmatzis.george@mayo.edu"),
   person(c("Sarah","H"),"Johnson", role = c("aut", "cre"),email = "johnson.sarah14@mayo.edu",  comment = c(ORCID = "0000-0001-7412-5322")),

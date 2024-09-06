@@ -9,6 +9,7 @@
 #' @param lossColor color to use for losses in linear genome plot, default is red
 #' @param zebraStrips option to have alternating gray/white background for chromosome delineation
 #' @param yAxisLimits option to set y axis to user specified limits, e.g. to align with the constellation plot
+#' @param plotCex factor to alter the cex for plots
 #' @param ... Parameters passed onto the actual plot command
 #' @inheritParams commonParameters
 #' @examples
@@ -34,7 +35,7 @@
 #' @export
 linearGenomePlot <- function( readDepthPer30kbBin, readDepthBinSize=30000, sampleId=NULL, alternateId=NULL, segmentation=NULL,
                               allelicSegments=NULL, noDelGainCalls = FALSE, gainColor = 'blue', lossColor= 'red', zebraStrips=FALSE,
-                              yAxisLimits=NULL, ...) {
+                              yAxisLimits=NULL, plotCex=1.3, ...) {
   # readDepthBinSize=30000; yLimQuantile=0.99; noDelGainCalls = FALSE;  gainColor = 'blue'; lossColor= 'red';zebraStrips=FALSE; alternateId=NULL
 
   if(R.version$major>=4){
@@ -83,8 +84,8 @@ linearGenomePlot <- function( readDepthPer30kbBin, readDepthBinSize=30000, sampl
     }
 
     plot(x, y, pch=".", xaxs="i", xlim=xlimit, xaxt="n", ylim=ylimit,
-         ylab=ylabel,xlab="",cex.axis=1.3,col=colorVector,cex.lab=1.3) # Plot the summed array
-    title(xlab='chromosome',cex.lab=1.4)
+         ylab=ylabel,xlab="",cex.axis=plotCex,col=colorVector,cex.lab=plotCex) # Plot the summed array
+    title(xlab='chromosome',cex.lab=plotCex)
 
     ## option for Zebra bars for the chromosomes. Draw first so the dots can go over
     if(zebraStrips){
@@ -103,7 +104,7 @@ linearGenomePlot <- function( readDepthPer30kbBin, readDepthBinSize=30000, sampl
     chromosomeStarts <- coords@chromStart[coords@chroms]/readDepthBinSize
     chromosomeEnds   <- coords@chromEnd[coords@chroms]/readDepthBinSize
     axis(side=3, at=chromosomeEnds, labels=NA, lwd=0, lwd.ticks = 1, tck = 1, col='darkgray') # Draw ticks
-    axis(side=3, at=chromosomeStarts+(chromosomeEnds-chromosomeStarts)/2, line = -1.75, labels = chrCharacters, cex.axis=1.2, lwd=0, padj=0) # Draw labels
+    axis(side=3, at=chromosomeStarts+(chromosomeEnds-chromosomeStarts)/2, line = -1.75, labels = chrCharacters, cex.axis=plotCex, lwd=0, padj=0) # Draw labels
 
 
     # add purple lines for LOH segments
@@ -121,8 +122,21 @@ linearGenomePlot <- function( readDepthPer30kbBin, readDepthBinSize=30000, sampl
         # add allele=0 segments to plot and data.frame
         segments(x0 = linBinStart, y0 = ylimit[1], x1 = linBinEnd, y1 = ylimit[1], col = 'purple', lwd=3)
 
-        legend('topright', inset=c(0, .04),
-               legend = c('2N+LOH'),col = c('purple'), lty=c(1), pch=c(NA), cex=1.3)
+        # testing legend options
+        if(TRUE){
+          legend('topright', inset=c(0, 0.04),
+                 legend = c('2N+LOH'),col = c('purple'), lty=c(1), pch=c(NA), cex=plotCex, lwd=3, bty='n')
+        }else{
+
+
+          ## add legend using new=TRUE, this allows the legend to be in the upper corner of the device
+          #while the plot region is shifted down to prevent the legend from printing overtop of data
+          op <- par(mar=c(1,3.5,1,2), new=TRUE)
+          plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
+          legend('bottomright', legend = c('2N+LOH'),col = c('purple'), lty=c(1), pch=c(NA), cex=plotCex, lwd=3)#, bty='n')
+          par(op)
+        }
+
         #legend = c('2N+LOH', 'gain', 'loss'), col = c('purple',  gainColor, lossColor),lty=c(1,NA,NA), pch=c(NA, ".", "."), cex=.95, pt.cex=2)
       }
     }

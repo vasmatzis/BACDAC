@@ -77,7 +77,9 @@ runBACDAC=function(sampleId, alternateId,
   loginfo('twoPanelReport')
   starCloudResult= twoPanelReport(starCloudPlotInputs=starCloudPlotInputs, calcPloidyResult=calcPloidyResult,
                                   readDepthPer30kbBin=readDepthPer30kbBin,segmentation=segmentation,
-                                  sampleId=sampleId,alternateId=alternateId, gainColor=gainColor, lossColor= lossColor)
+                                  sampleId=sampleId,alternateId=alternateId,
+                                  gainColor=gainColor, lossColor= lossColor,
+                                  noPdf=noPdf,outputDir=outputDir)
 
   loginfo('%s ploidy: %s ',sampleId, round(starCloudResult$ploidyCN,1) )
   loginfo('%s tumor Percent: %s',sampleId, round(calcPloidyResult$percentTumor))

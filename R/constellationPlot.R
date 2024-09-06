@@ -143,7 +143,9 @@ loadStarsInTheClouds <- function(sampleId, inputDir, readDepthPer30kbBin,hetScor
 }
 
 
-#' plot heterozygosity (actual and theoretical) vs NRD for a given tumor ratio
+#' plot heterozygosity (actual and theoretical) vs NRD for a given tumor purity
+#'
+#' annotations in top outer margin include values for ploidy, tumor purity, 2N+LOH and ploidy state
 #'
 #' @param diploidPeakNRD the NRD of the diploid peak, don't assume it is 2, may be
 #'    choosing a different peak than from a previous calculation
@@ -278,6 +280,8 @@ plotStarsInTheClouds <- function(sampleId, alternateId=NULL, starCloudPlotInputs
     lohContentA_maj2_min0 <- NA
   }
 
+  ploidyState = getPloidyState(twoNpLOH=lohContentA_maj2_min0, ploidy=ploidyCN)
+
   # logdebug('poisson Cov Fit= %s\t diploidPeakNRD= %s\t mainPeakNRD=%s',lambdaMainOrig,diploidPeakNRD, round(mainPeakNRD,3))
 
   # plot once with all chromosome data -------
@@ -291,7 +295,6 @@ plotStarsInTheClouds <- function(sampleId, alternateId=NULL, starCloudPlotInputs
          ylim=ylimits,
          xlab="Heterozygosity Score",
          ylab="NRD",
-         cex=plotCex,
          cex.lab=plotCex,cex.axis=plotCex
     )
 
@@ -349,15 +352,20 @@ plotStarsInTheClouds <- function(sampleId, alternateId=NULL, starCloudPlotInputs
     points(starVals/medStarVals,plotStarRange,pch="*",cex=2,xlim=c(0,1),col='green2')
 
     legend('bottomleft',legend = c('LOH', 'theoretical', 'actual'),col = c('purple',  'green2', 'black'),
-           lty=c(1,NA,NA), pch=c(NA, "*", "."), cex=.95*plotCex, pt.cex=2)
+           lty=c(1,NA,NA), lwd=c(1.5,NA,NA), pch=c(NA, "*", "."), cex=.9*plotCex, pt.cex=2,
+           bty='n')
 
-    # plot annotations
-    mtext(c(sampleId, alternateId), side=3, adj=c(0,1))
-    mtext(side=1, text=paste('ploidy: ',round(ploidyCN,1)), adj=0, line=1.7)
-    mtext(side=1, paste0('tumor: ',round(tau*100), '%'),    adj=1, line=1.7)
+
+    # outer margin plot annotations
+    mtext(sampleId,    side=3, adj=0.05, line=1, outer = TRUE,cex = plotCex)
+    mtext(alternateId, side=3, adj=0.05, line=0, outer = TRUE,cex = plotCex)
+    mtext(side=3, text=paste('ploidy: ',round(ploidyCN,1)), adj=0.5, line=1, outer = TRUE,cex = plotCex)
+    mtext(side=3, paste0('tumor: ',round(tau*100), '%'),    adj=0.5, line=0, outer = TRUE,cex = plotCex)
+    mtext(side=3, paste0('ploidy state: ',ploidyState),    adj=0.95, line=1, outer = TRUE,cex = plotCex)
     if(!is.na(lohContentA_maj2_min0)){
-      mtext(1, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0, line=3.1, cex=.9, col='gray30')
+      mtext(3, text=paste("2N+LOH:", round(lohContentA_maj2_min0,3)), adj = 0.95, line=0, outer = TRUE,cex = plotCex)
     }
+
 
     if(addSegmentLegend){
       # chrom symbol legends
@@ -444,38 +452,52 @@ plotStarsInTheClouds <- function(sampleId, alternateId=NULL, starCloudPlotInputs
 #' @inheritParams commonParameters
 #' @export
 twoPanelReport=function(starCloudPlotInputs, calcPloidyResult, readDepthPer30kbBin, segmentation,
-                        sampleId=NULL, alternateId=NULL, gainColor='blue', lossColor= 'red'){
+                        sampleId=NULL, alternateId=NULL, gainColor='blue', lossColor= 'red',
+                        noPdf=FALSE, outputDir=NULL){
 
+  if (!noPdf) {
+    if(!is.null(outputDir)){
+      ploidyPdfFile <-file.path(dir=outputDir, paste0(sampleId, 'BACDAC_ploidyReport.pdf'))
+      loginfo('will plot to pdf: %s', ploidyPdfFile)
+      if(!dir.exists(dirname(ploidyPdfFile))) {
+        loginfo("creating output directory: %s", dirname(ploidyPdfFile))
+        dir.create(path=file.path(dirname(ploidyPdfFile)),mode = "0775")
+      }
+      pdf(file = ploidyPdfFile,width=12, height=4, title=paste0('BACDAC_ploidy_',sampleId)) # paper="a4r",
+      on.exit(dev.off(),add = TRUE)
+    }else{
+      logwarn('can not output pdf, outputDir=NULL, will print to plot window')
+    }
+  }
 
-  graphics::layout( matrix(c(1,2,2),nrow=1),
+  # 1234 x 445
+  graphics::layout( matrix(c(1,2),nrow=1),
                     heights= c(1),
-                    widths = c(1.5,2))   # Widths of the two columns
+                    widths = c(.5,1))   # Widths of the two columns
   labelCex=1.5
+  plotCex= ifelse(noPdf,1.2,0.9)
   leftFigLabel=NULL;rightFigLabel=NULL
   diploidPeakNRD=getDiploidPeakNRD(calcPloidyResult)
+
   # left panel
-  op <- par(mar=c(5,3,3,3),mgp=c(1.5, 0.5,0))
+  op <- par(mar=c(3.5,3.5,1,2),mgp=c(1.5,0.5,0),oma=c(0,0,2,0)+.2)
   starCloudResult=plotStarsInTheClouds(sampleId=sampleId, starCloudPlotInputs=starCloudPlotInputs, diploidPeakNRD=diploidPeakNRD,
                                        tau=min(1,calcPloidyResult$percentTumor/100),
                                        plotEachChrom=FALSE, mainPeakNRD=getMainPeakNRD(calcPloidyResult),
                                        segmentData=calcPloidyResult$segmentData, peakInfo=calcPloidyResult$peakInfo,
                                        digitalPeakZone =calcPloidyResult[['iterationStatsAll']][['digitalPeakZone']],
-                                       plotCex=1.3)
+                                       plotCex=plotCex)
   myAt=starCloudResult$plotAxisLimits$nrdAxisLims[2]
   mtext(leftFigLabel, side=2, at=myAt,cex=labelCex,las=1,line=1.5)
-  mtext(sampleId, side=3, adj=0)
-  par(op)
 
   # right panel
-  op <- par(mar=c(5,3,3,1),mgp=c(1.5, 0.5,0))
   # convert the nrd axis limits in the constellation plot to rd, so the linear genome plot can be on the same scale
   rdAxisLimits= calcRD(nrd=starCloudResult$plotAxisLimits$nrdAxisLims, wsz=readDepthPer30kbBin$windowSize, calcPloidyResult$expReadsIn2NPeak_1bp)
   linearGenomePlot( readDepthPer30kbBin=readDepthPer30kbBin, readDepthBinSize=readDepthPer30kbBin$windowSize, segmentation=segmentation,
                     allelicSegments=starCloudResult$allelicSegments,
-                    gainColor = gainColor, lossColor= lossColor, yAxisLimits = rdAxisLimits)
+                    gainColor = gainColor, lossColor= lossColor, yAxisLimits = rdAxisLimits,plotCex=plotCex)
   myAt=rdAxisLimits[2]
   mtext(rightFigLabel, side=2, cex=labelCex,at =myAt,las=1,line=1.5)
-  mtext(alternateId, side=3, adj=1)
   par(op)
 
   return(starCloudResult)

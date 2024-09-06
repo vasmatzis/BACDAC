@@ -903,10 +903,11 @@ calculatePloidy <- function(
   if (!noPdf) {
     if(!is.null(outputDir)){
       ploidyPdfFile <-file.path(dir=outputDir, paste0(sampleId, 'calculatePloidyFigures.pdf'))
-      if(!dir.exists(dirname(ploidyPdfFile@path))) {
+      if(!dir.exists(dirname(ploidyPdfFile))) {
         loginfo("creating output directory: %s", dirname(ploidyPdfFile))
         dir.create(path=file.path(dirname(ploidyPdfFile)),mode = "0775")
       }
+      loginfo('will plot to pdf %s:', ploidyPdfFile)
       pdf(file = ploidyPdfFile, paper="a4r", width=8, height=10, title=paste0('calculatePloidy_',sampleId))
       on.exit(dev.off(),add = TRUE)
     }else{
@@ -2228,7 +2229,7 @@ calculatePloidy <- function(
 
   if (!noPdf) {
     # dev.off() # now executed by on.exit()
-    loginfo("wrote file: %s", ploidyPdfFile@path)
+    loginfo("wrote file: %s", ploidyPdfFile)
   }
 
   #############################################'

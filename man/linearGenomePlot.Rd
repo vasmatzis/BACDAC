@@ -16,6 +16,7 @@ linearGenomePlot(
   lossColor = "red",
   zebraStrips = FALSE,
   yAxisLimits = NULL,
+  plotCex = 1.3,
   ...
 )
 }
@@ -46,6 +47,8 @@ chr, start, end, rd; optional: cnvState (1=loss, 2=normal, 3=gain) for color cod
 \item{zebraStrips}{option to have alternating gray/white background for chromosome delineation}
 
 \item{yAxisLimits}{option to set y axis to user specified limits, e.g. to align with the constellation plot}
+
+\item{plotCex}{factor to alter the cex for plots}
 
 \item{...}{Parameters passed onto the actual plot command}
 }
