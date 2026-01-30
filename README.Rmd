@@ -82,7 +82,7 @@ Two reference files are also required. These are available at https://zenodo.org
 
 NOTE/WARNING: When running the examples (as packaged with their current directory structure) if the
 files do not exist they will be automatically downloaded and installed into a folder in your
-current directory at `./referencefiles`
+current directory at `./referenceFiles`
 
 ## Sample input Files
 There are four types of input files required for each sample you wish to test. The contents and any

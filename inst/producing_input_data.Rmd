@@ -16,9 +16,17 @@ Note, we have not tested these tools ourselves and cannot attest to the quality 
 
 ### Make `[inputFile]` 
 Assuming the bam file you have is aligned to chromosomes labelled chr1,chr2,...,chrX,chrY    
-`loh_dbSnp_20180418.tsv.gz` is our file with a list of 33629538 common snp positions. Other such files are available from a variety of sources.
+`hetScore_dbSnp_20180418.tsv.gz` is a file with a list of 33629538 common snp positions. Other such files are available from a variety of sources.
 
-`zcat loh_dbSnp_20180418.tsv.gz | tail -n +2 | awk '{if ($1==23) {test="X"} else if ($1=24) {test="Y"} else {test=$1} print "chr"test"\t"$2}' > [inputFile]`
+`zcat hetScore_dbSnp_20180418.tsv.gz | tail -n +7 | awk '{if ($1==23) {test="X"} else if ($1==24) {test="Y"} else {test=$1} print "chr"test"\t"$2}' > [inputFile]`
+
+The columns in hetScore_dbSnp_20180418.tsv.gz are: "chr", "pos", "id", "ref", "alt", "reffreq", "altfreq". 
+For example:
+chr     pos     id      ref     alt     reffreq altfreq
+1       11012   rs544419019     C       G       0.9119  0.08806
+1       11063   rs561109771     T       G       0.997   0.002995
+1       13110   rs540538026     G       A       0.9732  0.02676
+1       13116   rs62635286      T       G       0.903   0.09704
 
 
 ### Samtools
@@ -56,13 +64,13 @@ samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-
 ```{eval=FALSE}
 cat [pileupFile] | awk '{ p=$5; nA=gsub("[Aa]","",p); print $1,$2,$4,$5,nA; }' | awk '{ p=$4; nC=gsub("[Cc]","",p); print $1,$2,$3,$4,$5,nC; }' | awk '{ p=$4; nG=gsub("[Gg]","",p); print $1,$2,$3,$4,$5,$6,nG; }' | awk '{ p=$4; nT=gsub("[Tt]","",p); print $1,$2,$3,$4,$5,$6,$7,nT; }' | awk '{ p=$4; nD=gsub("[*]","",p); print $1,$2,$3,$4,$5,$6,$7,$8,nD; }' | awk 'BEGIN {OFS=",";}{ p=$4; nR=gsub("[<>]","",p); print $3,$5,$6,$7,$8,$9,nR; }' > [pileupTempFile]
 echo "CHROM,POS,REF,ALT,COV,A,C,G,T,DEL,REFSKIP" >> [pileupFinal]
-paste -d',' <( zcat loh_dbSnp_20180418.tsv.gz | tail -n +2 | awk 'BEGIN {OFS=","};{print $1,$2,$4,$5 }') <(cat [pileupTempFile]) >> [pileupFinal]
+paste -d',' <( zcat hetScore_dbSnp_20180418.tsv.gz | tail -n +7 | awk 'BEGIN {OFS=","};{print $1,$2,$4,$5 }') <(cat [pileupTempFile]) >> [pileupFinal]
 ```
 
 
 ```{eval=FALSE}
 sw=( A:C:G:T )
-echo "chr,pos,ref,alt" >> [hetInputFile]
+echo "chr,pos,ref,alt" > [hetInputFile]
 tail -n +2 [pileupFinal] | awk -v sw="${sw[*]}" 'BEGIN {FS=","};BEGIN {OFS="\t"};{ 
 n=split(sw, AR, ":");
 for(i=1;i<=4;i++) { 
