@@ -4,6 +4,7 @@
 # BACDAC
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 BACDAC is an R package for “Ploidy Analysis using the Binomial Allelic
@@ -51,7 +52,7 @@ linearGenomePlot(readDepthPer30kbBin=readDepthPer30kbBin,readDepthBinSize=readDe
                 sampleId=sampleId,segmentation=segmentation)
 ```
 
-<img src="man/figures/README-example-1.png" width="100%" />
+<img src="man/figures/README-example-1.png" alt="" width="100%" />
 
 There are four main functions to be operated in this order:
 
@@ -76,7 +77,7 @@ Two reference files are also required. These are available at
 NOTE/WARNING: When running the examples (as packaged with their current
 directory structure) if the files do not exist they will be
 automatically downloaded and installed into a folder in your current
-directory at `./referencefiles`
+directory at `./referenceFiles`
 
 ## Sample input Files
 

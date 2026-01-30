@@ -9,7 +9,9 @@ plotHetScorePerArm(
   sampleId = NULL,
   hetScoreMean = 0.9875,
   hetScoreStDev = 0.0125,
-  yMap = function(y) {     2^(10 * y) },
+  yMap = function(y) {
+     2^(10 * y)
+ },
   ylab = "Heterozygosity Score",
   zebraStrips = FALSE
 )

@@ -7,7 +7,9 @@
 plotHetScorePerBin(
   hetScore,
   sampleId = NULL,
-  yMap = function(y) {     y },
+  yMap = function(y) {
+     y
+ },
   ylab = "Heterozygosity Score",
   allelicSegments = NULL,
   zebraStrips = FALSE
