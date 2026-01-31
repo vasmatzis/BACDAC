@@ -16,7 +16,10 @@ including low-pass low-tumor NGS.
 Inputs include read-depth and segmentation data, and ref/alt counts for
 common single nucleutide polymorphisms (SNPs). Calculates the
 “Heterozygosity Score” and produces the Constellation plot to visualize
-allele-specific copy-number as shown in publication xyz.
+allele-specific copy-number as shown in publication:
+
+<https://pubmed.ncbi.nlm.nih.gov/40394578/>  
+Genome Biol. 2025 May 20;26(1):132. doi: 10.1186/s13059-025-03599-2
 
 ## Installation
 
