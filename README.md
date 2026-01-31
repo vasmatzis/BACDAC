@@ -79,6 +79,11 @@ directory structure) if the files do not exist they will be
 automatically downloaded and installed into a folder in your current
 directory at `./referenceFiles`
 
+A third reference file is available at
+<https://zenodo.org/records/18436153> 3. hetScore_dbSnp_20180418.tsv.gz
+
+See `inst/producing_input_data.md` for its usage.
+
 ## Sample input Files
 
 There are four types of input files required for each sample you wish to
