@@ -470,6 +470,7 @@ markChromEdges <- function(chromStarts,maxcn,vCol='gray90'){
 
 
 #' list of colors to use for the peaks in \code{peaksByDensity}
+#' @export
 #' @keywords internal
 getCNcolors <- function(){
   # cnColors <- c(palette()[-1], "orange", 'white', palette()[-1]) # remove black, add orange, white, and repeat to make sure we have enough colors

@@ -13,13 +13,13 @@
 #' @param qualityPostNorm used to set max allowed value for grabDataPercent
 #'
 #' @inheritParams commonParameters
-#' @keywords internal
 #'
+#' @example inst/examples/peaksByDensityExample.R
+#'
+#' @keywords internal
+#' @export
 peaksByDensity <-function(sampleId,readDepthPer100kbBin, segmentation, segmentationBinSize=30000, wszPeaks = 100000, grabDataPercentManual= -1, origMaxPercentCutoffManual=-1,
                           addAreaLinesToPlot=FALSE,qualityPostNorm=NULL, omitAnnotations=FALSE,alternateId=NULL){
-  # peaksByDensity(sampleId,  cnvBinnedData, segmentation=segmentation, wszPeaks = 100000, grabDataPercentManual= 0.08);
-  #  grabDataPercentManual= -1; segmentation=segmentation; segmentationBinSize=30000; wszPeaks = 100000; addAreaLinesToPlot=F; origMaxPercentCutoffManual=-1;  qualityPostNorm=NULL;omitAnnotations=FALSE
-
   numChroms=24
   coords <- getLinearCoordinates(chromosomes = 1:numChroms)
 
