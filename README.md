@@ -14,7 +14,7 @@ Reports tumor ploidy and purity from whole-genome sequencing data
 including low-pass low-tumor NGS.
 
 Inputs include read-depth and segmentation data, and ref/alt counts for
-common single nucleutide polymorphisms (SNPs). Calculates the
+common single nucleotide polymorphisms (SNPs). Calculates the
 “Heterozygosity Score” and produces the Constellation plot to visualize
 allele-specific copy-number as shown in publication:
 
