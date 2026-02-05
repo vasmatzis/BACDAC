@@ -31,11 +31,28 @@ which should provide the following output:
  1  13116  rs62635286   T  G  0.903   0.09704 
 ```
 
-### Make `[inputFile]`
+### define some file names…
 
-Assuming the bam file you have is aligned to chromosomes labelled
-chr1,chr2,…,chrX,chrY  
-`zcat hetScore_dbSnp_20180418.tsv.gz | tail -n +7 | awk '{if ($1==23) {test="X"} else if ($1==24) {test="Y"} else {test=$1} print "chr"test"\t"$2}' > [inputFile]`
+```
+# input the name of your files here.
+bamFile=bamFile.bam
+dbSnpPosFile=hetScore_dbSnp_20180418.tsv.gz
+inputPosFile=inputPositionsList.tsv
+pileupInit=pileup.tsv
+pileupFinal=pileup_final.tsv
+pileupTempFile=pileup_temp.tsv
+inputHetFile=inputHetFile.tsv
+```
+
+### Make `$inputPosFile`
+
+Assuming your bam file is aligned to chromosomes labelled
+chr1,chr2,…,chrX,chrY.  
+Extract the chr and position from your snp file.
+
+```
+zcat $dbSnpPosFile | tail -n +7 | awk '{if ($1==23) {test="X"} else if ($1==24) {test="Y"} else {test=$1} print "chr"test"\t"$2}' > $inputPosFile
+```
 
 ### Samtools
 
@@ -55,49 +72,51 @@ make install
 You can then use this as input to samtools mpileup to create a pileup
 file. The early commands are telling the program what to output, base
 quality, alignment quality.  Can limit depth (-d) in this case as we are
-getting REF/ALT balance and not depth itself.  
-`samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -l [inputFile] -o [pileupFile] [bamFile]`
+getting REF/ALT balance and not depth itself.
 
-Can also do by chromosome using (-r) where chromNum is `chr1`  
-`samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -r [chromNum] -l [inputFile] -o [pileupFileChr] [bamFile]`
+```
+samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -l $inputPosFile -o $pileupInit $bamFile
+# Can also do by chromosome using (-r) where [chromNum] is, for example `chr1`  
+samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -r [chromNum] -l $inputPosFile -o [pileupFileChr] $bamFile
+```
 
 ### Conversion of samtools output
 
 Convert the output into a more easily digestible form:
 
 ```
-samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -l [inputFile] -o [pileupFile] [bamFile]
-#this can also do this by chromosome using (-r) like this where chromNum would be like 'chr1'
-samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -r [chromNum] -l [inputFile] -o [pileupFileChr] [bamFile]
+samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -l $inputPosFile -o $pileupInit $bamFile
+# Can also do  by chromosome using (-r) where [chromNum] is, for example 'chr1'
+samtools mpileup -a -A -q 10 -Q 15 -d 1000 --no-output-ins --no-output-ins --no-output-del --no-output-del --no-output-ends -r [chromNum] -l $inputPosFile -o [pileupFileChr] $bamFile
 ```
 
-`[pileupFinal]` can then be converted to the format needed
+`$pileupFinal` can then be converted to the format needed
 
-This shell script processes a pileup file to count base occurrences,
-formats the output, and merges it with a database SNP file. It uses
-nested awk commands to count A, C, G, T, deletions, and refskip
-characters, then creates a final CSV file with header
+Here we process a pileup file to count base occurrences, format the
+output, and merge it with a database SNP file. It uses nested awk
+commands to count A, C, G, T, deletions, and refskip characters, then
+creates a final CSV or TSV? file with header
 “CHROM,POS,REF,ALT,COV,A,C,G,T,DEL,REFSKIP”.
 
 ```
 # 1. Process pileup file to count bases and deletions
-cat [pileupFile] | \
-awk '{ p=$5; nA=gsub("[Aa]","",p); print $1,$2,$4,$5,nA; }' | \
+cat $pileupInit | \
+awk '{ p=$5; nA=gsub("[Aa]","",p); print $1,$2,$4,$5,nA; }' | \   # return how many A's are in the string
 awk '{ p=$4; nC=gsub("[Cc]","",p); print $1,$2,$3,$4,$5,nC; }' | \
 awk '{ p=$4; nG=gsub("[Gg]","",p); print $1,$2,$3,$4,$5,$6,nG; }' | \
 awk '{ p=$4; nT=gsub("[Tt]","",p); print $1,$2,$3,$4,$5,$6,$7,nT; }' | \
 awk '{ p=$4; nD=gsub("[*]","",p); print $1,$2,$3,$4,$5,$6,$7,$8,nD; }' | \
 awk 'BEGIN {OFS=",";}{ p=$4; nR=gsub("[<>]","",p); print $3,$5,$6,$7,$8,$9,nR; }' \
-> [pileupTempFile]
+> $pileupTempFile
 
 # 2. Add Header to final output
-echo "CHROM,POS,REF,ALT,COV,A,C,G,T,DEL,REFSKIP" >> [pileupFinal]
+echo "CHROM,POS,REF,ALT,COV,A,C,G,T,DEL,REFSKIP" > $pileupFinal
 
 # 3. Merge processed pileup with database SNP file
 paste -d',' \
-  <(zcat loh_dbSnp_20180418.tsv.gz | tail -n +2 | awk 'BEGIN {OFS=","};{print $1,$2,$4,$5 }') \
-  <(cat [pileupTempFile]) \
-  >> [pileupFinal]
+  <(zcat $dbSnpPosFile | tail -n +7 | awk 'BEGIN {OFS=","};{print $1,$2,$4,$5 }') \
+  <(cat $pileupTempFile) \
+  >> $pileupFinal
 ```
 
 Then extract specific allele counts (A, C, G, or T) from a genomic
@@ -107,8 +126,8 @@ and which belongs to the “Alternate” allele for every genomic position.
 
 ```
 sw=( A:C:G:T )                           # Define a variable containing the four DNA bases separated by colons.
-echo "chr,pos,ref,alt" > [hetInputFile]  # Initialize the output file [hetInputFile] with a header row.
-tail -n +2 [pileupFinal] | awk -v sw="${sw[*]}" 'BEGIN {FS=","};BEGIN {OFS="\t"};{ 
+echo "chr,pos,ref,alt" > $inputHetFile  # Initialize the output file [inputHetFile] with a header row.
+tail -n +2 $pileupFinal | awk -v sw="${sw[*]}" 'BEGIN {FS=","};BEGIN {OFS="\t"};{ 
   n=split(sw, AR, ":");   # Splits the string A:C:G:T into an array AR where AR[1]=A, AR[2]=C, etc.
   for(i=1;i<=4;i++) {     # Iterates through the four bases
     # Ref Allele Check: If the base in column 3 ($3) matches one of the bases in the array, it grabs the corresponding count from columns 6 through 9 (e.g., if $3 is 'A', it takes the value from $6).
@@ -121,10 +140,10 @@ tail -n +2 [pileupFinal] | awk -v sw="${sw[*]}" 'BEGIN {FS=","};BEGIN {OFS="\t"}
     }
   }
   print $1,$2,rOut,aOut    # Outputs the chromosome, position, and the extracted Ref/Alt counts
-}' >> [hetInputFile]
+}' >> $inputHetFile
 ```
 
-The resulting `[hetInputFile]` will contain:
+The resulting `$inputHetFile` will contain:
 
 1.  Chromosome  
 2.  Position  
@@ -157,6 +176,7 @@ mapCounter
 set window (-w) to 30000 and limit to primary chromosomes
 
 ```
+# need to specify [filename]
 hmmcopy_utils/bin/readCounter -w 30000 -c chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY` `[fileName].bam > [fileName].30kb.wig
 ```
 
